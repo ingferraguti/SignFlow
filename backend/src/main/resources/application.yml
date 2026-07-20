@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: SignFlow
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/signflow}
+    username: ${SPRING_DATASOURCE_USERNAME:signflow}
+    password: ${SPRING_DATASOURCE_PASSWORD:change-me-local}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+server:
+  port: ${SERVER_PORT:8080}
+signflow:
+  api:
+    cors-allowed-origins: ${SIGNFLOW_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  system:
+    version: ${SIGNFLOW_VERSION:0.1.0-SNAPSHOT}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
