@@ -1,0 +1,6 @@
+.env
+*.log
+backend/target/
+frontend/.next/
+frontend/node_modules/
+frontend/out/
