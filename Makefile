@@ -1,8 +1,11 @@
-COMPOSE ?= docker compose
+COMPOSE ?= docker compose -f compose.yaml
+ifneq ($(wildcard .local/compose.tls.yaml),)
+COMPOSE += -f .local/compose.tls.yaml
+endif
 
 .PHONY: up down logs test backend-test frontend-test lint build
 up:
-	$(COMPOSE) up --build
+	$(COMPOSE) up --build -d
 
 down:
 	$(COMPOSE) down

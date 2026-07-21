@@ -7,12 +7,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "Validation failed", request.getRequestURI());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    ResponseEntity<ApiErrorResponse> handleNotFound(NoResourceFoundException exception, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "Resource not found", request.getRequestURI());
     }
 
     @ExceptionHandler(Exception.class)

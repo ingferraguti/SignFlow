@@ -8,13 +8,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(SystemInfoController.class)
+@EnableConfigurationProperties(SystemInfoProperties.class)
 @TestPropertySource(properties = "signflow.system.version=unit-test")
 class SystemInfoControllerTest {
     @Autowired
@@ -29,12 +28,12 @@ class SystemInfoControllerTest {
                 .andExpect(jsonPath("$.status", equalTo("UP")));
     }
 
-    @TestConfiguration
-    @EnableConfigurationProperties(SystemInfoProperties.class)
-    static class TestConfig {
-        @Bean
-        SystemInfoController controller(SystemInfoProperties properties) {
-            return new SystemInfoController(properties);
-        }
+    @Test
+    void returnsSafeNotFoundResponseForUnknownApiPath() throws Exception {
+        mockMvc.perform(get("/api/not-found"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", equalTo(404)))
+                .andExpect(jsonPath("$.message", equalTo("Resource not found")))
+                .andExpect(jsonPath("$.path", equalTo("/api/not-found")));
     }
 }

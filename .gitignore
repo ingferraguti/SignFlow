@@ -1,4 +1,6 @@
 .env
+.tools/
+.local/
 *.log
 backend/target/
 frontend/.next/

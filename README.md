@@ -27,9 +27,13 @@ cp .env.example .env
 make up
 ```
 
+If local antivirus or a corporate proxy performs TLS inspection, provide its public root certificate as a BuildKit secret instead of disabling certificate verification. See `docs/development.md` for the local override pattern.
+
 Backend: <http://localhost:8080>
 Frontend: <http://localhost:3000>
 Swagger UI: <http://localhost:8080/swagger-ui.html>
+
+All published ports bind to `127.0.0.1` by default. PostgreSQL and the unauthenticated technical API are therefore not reachable from the local network.
 
 ## Manual startup
 
@@ -47,6 +51,19 @@ cd frontend
 npm install
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8080 npm run dev
 ```
+
+## Windows and PowerShell
+
+Docker Desktop with the WSL2 backend is the recommended Windows setup. PowerShell shortcuts are available under `scripts`:
+
+```powershell
+.\scripts\start.ps1
+.\scripts\logs.ps1
+.\scripts\test-all.ps1
+.\scripts\stop.ps1
+```
+
+Additional commands include `migrate.ps1`, `test-backend.ps1`, `test-frontend.ps1`, `load-demo.ps1`, `clean.ps1`, and `reset-database.ps1`. Database reset is destructive and therefore requires typing `RESET`. If port 8080 is occupied, set `BACKEND_PORT=18080` and `NEXT_PUBLIC_BACKEND_URL=http://localhost:18080` in the ignored local `.env` before building the frontend.
 
 ## Environment variables
 

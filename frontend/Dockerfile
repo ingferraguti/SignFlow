@@ -1,7 +1,13 @@
+# syntax=docker/dockerfile:1.7
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN --mount=type=secret,id=local_ca,required=false \
+    if [ -f /run/secrets/local_ca ]; then \
+      NODE_EXTRA_CA_CERTS=/run/secrets/local_ca npm ci; \
+    else \
+      npm ci; \
+    fi
 FROM node:22-alpine AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
