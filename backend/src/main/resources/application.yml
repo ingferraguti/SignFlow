@@ -11,6 +11,12 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SIGNFLOW_OIDC_ISSUER_URI:http://localhost:8081/realms/signflow}
+          jwk-set-uri: ${SIGNFLOW_OIDC_JWK_SET_URI:http://localhost:8081/realms/signflow/protocol/openid-connect/certs}
 management:
   endpoints:
     web:

@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-21 11:58 Europe/Rome.
+Last verified: 2026-07-22 12:32 Europe/Rome.
 
 ## Repository State
 
@@ -29,6 +29,15 @@ There are local uncommitted changes outside this documentation goal. They were a
 - Frontend system status page.
 - Placeholder frontend pages for `Referti`, `Firma`, `Monitoraggio`, and `Configurazione`.
 - Docker Compose services for PostgreSQL, backend, and frontend.
+- Docker Compose service for local Keycloak OIDC.
+- Local Keycloak realm import with `demo.admin` and `demo.signer` users.
+- Backend Spring Security resource-server protection for `/api/**`.
+- Backend role mapping for `ADMINISTRATOR` and `SIGNER` from Keycloak realm roles.
+- Backend `/api/auth/me` endpoint for current authenticated user details.
+- JSON 401 and 403 API error responses.
+- Frontend NextAuth OIDC login/logout through Keycloak.
+- Frontend route protection with redirect to `/login`.
+- E2E authentication test covering protected route, login, current user display, logout, and blocked access after logout.
 
 ## Not Yet Implemented
 
@@ -46,8 +55,9 @@ There are local uncommitted changes outside this documentation goal. They were a
 - Analytics event persistence and publication interfaces.
 - FSE 2.0 validation/submission.
 - Digital preservation packaging/submission.
-- Real authentication and authorization.
 - ClickHouse, OpenSearch, Kafka/RabbitMQ, MinIO, Superset, or Knowage.
+- Production identity-provider hardening and real organization user provisioning.
+- Signature-provider authentication, which remains a separate future concern.
 
 ## Baseline Commands
 
@@ -59,7 +69,7 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: timed out after about 124 seconds without useful command output in this Codex run. Backend and frontend were then executed separately.
+Result: not rerun for this status update. Backend, frontend, API, Compose, and E2E checks were run separately.
 
 ### Backend
 
@@ -74,11 +84,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 3.
+- Tests run: 6.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-21T11:58:32+02:00.
+- Finished at: 2026-07-22T12:23:28+02:00.
 
 Notes:
 
@@ -100,13 +110,60 @@ Evidence:
 - `npm ci` completed.
 - `npm run lint` passed.
 - `npm run build` passed.
-- Next.js generated 9 static pages.
+- Next.js generated 11 routes/pages.
 
 Notes:
 
-- npm audit reported 2 moderate severity vulnerabilities.
+- npm audit reported 4 vulnerabilities: 2 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
+- Last successful lint/build run completed at 2026-07-22 12:31 Europe/Rome.
+
+### Docker Compose Authentication Flow
+
+Command:
+
+```powershell
+.\scripts\start.ps1
+```
+
+Result: services reached healthy/running state, although the Codex command wrapper timed out while waiting for the long Docker build.
+
+Evidence:
+
+- PostgreSQL healthy on `127.0.0.1:5432`.
+- Keycloak running on `127.0.0.1:8081`.
+- Backend healthy on `127.0.0.1:18080` in this local environment.
+- Frontend running on `127.0.0.1:3000`.
+- Keycloak log confirms realm `signflow` imported.
+
+API spot checks:
+
+- `GET http://localhost:18080/api/auth/me` without token returned 401.
+- `GET http://localhost:18080/api/system/info` without token returned 401.
+
+### E2E Authentication
+
+Command:
+
+```powershell
+.\scripts\test-e2e.ps1
+```
+
+Equivalent command used during verification:
+
+```powershell
+cd frontend
+npm run e2e
+```
+
+Result: pass.
+
+Evidence:
+
+- Playwright ran 1 Chromium test.
+- The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
+- Last successful run completed at 2026-07-22 12:26 Europe/Rome.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current technical foundation is runnable and that the existing system endpoint and frontend shell compile. It does not prove any business workflow because no business workflow is implemented yet.
+The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, and the frontend login/logout path works through Docker Compose. It does not prove any clinical business workflow because those workflows are still not implemented.

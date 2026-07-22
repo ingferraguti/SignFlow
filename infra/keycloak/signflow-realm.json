@@ -1,0 +1,97 @@
+{
+  "realm": "signflow",
+  "enabled": true,
+  "displayName": "SignFlow Local Demo",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMINISTRATOR",
+        "description": "Local demo administrator role for SignFlow"
+      },
+      {
+        "name": "SIGNER",
+        "description": "Local demo signer role for SignFlow"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "signflow-frontend",
+      "name": "SignFlow Frontend Local Demo",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "local-demo-frontend-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/api/auth/callback/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "demo.admin",
+      "firstName": "Local Demo",
+      "lastName": "Administrator",
+      "email": "demo.admin@signflow.local",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-admin-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMINISTRATOR"
+      ]
+    },
+    {
+      "username": "demo.signer",
+      "firstName": "Local Demo",
+      "lastName": "Signer",
+      "email": "demo.signer@signflow.local",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-signer-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SIGNER"
+      ]
+    }
+  ]
+}

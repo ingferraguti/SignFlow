@@ -4,5 +4,7 @@
 *.log
 backend/target/
 frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
 frontend/node_modules/
 frontend/out/

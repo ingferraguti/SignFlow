@@ -4,3 +4,9 @@ spring:
       on-profile: test
   jpa:
     show-sql: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/signflow
+          jwk-set-uri: http://localhost:8081/realms/signflow/protocol/openid-connect/certs

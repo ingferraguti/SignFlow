@@ -31,9 +31,21 @@ If local antivirus or a corporate proxy performs TLS inspection, provide its pub
 
 Backend: <http://localhost:8080>
 Frontend: <http://localhost:3000>
+Keycloak: <http://localhost:8081>
 Swagger UI: <http://localhost:8080/swagger-ui.html>
 
 All published ports bind to `127.0.0.1` by default. PostgreSQL and the unauthenticated technical API are therefore not reachable from the local network.
+
+## Local authentication
+
+Docker Compose starts a local Keycloak realm named `signflow`. The demo identities are intentionally local-only and must not be reused in production:
+
+```text
+Administrator: demo.admin / local-admin-password
+Signer:        demo.signer / local-signer-password
+```
+
+SignFlow uses Keycloak/OIDC for application login and logout. This is separate from future remote signature-provider authentication, which must remain provider-specific and temporary.
 
 ## Manual startup
 
@@ -60,10 +72,11 @@ Docker Desktop with the WSL2 backend is the recommended Windows setup. PowerShel
 .\scripts\start.ps1
 .\scripts\logs.ps1
 .\scripts\test-all.ps1
+.\scripts\test-e2e.ps1
 .\scripts\stop.ps1
 ```
 
-Additional commands include `migrate.ps1`, `test-backend.ps1`, `test-frontend.ps1`, `load-demo.ps1`, `clean.ps1`, and `reset-database.ps1`. Database reset is destructive and therefore requires typing `RESET`. If port 8080 is occupied, set `BACKEND_PORT=18080` and `NEXT_PUBLIC_BACKEND_URL=http://localhost:18080` in the ignored local `.env` before building the frontend.
+Additional commands include `migrate.ps1`, `test-backend.ps1`, `test-frontend.ps1`, `load-demo.ps1`, `clean.ps1`, and `reset-database.ps1`. Database reset is destructive and therefore requires typing `RESET`. If port 8080 is occupied, set `BACKEND_PORT=18080`, `NEXT_PUBLIC_BACKEND_URL=http://localhost:18080`, and keep `BACKEND_INTERNAL_URL=http://backend:8080` in the ignored local `.env` before building the frontend.
 
 ## Environment variables
 
@@ -76,6 +89,12 @@ make backend-test
 make frontend-test
 make lint
 make test
+```
+
+Run the E2E authentication test after the Docker Compose stack is up:
+
+```powershell
+.\scripts\test-e2e.ps1
 ```
 
 ## Repository structure
