@@ -96,3 +96,30 @@ Non-regression checks:
 
 - all Goal 3 and Goal 4 backend tests continue to pass;
 - technical configuration, identity administration, protected system status, and OIDC login/logout remain operational.
+
+## Goal 6 - Clinical Documents and Object Storage
+
+Backend tests (`AdminClinicalDocumentIntegrationTest`):
+
+- upload a real PDF payload to a MinIO Testcontainer and persist metadata only in PostgreSQL;
+- verify SHA-256, effective MIME type, byte size, original filename, generated opaque object identifier, uploader, upload date, version, and active status;
+- verify consecutive versions for the same Report;
+- download the exact bytes with authorized inline/attachment responses and `nosniff` protection;
+- generate and consume an expiring presigned URL;
+- prove that the same private object is rejected without a signature;
+- reject fake PDF content, unsafe filenames, wrong declared MIME types, oversize files, invalid dispositions, and missing Reports;
+- logically delete metadata, block subsequent content access, and retain the underlying object;
+- return 401 to anonymous callers and 403 to the unauthorized signer role;
+- assert that `clinical_documents` contains no PostgreSQL `bytea` column.
+
+Frontend and E2E checks:
+
+- `/referti` detail lists the fictitious demo PDF and its metadata;
+- an administrator uploads a PDF, sees the calculated metadata, opens a presigned preview, and downloads the original filename;
+- document action labels are persisted in the admin text/translation profile;
+- lint, type validation, and production build pass with binary/multipart proxying enabled.
+
+Non-regression checks:
+
+- all Goal 3, Goal 4, and Goal 5 backend integration tests pass;
+- authentication, organization, technical configuration, report search/detail, protected system status, and OIDC login/logout remain operational.

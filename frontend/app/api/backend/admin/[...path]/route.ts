@@ -21,14 +21,20 @@ async function proxy(request: NextRequest, context: Context) {
       Authorization: `Bearer ${session.accessToken}`,
       "content-type": request.headers.get("content-type") ?? "application/json",
     },
-    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
+    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(),
     cache: "no-store",
   });
 
-  const body = await response.text();
+  const body = await response.arrayBuffer();
+  const headers = new Headers();
+  headers.set("content-type", response.headers.get("content-type") ?? "application/json");
+  for (const name of ["content-disposition", "content-length", "x-content-type-options"]) {
+    const value = response.headers.get(name);
+    if (value) headers.set(name, value);
+  }
   return new NextResponse(body, {
     status: response.status,
-    headers: { "content-type": response.headers.get("content-type") ?? "application/json" },
+    headers,
   });
 }
 

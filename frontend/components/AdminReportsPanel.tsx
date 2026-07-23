@@ -6,6 +6,7 @@ import {
   type ReportDetail, type ReportFilters, type ReportPage, type SourceSystemOption,
 } from "../lib/adminReports";
 import { useUiTexts } from "./UiTextProvider";
+import { ClinicalDocumentsPanel } from "./ClinicalDocumentsPanel";
 
 export function AdminReportsPanel() {
   const { text } = useUiTexts();
@@ -77,6 +78,7 @@ function ReportDetailPanel({ detail, close }: { detail: ReportDetail; close: () 
   return <section className="card report-detail"><div className="section-title"><div><h2>Dettaglio referto {detail.internalIdentifier}</h2><p>Pratica {detail.practice.practiceIdentifier}</p></div><button onClick={close}>{text("button.closeDetails")}</button></div>
     <dl className="detail-grid"><Detail label="ID esterno" value={detail.externalIdentifier} /><Detail label="ID FSE" value={detail.fseIdentifier} /><Detail label="Stato" value={detail.state} /><Detail label="Tipo documento" value={detail.documentType} /><Detail label="Reparto" value={detail.department} /><Detail label="Sistema erogante" value={detail.sourceSystemCode} /><Detail label="Paziente" value={`${detail.patient.lastName} ${detail.patient.firstName}`} /><Detail label="ID paziente" value={detail.patient.patientIdentifier} /><Detail label="CF paziente" value={detail.patient.fiscalCode} /><Detail label="Firmatario" value={detail.signerUsername ?? "Non assegnato"} /><Detail label="CF firmatario" value={detail.signerFiscalCode} /><Detail label="Produzione" value={formatDate(detail.producedAt)} /><Detail label="Modifica" value={formatDate(detail.modifiedAt)} /><Detail label="Firma" value={formatDate(detail.signedAt)} /></dl>
     <h3>Flag tecnici</h3><div className="flag-list">{[["PDF/A3", detail.pdfA3Conversion], ["Firma visibile", detail.visibleSignature], ["Firma multipla", detail.multipleSignature], ["Invio non firmato", detail.sendUnsigned], ["Creazione CDA", detail.createCda], ["Passthrough", detail.passthrough]].map(([label, value]) => <span key={String(label)} className={value ? "enabled" : ""}>{label}: {value ? "Sì" : "No"}</span>)}</div>
+    <ClinicalDocumentsPanel reportId={detail.id} />
   </section>;
 }
 

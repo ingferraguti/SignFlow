@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-23 12:23 Europe/Rome.
+Last verified: 2026-07-23 16:11 Europe/Rome.
 
 ## Repository State
 
@@ -26,7 +26,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend home page.
 - Frontend system status page.
 - Placeholder frontend pages for `Firma` and `Monitoraggio`; active administration pages for `Referti` and `Configurazione`.
-- Docker Compose services for PostgreSQL, backend, and frontend.
+- Docker Compose services for PostgreSQL, Keycloak, private MinIO object storage, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
 - Local Keycloak realm import with `demo.admin` and `demo.signer` users.
 - Backend Spring Security resource-server protection for `/api/**`.
@@ -49,11 +49,15 @@ The repository currently contains a technical foundation for SignFlow:
 - Practice container, Report aggregate, minimized PatientMetadata, complete report state enum, technical flags, and fictitious demo records.
 - Paginated admin report search/detail APIs with exact-ID precedence and filters for patient, signer, signer fiscal code, state, source system, department, and all report date intervals.
 - Active `/referti` administration page with advanced filters, pagination, detail consultation, and configurable action texts.
+- `ClinicalDocument` metadata with Report association, SHA-256, effective PDF validation, MIME type, size, version, original filename, opaque object identifier, upload author/date, active/deleted state, and logical deletion.
+- PDF binaries stored only in a private MinIO bucket; PostgreSQL contains no binary document column.
+- Authorized PDF upload, inline/attachment download, presigned preview URL with configurable expiry, filename hardening, and configurable size limit.
+- Fictitious demo PDF materialized idempotently in MinIO for the local profile.
+- `/referti` document UI for upload, metadata/version consultation, preview, download, temporary URL copying, deleted-document visibility, and logical deletion.
 - Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
 
-- Clinical document metadata model and object-storage integration.
 - Signature batch and signature attempt model.
 - Signer report list/detail/preview/signature workflow.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
@@ -61,7 +65,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Analytics event persistence and publication interfaces.
 - FSE 2.0 validation/submission.
 - Digital preservation packaging/submission.
-- ClickHouse, OpenSearch, Kafka/RabbitMQ, MinIO, Superset, or Knowage.
+- ClickHouse, OpenSearch, Kafka/RabbitMQ, Superset, or Knowage.
 - Production identity-provider hardening and real organization user provisioning.
 - Signature-provider authentication, which remains a separate future concern.
 
@@ -90,11 +94,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 23.
+- Tests run: 27.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-23T12:15:54+02:00.
+- Finished at: 2026-07-23T16:08:19+02:00.
 
 Notes:
 
@@ -122,7 +126,7 @@ Notes:
 
 - npm audit reported 3 vulnerabilities: 1 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-23 12:20 Europe/Rome.
+- Last successful lint/build run completed at 2026-07-23 16:11 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -140,7 +144,10 @@ Evidence:
 - Keycloak running on `127.0.0.1:8081`.
 - Backend healthy on `127.0.0.1:18080` in this local environment.
 - Frontend running on `127.0.0.1:3000`.
+- MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
+- Flyway validated 10 migrations and applied V9/V10 successfully.
+- The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
 
 API spot checks:
 
@@ -169,9 +176,10 @@ Evidence:
 - Playwright ran 1 Chromium test.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
+- The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-07-23 12:22 Europe/Rome.
+- Last successful run completed at 2026-07-23 16:06 Europe/Rome.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current technical foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and user, organization, technical configuration, and Practice/Report administration are covered by backend integration and browser tests. It does not yet prove signer-side signing or document-processing workflows.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and user, organization, technical configuration, Practice/Report, and clinical-document administration are covered by backend integration and browser tests. Real signer-side signing and document transformation workflows remain pending.

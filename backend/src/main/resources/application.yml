@@ -11,6 +11,10 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: ${SIGNFLOW_DOCUMENT_MAX_FILE_SIZE:10MB}
+      max-request-size: ${SIGNFLOW_DOCUMENT_MAX_FILE_SIZE:10MB}
   security:
     oauth2:
       resourceserver:
@@ -33,6 +37,16 @@ signflow:
     cors-allowed-origins: ${SIGNFLOW_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   system:
     version: ${SIGNFLOW_VERSION:0.1.0-SNAPSHOT}
+  documents:
+    endpoint: ${SIGNFLOW_OBJECT_STORAGE_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${SIGNFLOW_OBJECT_STORAGE_PUBLIC_ENDPOINT:http://localhost:9000}
+    access-key: ${SIGNFLOW_OBJECT_STORAGE_ACCESS_KEY:signflow-local}
+    secret-key: ${SIGNFLOW_OBJECT_STORAGE_SECRET_KEY:signflow-local-secret}
+    bucket: ${SIGNFLOW_OBJECT_STORAGE_BUCKET:signflow-clinical-documents}
+    region: ${SIGNFLOW_OBJECT_STORAGE_REGION:us-east-1}
+    max-size-bytes: ${SIGNFLOW_DOCUMENT_MAX_SIZE_BYTES:10485760}
+    temporary-url-seconds: ${SIGNFLOW_DOCUMENT_URL_TTL_SECONDS:300}
+    demo-enabled: ${SIGNFLOW_DOCUMENT_DEMO_ENABLED:false}
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

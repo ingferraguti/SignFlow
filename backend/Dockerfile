@@ -2,7 +2,8 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-RUN --mount=type=secret,id=local_ca,required=false \
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=secret,id=local_ca,required=false \
     if [ -f /run/secrets/local_ca ]; then \
       keytool -importcert -noprompt -trustcacerts -alias signflow-local-ca \
         -file /run/secrets/local_ca -keystore "$JAVA_HOME/lib/security/cacerts" \
@@ -10,7 +11,7 @@ RUN --mount=type=secret,id=local_ca,required=false \
     fi && \
     mvn -q -DskipTests dependency:go-offline
 COPY src ./src
-RUN mvn -q -DskipTests package
+RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

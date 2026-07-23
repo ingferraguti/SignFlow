@@ -18,6 +18,9 @@ const defaults: UiTexts = {
   "button.viewDetails": "Dettaglio", "button.resetFilters": "Azzera filtri",
   "button.closeDetails": "Chiudi dettaglio", "button.previousPage": "Pagina precedente",
   "button.nextPage": "Pagina successiva",
+  "button.uploadDocument": "Carica PDF", "button.previewDocument": "Anteprima",
+  "button.downloadDocument": "Scarica", "button.temporaryUrl": "URL temporaneo",
+  "button.deleteDocument": "Elimina documento", "button.closePreview": "Chiudi anteprima",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

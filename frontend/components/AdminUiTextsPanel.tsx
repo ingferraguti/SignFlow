@@ -18,6 +18,9 @@ const textLabels: Record<string, string> = {
   "button.viewDetails": "Bottone: dettaglio referto", "button.resetFilters": "Bottone: azzera filtri",
   "button.closeDetails": "Bottone: chiudi dettaglio", "button.previousPage": "Bottone: pagina precedente",
   "button.nextPage": "Bottone: pagina successiva",
+  "button.uploadDocument": "Bottone: carica PDF", "button.previewDocument": "Bottone: anteprima PDF",
+  "button.downloadDocument": "Bottone: scarica PDF", "button.temporaryUrl": "Bottone: URL temporaneo",
+  "button.deleteDocument": "Bottone: elimina documento", "button.closePreview": "Bottone: chiudi anteprima",
 };
 
 export function AdminUiTextsPanel() {

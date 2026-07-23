@@ -1,6 +1,6 @@
 # SignFlow
 
-SignFlow is an open source healthcare middleware for remote digital signature workflows for clinical documents. This repository currently contains only the technical foundation: a Spring Boot backend, a Next.js frontend, PostgreSQL configuration, Flyway migration support, and developer tooling.
+SignFlow is an open source healthcare middleware for remote digital signature workflows for clinical documents. The repository includes authenticated administration, practice/report consultation, private S3-compatible clinical-document storage, PostgreSQL/Flyway, and developer tooling.
 
 ## Current status
 
@@ -10,9 +10,10 @@ Implemented in this phase:
 - Backend `GET /api/system/info` endpoint and Actuator health endpoint.
 - Initial Flyway migration for the technical `application_metadata` table.
 - Next.js administrative shell with home, system status, and placeholder areas.
-- Docker Compose for PostgreSQL, backend, and frontend.
+- Docker Compose for PostgreSQL, Keycloak, MinIO, backend, and frontend.
+- Administrative Practice/Report search plus PDF upload, preview, download, hashing, versioning, and logical deletion.
 
-Intentionally excluded: HL7 intake, CDA2 generation, real digital signature providers, FSE 2.0 submission, digital preservation, complete user/patient/report management, real authentication, Kafka, ClickHouse, OpenSearch, MinIO, and separated microservices.
+Not yet implemented: HL7 intake, CDA2 generation, real signature-provider execution, FSE 2.0 submission, digital preservation, Kafka, ClickHouse, OpenSearch, and separated microservices.
 
 ## Prerequisites
 
@@ -32,6 +33,8 @@ If local antivirus or a corporate proxy performs TLS inspection, provide its pub
 Backend: <http://localhost:8080>
 Frontend: <http://localhost:3000>
 Keycloak: <http://localhost:8081>
+MinIO API: <http://localhost:9000>
+MinIO console: <http://localhost:9001>
 Swagger UI: <http://localhost:8080/swagger-ui.html>
 
 All published ports bind to `127.0.0.1` by default. PostgreSQL and the unauthenticated technical API are therefore not reachable from the local network.

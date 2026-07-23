@@ -48,6 +48,22 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await page.getByRole("button", { name: "Dettaglio" }).click();
   await expect(page.getByRole("heading", { name: "Dettaglio referto RPT-INT-001" })).toBeVisible();
   await expect(page.getByText("PRACTICE-DEMO-001").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Documenti clinici e allegati" })).toBeVisible();
+  await expect(page.getByText("referto-dimostrativo.pdf")).toBeVisible();
+  await page.getByLabel("File PDF").setInputFiles({
+    name: "e2e-allegato.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n"),
+  });
+  await page.getByRole("button", { name: "Carica PDF" }).click();
+  await expect(page.getByText(/Versione \d+ caricata e verificata/)).toBeVisible();
+  const documentRow = page.getByRole("row").filter({ hasText: "e2e-allegato.pdf" }).first();
+  await expect(documentRow.getByText("ACTIVE")).toBeVisible();
+  await documentRow.getByRole("button", { name: "Anteprima" }).click();
+  await expect(page.getByTitle("Anteprima e2e-allegato.pdf")).toBeVisible();
+  const download = page.waitForEvent("download");
+  await documentRow.getByRole("button", { name: "Scarica" }).click();
+  expect((await download).suggestedFilename()).toBe("e2e-allegato.pdf");
 
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
