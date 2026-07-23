@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-22 12:32 Europe/Rome.
+Last verified: 2026-07-23 09:47 Europe/Rome.
 
 ## Repository State
 
@@ -38,6 +38,11 @@ There are local uncommitted changes outside this documentation goal. They were a
 - Frontend NextAuth OIDC login/logout through Keycloak.
 - Frontend route protection with redirect to `/login`.
 - E2E authentication test covering protected route, login, current user display, logout, and blocked access after logout.
+- PostgreSQL organizational model for partitions, companies, roles, groups, application users, user-role assignments, and user-group assignments.
+- Demo application users aligned with the local Keycloak identities `demo.admin` and `demo.signer`.
+- Admin APIs for user search, detail, create, update, activation, deactivation, and organization option lists.
+- Admin frontend page `/configurazione` for user search, editing, roles, groups, partition, company, signer fiscal code, and prepared counter-signer fiscal-code field.
+- Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
 
@@ -84,11 +89,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 6.
+- Tests run: 9.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-22T12:23:28+02:00.
+- Finished at: 2026-07-23T09:44:25+02:00.
 
 Notes:
 
@@ -116,7 +121,7 @@ Notes:
 
 - npm audit reported 4 vulnerabilities: 2 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-22 12:31 Europe/Rome.
+- Last successful lint/build run completed at 2026-07-23 09:46 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -162,8 +167,8 @@ Evidence:
 
 - Playwright ran 1 Chromium test.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-07-22 12:26 Europe/Rome.
+- Last successful run completed at 2026-07-23 09:47 Europe/Rome.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, and the frontend login/logout path works through Docker Compose. It does not prove any clinical business workflow because those workflows are still not implemented.
+The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, the frontend login/logout path works through Docker Compose, and administrative user/organization management is covered by backend integration tests. It does not prove any clinical business workflow because those workflows are still not implemented.

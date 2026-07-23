@@ -24,3 +24,21 @@ a { color: inherit; text-decoration: none; }
 .login-card { display: grid; gap: 1rem; }
 .demo-credentials { background: #eef4fb; border: 1px solid var(--border); border-radius: .5rem; padding: 1rem; }
 .demo-credentials p { margin: .25rem 0; }
+.admin-grid { align-items: start; display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) 24rem; }
+.admin-wide { max-width: none; }
+.section-title { align-items: center; display: flex; justify-content: space-between; gap: 1rem; }
+.section-title h1, .section-title p { margin: 0; }
+.search-row { display: flex; gap: .75rem; margin: 1rem 0; }
+input, select { border: 1px solid var(--border); border-radius: .35rem; font: inherit; padding: .55rem; width: 100%; }
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; font-size: .9rem; min-width: 60rem; width: 100%; }
+th, td { border-bottom: 1px solid var(--border); padding: .65rem; text-align: left; vertical-align: top; }
+td small { color: var(--muted); display: block; margin-top: .15rem; }
+.admin-form { display: grid; gap: .75rem; }
+.admin-form label { display: grid; gap: .25rem; font-weight: 700; }
+.admin-form fieldset { border: 1px solid var(--border); border-radius: .5rem; display: grid; gap: .35rem; margin: 0; padding: .75rem; }
+.admin-form legend { font-weight: 700; }
+.checkbox-line { align-items: center; display: flex !important; flex-direction: row; gap: .5rem !important; font-weight: 400 !important; }
+.checkbox-line input { width: auto; }
+.inline-error { background: #fff0f0; border: 1px solid #ffc9c9; border-radius: .5rem; color: #8a1f1f; padding: .75rem; }
+@media (max-width: 1100px) { .admin-grid { grid-template-columns: 1fr; } }

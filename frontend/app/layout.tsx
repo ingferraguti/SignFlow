@@ -12,7 +12,7 @@ const navigation = [
   { href: "/referti", label: "Referti", enabled: false },
   { href: "/firma", label: "Firma", enabled: false },
   { href: "/monitoraggio", label: "Monitoraggio", enabled: false },
-  { href: "/configurazione", label: "Configurazione", enabled: false },
+  { href: "/configurazione", label: "Configurazione", enabled: true },
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
