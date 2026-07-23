@@ -25,6 +25,17 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByRole("button", { name: "Partizioni" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Aziende" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Gruppi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Configurazioni tecniche" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sistemi eroganti" })).toBeVisible();
+  await expect(page.getByText("LIS-DEMO")).toBeVisible();
+  await page.getByLabel("Passthrough").check();
+  await expect(page.getByText("Creazione CDA e passthrough non possono essere attivi contemporaneamente.")).toBeVisible();
+  await page.getByRole("button", { name: "Provider di firma" }).click();
+  await expect(page.getByText("MOCK-REMOTE")).toBeVisible();
+  await page.getByRole("button", { name: "Account di firma" }).click();
+  await expect(page.getByRole("cell", { name: "demo-signer", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Mappature FSE" }).click();
+  await expect(page.getByText("PRESIDIO-DEMO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
 
   await page.getByRole("button", { name: "Logout" }).click();

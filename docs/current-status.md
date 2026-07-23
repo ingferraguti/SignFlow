@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-23 10:20 Europe/Rome.
+Last verified: 2026-07-23 11:29 Europe/Rome.
 
 ## Repository State
 
@@ -17,7 +17,7 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Implemented
 
-- Backend package boundaries: `audit`, `configuration`, `identity`, `reports`, `shared`, `signatures`, `sourcesystems`.
+- Backend package boundaries: `audit`, `configuration`, `identity`, `reports`, `shared`, `signatures`, `sourcesystems`, `technicalconfig`.
 - `GET /api/system/info`, returning application name, version, and `UP` status.
 - Global API error response support.
 - Actuator health endpoint.
@@ -25,7 +25,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend shell with navigation.
 - Frontend home page.
 - Frontend system status page.
-- Placeholder frontend pages for `Referti`, `Firma`, `Monitoraggio`, and `Configurazione`.
+- Placeholder frontend pages for `Referti`, `Firma`, and `Monitoraggio`; active administration page for `Configurazione`.
 - Docker Compose services for PostgreSQL, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
 - Local Keycloak realm import with `demo.admin` and `demo.signer` users.
@@ -42,6 +42,10 @@ The repository currently contains a technical foundation for SignFlow:
 - Admin CRUD-style APIs for creating, editing, activating, and deactivating partitions, companies, and groups.
 - Persisted admin UI-text configuration for menu entries and button translations.
 - Admin frontend page `/configurazione` for user search/editing, role/group/partition/company assignment, organization management, signer fiscal code, prepared counter-signer field, and UI text configuration.
+- PostgreSQL models and complete admin CRUD APIs for source systems, signature providers, signature accounts, and FSE facility mappings.
+- Source-system pipeline flags with explicit rejection of simultaneous CDA creation and passthrough.
+- Non-secret signature-provider authentication configuration and external credential references; provider passwords are not stored.
+- Technical configuration UI with demo data and configurable action/tab texts.
 - Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
@@ -49,10 +53,8 @@ The repository currently contains a technical foundation for SignFlow:
 - Report/referto domain entity and database table.
 - Patient metadata model.
 - Clinical document metadata model and object-storage integration.
-- Signature provider, signature account, signature batch, and signature attempt model.
+- Signature batch and signature attempt model.
 - Signer report list/detail/preview/signature workflow.
-- Source-system configuration and pipeline flags.
-- FSE facility mappings.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
 - Audit event persistence.
 - Analytics event persistence and publication interfaces.
@@ -87,11 +89,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 12.
+- Tests run: 17.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-23T10:17:29+02:00.
+- Finished at: 2026-07-23T11:24:58+02:00.
 
 Notes:
 
@@ -119,7 +121,7 @@ Notes:
 
 - npm audit reported 3 vulnerabilities: 1 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-23 10:18 Europe/Rome.
+- Last successful lint/build run completed at 2026-07-23 11:26 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -129,7 +131,7 @@ Command:
 .\scripts\start.ps1
 ```
 
-Result: services reached healthy/running state, although the Codex command wrapper timed out while waiting for the long Docker build.
+Result: images rebuilt successfully and all services reached healthy/running state.
 
 Evidence:
 
@@ -164,10 +166,10 @@ Result: pass.
 Evidence:
 
 - Playwright ran 1 Chromium test.
-- The authenticated admin visited `/configurazione` and saw users, organizational management, and the UI-text profile.
+- The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-07-23 09:47 Europe/Rome.
+- Last successful run completed at 2026-07-23 11:28 Europe/Rome.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, the frontend login/logout path works through Docker Compose, and administrative user/organization management is covered by backend integration tests. It does not prove any clinical business workflow because those workflows are still not implemented.
+The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, the frontend login/logout path works through Docker Compose, and user, organization, and technical configuration administration are covered by backend integration and browser tests. It does not prove any clinical business workflow because those workflows are still not implemented.

@@ -5,6 +5,7 @@ import java.time.Instant;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -19,6 +20,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "Validation failed", request.getRequestURI());
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ApiErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException exception, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Malformed or unsupported request value", request.getRequestURI());
+    }
+
     @ExceptionHandler({IllegalArgumentException.class, ConstraintViolationException.class})
     ResponseEntity<ApiErrorResponse> handleBadRequest(Exception exception, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI());
@@ -26,7 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ApiErrorResponse> handleConflict(DataIntegrityViolationException exception, HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, "The value conflicts with existing organization data", request.getRequestURI());
+        return build(HttpStatus.CONFLICT, "The value conflicts with existing configuration data", request.getRequestURI());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

@@ -12,6 +12,9 @@ const defaults: UiTexts = {
   "button.newOrganization": "Nuovo", "button.saveTexts": "Salva testi",
   "button.login": "Login with Keycloak", "button.logout": "Logout",
   "button.partitions": "Partizioni", "button.companies": "Aziende", "button.groups": "Gruppi",
+  "button.delete": "Elimina", "button.sourceSystems": "Sistemi eroganti",
+  "button.signatureProviders": "Provider di firma", "button.signatureAccounts": "Account di firma",
+  "button.fseFacilityMappings": "Mappature FSE", "button.newTechnicalConfiguration": "Nuova configurazione",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

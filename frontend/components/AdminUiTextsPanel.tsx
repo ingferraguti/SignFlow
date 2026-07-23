@@ -12,6 +12,9 @@ const textLabels: Record<string, string> = {
   "button.newOrganization": "Bottone: nuova voce organizzativa", "button.saveTexts": "Bottone: salva testi",
   "button.login": "Bottone: login", "button.logout": "Bottone: logout",
   "button.partitions": "Bottone: partizioni", "button.companies": "Bottone: aziende", "button.groups": "Bottone: gruppi",
+  "button.delete": "Bottone: elimina", "button.sourceSystems": "Bottone: sistemi eroganti",
+  "button.signatureProviders": "Bottone: provider di firma", "button.signatureAccounts": "Bottone: account di firma",
+  "button.fseFacilityMappings": "Bottone: mappature FSE", "button.newTechnicalConfiguration": "Bottone: nuova configurazione tecnica",
 };
 
 export function AdminUiTextsPanel() {

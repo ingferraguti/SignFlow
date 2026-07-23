@@ -43,3 +43,28 @@ Non-regression checks:
 
 - System status remains protected and available after login.
 - Existing OIDC login/logout E2E still passes.
+
+## Goal 4 - Technical Administration
+
+Backend tests (`AdminTechnicalConfigurationIntegrationTest`):
+
+- demo source system, signature provider, signature account, and FSE facility mapping are available;
+- no provider/account database column or API response stores a password;
+- an administrator can create, read, update, and delete all four configuration types;
+- `createCda=true` with `passthrough=true` is rejected with an explicit 400 message;
+- invalid provider authentication modes and non-HTTP provider URLs are rejected;
+- signature accounts only accept users with the `SIGNER` role;
+- FSE mappings require source system and company consistency;
+- a signer receives 403 for every technical administration resource.
+
+Frontend and E2E checks:
+
+- lint and production build pass;
+- `/configurazione` renders all four technical configuration tabs and demo records;
+- the source-system form displays an explicit incompatibility error before submission;
+- configurable admin texts include every new tab and action button.
+
+Non-regression checks:
+
+- all Goal 3 backend tests continue to pass;
+- protected system status, OIDC login/logout, user administration, organization administration, and UI-text profile remain available.
