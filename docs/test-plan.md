@@ -68,3 +68,31 @@ Non-regression checks:
 
 - all Goal 3 backend tests continue to pass;
 - protected system status, OIDC login/logout, user administration, organization administration, and UI-text profile remain available.
+
+## Goal 5 - Practices and Reports
+
+Backend tests (`AdminReportIntegrationTest`):
+
+- exact lookup by internal, external, and FSE identifier;
+- deterministic identifier precedence: internal, then external, then FSE, with descriptive filters ignored;
+- patient search by name and patient identifier;
+- signer search and signer fiscal-code search;
+- state, source-system, and department filters;
+- production, modification, and signature date intervals;
+- pagination and validated ordering;
+- rejection of invalid pages, page sizes, ordering, states, date intervals, and UUID parameters;
+- complete detail containing Practice, PatientMetadata, signer, SourceSystem, dates, flags, and state;
+- every required Report state is represented;
+- signer receives 403 on report administration search and detail.
+
+Frontend and E2E checks:
+
+- `/referti` is enabled in navigation and renders the advanced admin search;
+- exact-ID precedence is communicated and descriptive fields are disabled during exact lookup;
+- report table pagination and detail consultation work with seeded fictitious records;
+- report action buttons remain configurable from the admin UI-text profile.
+
+Non-regression checks:
+
+- all Goal 3 and Goal 4 backend tests continue to pass;
+- technical configuration, identity administration, protected system status, and OIDC login/logout remain operational.

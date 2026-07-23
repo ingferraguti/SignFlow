@@ -6,7 +6,7 @@ import { useUiTexts } from "./UiTextProvider";
 const navigation = [
   { href: "/", key: "menu.home", enabled: true },
   { href: "/system", key: "menu.system", enabled: true },
-  { href: "/referti", key: "menu.reports", enabled: false },
+  { href: "/referti", key: "menu.reports", enabled: true },
   { href: "/firma", key: "menu.signature", enabled: false },
   { href: "/monitoraggio", key: "menu.monitoring", enabled: false },
   { href: "/configurazione", key: "menu.configuration", enabled: true },

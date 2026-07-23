@@ -38,6 +38,17 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByText("PRESIDIO-DEMO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
 
+  await page.goto("/referti");
+  await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
+  await expect(page.locator("tbody tr")).toHaveCount(4);
+  await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-001");
+  await expect(page.getByLabel("Paziente")).toBeDisabled();
+  await page.getByRole("button", { name: "Cerca" }).click();
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+  await page.getByRole("button", { name: "Dettaglio" }).click();
+  await expect(page.getByRole("heading", { name: "Dettaglio referto RPT-INT-001" })).toBeVisible();
+  await expect(page.getByText("PRACTICE-DEMO-001").first()).toBeVisible();
+
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
   if (page.url().includes("localhost:8081")) {

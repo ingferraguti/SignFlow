@@ -15,6 +15,9 @@ const defaults: UiTexts = {
   "button.delete": "Elimina", "button.sourceSystems": "Sistemi eroganti",
   "button.signatureProviders": "Provider di firma", "button.signatureAccounts": "Account di firma",
   "button.fseFacilityMappings": "Mappature FSE", "button.newTechnicalConfiguration": "Nuova configurazione",
+  "button.viewDetails": "Dettaglio", "button.resetFilters": "Azzera filtri",
+  "button.closeDetails": "Chiudi dettaglio", "button.previousPage": "Pagina precedente",
+  "button.nextPage": "Pagina successiva",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

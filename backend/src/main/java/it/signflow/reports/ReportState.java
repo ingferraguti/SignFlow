@@ -1,0 +1,22 @@
+package it.signflow.reports;
+
+public enum ReportState {
+    RECEIVED,
+    PARSED,
+    INCOMPLETE,
+    MISSING_SIGNER,
+    READY_TO_SIGN,
+    PREVIEWED,
+    REVIEW_PENDING,
+    APPROVED,
+    SIGN_BATCH_CREATED,
+    SIGNING,
+    SIGNED,
+    SIGN_ERROR,
+    FSE_VALIDATION_ERROR,
+    FSE_SENT,
+    FSE_ACCEPTED,
+    FSE_REJECTED,
+    CONSERVATION_SENT,
+    CONSERVATION_ACCEPTED
+}

@@ -6,7 +6,7 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 
 | Term | Italian term | Definition | Relationship |
 | --- | --- | --- | --- |
-| Practice | Pratica | Operational case/container term sometimes used in workflow systems. The current repository does not use `Practice`. If introduced later, it must not replace `Report` automatically. | A Practice may group one or more Reports, but this is not required by the source document. |
+| Practice | Pratica | Operational case/container used to group related work without replacing the central `Report` aggregate. | A Practice groups one or more Reports; every Report belongs to one Practice in the local domain model. |
 | Report | Referto | Central workflow object to be signed, tracked, sent to FSE, and preserved. It combines metadata, state, signer assignment, source-system origin, and document references. | A Report references one or more Clinical Documents and is assigned to a Signer. |
 | ClinicalDocument | Documento clinico | Technical artifact associated with a Report: PDF, PDF/A, CDA2, XML, signed document, FSE receipt, or preservation receipt. | Stored outside PostgreSQL in object storage; PostgreSQL stores metadata, hash, version, and references. |
 | Signer | Firmatario | Clinical professional enabled to sign reports. | Can map to application users, domain accounts, and one or more signature-provider accounts. |

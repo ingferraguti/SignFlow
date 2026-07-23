@@ -6,7 +6,7 @@ SignFlow, also referred to in the source material as H-Sign or Clinical Signing 
 
 The product receives clinical reports and related artifacts from smaller clinical applications, specialist records, legacy systems, APIs, or HL7 flows; normalizes metadata; presents the work queue to signers; coordinates single and batch signing through external providers; records each relevant transition; and prepares future integrations with FSE 2.0 and digital preservation.
 
-The current repository does not yet implement these business workflows. It provides a Spring Boot backend, a Next.js frontend shell, PostgreSQL/Flyway foundations, Docker Compose, and a technical system status endpoint.
+The current repository implements the administrative foundations for identity, organization, technical pipeline configuration, and consultation of practices and reports. Signer workflows and document-processing integrations remain future work.
 
 ## Scope Principles
 
@@ -23,23 +23,24 @@ Implemented today:
 - Modular monolith backend structure under `it.signflow`.
 - Backend `GET /api/system/info`.
 - Spring Boot Actuator health endpoint.
-- Flyway migration `V1__create_application_metadata.sql`.
-- Frontend app shell with home and system status pages.
-- Placeholder frontend routes for referti, firma, monitoraggio, and configurazione.
+- Versioned Flyway schema for identity, organization, technical configuration, practices, reports, and patient metadata.
+- Frontend app shell with authenticated system, configuration, and report-consultation pages.
+- Administrative APIs and UI for users, organizations, source systems, signature providers/accounts, FSE facility mappings, and report search/detail.
+- Exact report-identifier precedence plus descriptive and date-range filters.
 - Docker Compose services for PostgreSQL, backend, and frontend.
 
 Not implemented today:
 
-- Domain entities for reports, documents, patients, users, source systems, providers, batches, HL7 messages, audit, or analytics.
-- Business REST APIs for signer or admin workflows.
+- Clinical document binary metadata/storage, signature batches, HL7 messages, audit, and analytics entities.
+- Business REST APIs for signer workflows.
 - Real or mock signature workflow.
-- HL7 intake, CDA2 generation, PDF/A conversion, object storage, FSE, preservation, authentication, authorization, analytics, or audit persistence.
+- HL7 intake, CDA2 generation, PDF/A conversion, object storage, FSE, preservation, analytics, or audit persistence.
 
 ## Domain Model
 
 The technical model must support the entities defined in `docs/domain-glossary.md`. The central aggregate for the MVP is `Report`/`Referto`, which represents the clinical signing workflow around a clinical document, patient metadata, signer, source system, technical state, and integration outcomes.
 
-The repository does not currently use the term `Practice`. If future imported code or requirements use `Practice`, map it as an operational case/container term and document how it relates to `Report`/`Referto` before renaming code. Do not indiscriminately rename existing code.
+The repository uses `Practice` as an operational case/container that groups one or more `Report` records. It does not replace or rename `Report`/`Referto`, which remains the central workflow aggregate.
 
 ## Report State Machine
 

@@ -15,6 +15,9 @@ const textLabels: Record<string, string> = {
   "button.delete": "Bottone: elimina", "button.sourceSystems": "Bottone: sistemi eroganti",
   "button.signatureProviders": "Bottone: provider di firma", "button.signatureAccounts": "Bottone: account di firma",
   "button.fseFacilityMappings": "Bottone: mappature FSE", "button.newTechnicalConfiguration": "Bottone: nuova configurazione tecnica",
+  "button.viewDetails": "Bottone: dettaglio referto", "button.resetFilters": "Bottone: azzera filtri",
+  "button.closeDetails": "Bottone: chiudi dettaglio", "button.previousPage": "Bottone: pagina precedente",
+  "button.nextPage": "Bottone: pagina successiva",
 };
 
 export function AdminUiTextsPanel() {

@@ -61,3 +61,24 @@ td small { color: var(--muted); display: block; margin-top: .15rem; }
 .form-hint { color: var(--muted); font-size: .85rem; margin: 0; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 @media (max-width: 1050px) { .technical-grid { grid-template-columns: 1fr; } }
+.reports-layout { display: grid; gap: 1rem; }
+.reports-search-card, .reports-results-card, .report-detail { max-width: none; }
+.report-filter-form { display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 1rem; }
+.report-filter-form > label, .date-range label { display: grid; gap: .25rem; font-weight: 700; }
+.report-filter-form fieldset { border: 1px solid var(--border); border-radius: .5rem; margin: 0; padding: .75rem; }
+.exact-identifiers { display: grid; gap: .75rem; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.exact-identifiers legend, .date-range legend { font-weight: 700; }
+.exact-identifiers .form-hint { grid-column: 1 / -1; }
+.date-range { display: grid; gap: .5rem; grid-template-columns: 1fr 1fr; }
+.form-actions { align-items: flex-end; display: flex; gap: .5rem; grid-column: span 2; }
+.pagination { align-items: center; display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem; }
+.state-badge { background: #eef4fb; border-radius: 999px; color: #284e78; display: inline-block; font-size: .75rem; font-weight: 700; padding: .3rem .55rem; }
+.detail-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.detail-grid div { border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+.detail-grid dt { color: var(--muted); font-size: .8rem; font-weight: 700; }
+.detail-grid dd { margin: .25rem 0 0; }
+.flag-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+.flag-list span { background: #f0f1f4; border-radius: 999px; color: var(--muted); padding: .4rem .65rem; }
+.flag-list span.enabled { background: #dff7e8; color: #116031; font-weight: 700; }
+@media (max-width: 1000px) { .report-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .report-filter-form, .exact-identifiers { grid-template-columns: 1fr; } .form-actions { grid-column: auto; } }

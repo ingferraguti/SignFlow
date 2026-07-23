@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-23 11:29 Europe/Rome.
+Last verified: 2026-07-23 12:23 Europe/Rome.
 
 ## Repository State
 
@@ -25,7 +25,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend shell with navigation.
 - Frontend home page.
 - Frontend system status page.
-- Placeholder frontend pages for `Referti`, `Firma`, and `Monitoraggio`; active administration page for `Configurazione`.
+- Placeholder frontend pages for `Firma` and `Monitoraggio`; active administration pages for `Referti` and `Configurazione`.
 - Docker Compose services for PostgreSQL, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
 - Local Keycloak realm import with `demo.admin` and `demo.signer` users.
@@ -46,12 +46,13 @@ The repository currently contains a technical foundation for SignFlow:
 - Source-system pipeline flags with explicit rejection of simultaneous CDA creation and passthrough.
 - Non-secret signature-provider authentication configuration and external credential references; provider passwords are not stored.
 - Technical configuration UI with demo data and configurable action/tab texts.
+- Practice container, Report aggregate, minimized PatientMetadata, complete report state enum, technical flags, and fictitious demo records.
+- Paginated admin report search/detail APIs with exact-ID precedence and filters for patient, signer, signer fiscal code, state, source system, department, and all report date intervals.
+- Active `/referti` administration page with advanced filters, pagination, detail consultation, and configurable action texts.
 - Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
 
-- Report/referto domain entity and database table.
-- Patient metadata model.
 - Clinical document metadata model and object-storage integration.
 - Signature batch and signature attempt model.
 - Signer report list/detail/preview/signature workflow.
@@ -89,11 +90,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 17.
+- Tests run: 23.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-23T11:24:58+02:00.
+- Finished at: 2026-07-23T12:15:54+02:00.
 
 Notes:
 
@@ -121,7 +122,7 @@ Notes:
 
 - npm audit reported 3 vulnerabilities: 1 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-23 11:26 Europe/Rome.
+- Last successful lint/build run completed at 2026-07-23 12:20 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -167,9 +168,10 @@ Evidence:
 
 - Playwright ran 1 Chromium test.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
+- The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-07-23 11:28 Europe/Rome.
+- Last successful run completed at 2026-07-23 12:22 Europe/Rome.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current technical foundation is runnable, application authentication works locally through Keycloak/OIDC, protected APIs reject unauthenticated requests, the frontend login/logout path works through Docker Compose, and user, organization, and technical configuration administration are covered by backend integration and browser tests. It does not prove any clinical business workflow because those workflows are still not implemented.
+The build/test baseline proves that the current technical foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and user, organization, technical configuration, and Practice/Report administration are covered by backend integration and browser tests. It does not yet prove signer-side signing or document-processing workflows.
