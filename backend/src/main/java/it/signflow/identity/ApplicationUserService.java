@@ -59,6 +59,8 @@ public class ApplicationUserService {
         }
         if (!organizationRepository.companyExists(request.companyId())) {
             errors.add("companyId does not exist");
+        } else if (!organizationRepository.companyBelongsToPartition(request.companyId(), request.partitionId())) {
+            errors.add("companyId does not belong to partitionId");
         }
         List<UUID> roleIds = request.roleIds() == null ? List.of() : List.copyOf(request.roleIds());
         if (!organizationRepository.rolesExist(roleIds)) {
@@ -67,6 +69,8 @@ public class ApplicationUserService {
         List<UUID> groupIds = request.groupIds() == null ? List.of() : List.copyOf(request.groupIds());
         if (!organizationRepository.groupsExist(groupIds)) {
             errors.add("one or more groupIds do not exist");
+        } else if (!organizationRepository.groupsBelongToPartition(groupIds, request.partitionId())) {
+            errors.add("one or more groupIds do not belong to partitionId");
         }
         if (!errors.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.join("; ", errors));

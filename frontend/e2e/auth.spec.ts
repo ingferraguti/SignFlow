@@ -18,6 +18,15 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByRole("heading", { name: "System status" })).toBeVisible();
   await expect(page.getByText("Application:")).toBeVisible();
 
+  await page.goto("/configurazione");
+  await expect(page.getByRole("heading", { name: "Utenti" })).toBeVisible();
+  await expect(page.getByText("demo.admin").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Struttura organizzativa" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Partizioni" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Aziende" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Gruppi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
+
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
   if (page.url().includes("localhost:8081")) {

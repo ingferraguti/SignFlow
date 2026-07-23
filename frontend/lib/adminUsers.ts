@@ -26,6 +26,11 @@ export type OrganizationOptions = {
   groups: Option[];
 };
 
+export type OrganizationType = "partitions" | "companies" | "groups";
+export type OrganizationItem = Option & { partitionId?: string | null };
+export type OrganizationItemRequest = { code: string; name: string; partitionId?: string | null; active: boolean };
+export type UiTexts = Record<string, string>;
+
 export type ApplicationUserRequest = {
   username: string;
   oidcSubject: string;
@@ -79,4 +84,27 @@ export async function saveUser(user: ApplicationUserRequest, id?: string) {
 
 export async function setUserActive(id: string, active: boolean) {
   return request<ApplicationUser>(`users/${id}/${active ? "activate" : "deactivate"}`, { method: "POST" });
+}
+
+export function fetchOrganizationItems(type: OrganizationType) {
+  return request<OrganizationItem[]>(`organization/manage/${type}`);
+}
+
+export function saveOrganizationItem(type: OrganizationType, item: OrganizationItemRequest, id?: string) {
+  return request<OrganizationItem>(`organization/manage/${type}${id ? `/${id}` : ""}`, {
+    method: id ? "PUT" : "POST",
+    body: JSON.stringify(item),
+  });
+}
+
+export function setOrganizationItemActive(type: OrganizationType, id: string, active: boolean) {
+  return request<OrganizationItem>(`organization/manage/${type}/${id}/${active ? "activate" : "deactivate"}`, { method: "POST" });
+}
+
+export function fetchUiTexts() {
+  return request<UiTexts>("ui-texts");
+}
+
+export function saveUiTexts(texts: UiTexts) {
+  return request<UiTexts>("ui-texts", { method: "PUT", body: JSON.stringify(texts) });
 }

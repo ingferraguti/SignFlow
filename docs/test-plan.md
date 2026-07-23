@@ -26,14 +26,18 @@ Backend tests:
   - administrator can search demo users;
   - administrator can read organization options;
   - signer receives 403 on administrative user APIs;
+  - signer receives 403 on organization-management and UI-text APIs;
   - administrator can create, update, activate, and deactivate an application user;
+  - administrator can create and update partitions, companies, and groups and change their active state;
+  - administrator can configure persisted menu and button translations;
+  - organization payloads are validated by the backend;
   - application user CRUD does not introduce password storage.
 
 Frontend checks:
 
 - `npm run lint`
 - `npm run build`
-- Manual or browser verification of `/configurazione` with the local Keycloak administrator.
+- Playwright verification of `/configurazione` with the local Keycloak administrator, including users, organizational structure, and admin text/translation profile.
 
 Non-regression checks:
 

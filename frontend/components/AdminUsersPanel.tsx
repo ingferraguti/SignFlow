@@ -11,6 +11,7 @@ import {
   type Option,
   type OrganizationOptions,
 } from "../lib/adminUsers";
+import { useUiTexts } from "./UiTextProvider";
 
 const emptyOptions: OrganizationOptions = { partitions: [], companies: [], roles: [], groups: [] };
 
@@ -51,6 +52,7 @@ function fromUser(user: ApplicationUser): ApplicationUserRequest {
 }
 
 export function AdminUsersPanel() {
+  const { text } = useUiTexts();
   const [users, setUsers] = useState<ApplicationUser[]>([]);
   const [options, setOptions] = useState<OrganizationOptions>(emptyOptions);
   const [query, setQuery] = useState("");
@@ -125,11 +127,11 @@ export function AdminUsersPanel() {
             <h1>Utenti</h1>
             <p>{status}</p>
           </div>
-          <button className="primary" onClick={startNew}>Nuovo</button>
+          <button className="primary" onClick={startNew}>{text("button.newUser")}</button>
         </div>
         <form className="search-row" onSubmit={(event) => { event.preventDefault(); load(query).catch((reason: Error) => setError(reason.message)); }}>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cerca per utente, nome, cognome o codice fiscale" />
-          <button className="primary" type="submit">Cerca</button>
+          <button className="primary" type="submit">{text("button.search")}</button>
         </form>
         {error ? <p className="inline-error" role="alert">{error}</p> : null}
         <div className="table-wrap">
@@ -138,14 +140,14 @@ export function AdminUsersPanel() {
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td><button onClick={() => edit(user)}>Modifica</button></td>
+                  <td><button onClick={() => edit(user)}>{text("button.edit")}</button></td>
                   <td>{user.username}<small>{user.oidcSubject}</small></td>
                   <td>{user.lastName} {user.firstName}<small>{user.email}</small></td>
                   <td>{user.partition.code}</td>
                   <td>{user.company.code}</td>
                   <td>{user.roles.map((role) => role.code).join(", ")}</td>
                   <td>{user.groups.map((group) => group.code).join(", ")}</td>
-                  <td><button onClick={() => changeActive(user)}>{user.active ? "Disattiva" : "Attiva"}</button></td>
+                  <td><button onClick={() => changeActive(user)}>{text(user.active ? "button.deactivate" : "button.activate")}</button></td>
                 </tr>
               ))}
             </tbody>
@@ -169,7 +171,7 @@ export function AdminUsersPanel() {
           <fieldset><legend>Ruoli</legend>{options.roles.map((role) => checkbox(role, form.roleIds, () => toggleSelection("roleIds", role.id)))}</fieldset>
           <fieldset><legend>Gruppi</legend>{options.groups.map((group) => checkbox(group, form.groupIds, () => toggleSelection("groupIds", group.id)))}</fieldset>
           <label className="checkbox-line"><input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} /> Attivo</label>
-          <button className="primary" type="submit">Conferma</button>
+          <button className="primary" type="submit">{text("button.confirm")}</button>
         </form>
       </section>
     </div>

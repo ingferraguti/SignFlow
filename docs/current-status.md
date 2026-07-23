@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-23 09:47 Europe/Rome.
+Last verified: 2026-07-23 10:20 Europe/Rome.
 
 ## Repository State
 
@@ -14,8 +14,6 @@ The repository currently contains a technical foundation for SignFlow:
 - Docker Compose local stack.
 - PowerShell helper scripts.
 - Existing architecture and development notes.
-
-There are local uncommitted changes outside this documentation goal. They were already present when this status was recorded and were not reverted.
 
 ## Implemented
 
@@ -41,7 +39,9 @@ There are local uncommitted changes outside this documentation goal. They were a
 - PostgreSQL organizational model for partitions, companies, roles, groups, application users, user-role assignments, and user-group assignments.
 - Demo application users aligned with the local Keycloak identities `demo.admin` and `demo.signer`.
 - Admin APIs for user search, detail, create, update, activation, deactivation, and organization option lists.
-- Admin frontend page `/configurazione` for user search, editing, roles, groups, partition, company, signer fiscal code, and prepared counter-signer fiscal-code field.
+- Admin CRUD-style APIs for creating, editing, activating, and deactivating partitions, companies, and groups.
+- Persisted admin UI-text configuration for menu entries and button translations.
+- Admin frontend page `/configurazione` for user search/editing, role/group/partition/company assignment, organization management, signer fiscal code, prepared counter-signer field, and UI text configuration.
 - Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
@@ -49,10 +49,8 @@ There are local uncommitted changes outside this documentation goal. They were a
 - Report/referto domain entity and database table.
 - Patient metadata model.
 - Clinical document metadata model and object-storage integration.
-- User, role, group, partition, company management.
 - Signature provider, signature account, signature batch, and signature attempt model.
 - Signer report list/detail/preview/signature workflow.
-- Admin CRUD APIs and pages.
 - Source-system configuration and pipeline flags.
 - FSE facility mappings.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
@@ -89,11 +87,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 9.
+- Tests run: 12.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-23T09:44:25+02:00.
+- Finished at: 2026-07-23T10:17:29+02:00.
 
 Notes:
 
@@ -119,9 +117,9 @@ Evidence:
 
 Notes:
 
-- npm audit reported 4 vulnerabilities: 2 moderate and 2 high.
+- npm audit reported 3 vulnerabilities: 1 moderate and 2 high.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-23 09:46 Europe/Rome.
+- Last successful lint/build run completed at 2026-07-23 10:18 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -166,6 +164,7 @@ Result: pass.
 Evidence:
 
 - Playwright ran 1 Chromium test.
+- The authenticated admin visited `/configurazione` and saw users, organizational management, and the UI-text profile.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
 - Last successful run completed at 2026-07-23 09:47 Europe/Rome.
 

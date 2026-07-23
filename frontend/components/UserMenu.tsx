@@ -1,9 +1,11 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
+import { useUiTexts } from "./UiTextProvider";
 
 export function UserMenu() {
   const { data: session, status } = useSession();
+  const { text } = useUiTexts();
   if (status === "loading") return <span className="user-menu">Checking session...</span>;
   if (!session?.user) return null;
 
@@ -21,7 +23,7 @@ export function UserMenu() {
     <div className="user-menu" aria-label="Current user">
       <span>Signed in as <strong>{username}</strong></span>
       <small>{roles}</small>
-      <button onClick={logout}>Logout</button>
+      <button onClick={logout}>{text("button.logout")}</button>
     </div>
   );
 }

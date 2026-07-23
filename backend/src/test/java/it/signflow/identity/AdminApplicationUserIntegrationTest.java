@@ -63,6 +63,72 @@ class AdminApplicationUserIntegrationTest {
         mockMvc.perform(get("/api/admin/users").with(signerJwt()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status", equalTo(403)));
+
+        mockMvc.perform(get("/api/admin/organization/manage/groups").with(signerJwt()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/admin/ui-texts").with(signerJwt()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void administratorCanManagePartitionsCompaniesAndGroups() throws Exception {
+        String partitionBody = """
+                {"code":"TEST-PART","name":"Test partition","active":true}
+                """;
+        String partition = mockMvc.perform(post("/api/admin/organization/manage/partitions")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(partitionBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", equalTo("TEST-PART")))
+                .andReturn().getResponse().getContentAsString();
+        String partitionId = partition.replaceAll("(?s).*?\"id\":\"([^\"]+)\".*", "$1");
+
+        String companyBody = """
+                {"code":"TEST-COMP","name":"Test company","partitionId":"%s","active":true}
+                """.formatted(partitionId);
+        mockMvc.perform(post("/api/admin/organization/manage/companies")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(companyBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.partitionId", equalTo(partitionId)));
+
+        String groupBody = """
+                {"code":"TEST-GROUP","name":"Test group","partitionId":"%s","active":true}
+                """.formatted(partitionId);
+        String group = mockMvc.perform(post("/api/admin/organization/manage/groups")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(groupBody))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String groupId = group.replaceAll("(?s).*?\"id\":\"([^\"]+)\".*", "$1");
+
+        mockMvc.perform(put("/api/admin/organization/manage/groups/" + groupId)
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON)
+                        .content(groupBody.replace("Test group", "Updated group")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", equalTo("Updated group")));
+        mockMvc.perform(post("/api/admin/organization/manage/groups/" + groupId + "/deactivate").with(adminJwt()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.active", equalTo(false)));
+    }
+
+    @Test
+    void administratorCanConfigureMenuAndButtonTexts() throws Exception {
+        mockMvc.perform(put("/api/admin/ui-texts").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"menu.configuration\":\"Amministrazione\",\"button.search\":\"Trova\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$['menu.configuration']", equalTo("Amministrazione")))
+                .andExpect(jsonPath("$['button.search']", equalTo("Trova")));
+
+        mockMvc.perform(put("/api/admin/ui-texts").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"unknown.key\":\"value\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void organizationManagementValidatesInput() throws Exception {
+        mockMvc.perform(post("/api/admin/organization/manage/groups").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"invalid code\",\"name\":\"\",\"active\":true}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
