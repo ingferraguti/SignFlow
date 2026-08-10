@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-07-23 16:11 Europe/Rome.
+Last verified: 2026-08-10 Europe/Rome.
 
 ## Repository State
 
@@ -25,7 +25,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend shell with navigation.
 - Frontend home page.
 - Frontend system status page.
-- Placeholder frontend pages for `Firma` and `Monitoraggio`; active administration pages for `Referti` and `Configurazione`.
+- Active signer portal under `/firma`, active administration pages for `Referti` and `Configurazione`, and a placeholder for `Monitoraggio`.
 - Docker Compose services for PostgreSQL, Keycloak, private MinIO object storage, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
 - Local Keycloak realm import with `demo.admin` and `demo.signer` users.
@@ -54,12 +54,26 @@ The repository currently contains a technical foundation for SignFlow:
 - Authorized PDF upload, inline/attachment download, presigned preview URL with configurable expiry, filename hardening, and configurable size limit.
 - Fictitious demo PDF materialized idempotently in MinIO for the local profile.
 - `/referti` document UI for upload, metadata/version consultation, preview, download, temporary URL copying, deleted-document visibility, and logical deletion.
+- Signer-only APIs for home counters, authorized Report search/detail, document list/preview/download, state legend, and profile.
+- Report visibility by direct signer assignment, active group membership, or partition authorization; inaccessible Reports are not disclosed.
+- Signer portal pages for home, simple/advanced search, Report detail, PDF viewer, state legend, information, profile, and logout.
+- Workflow-aware transition from `READY_TO_SIGN` to `PREVIEWED` when the signer successfully opens a PDF.
+- Explicit `Report` state machine with a dedicated application workflow service and no generic state-update API.
+- Signer assignment/removal, missing-signer and incomplete-precondition detection, and controlled promotion to `READY_TO_SIGN`.
+- Optimistic `workflow_version`, idempotency keys, append-only workflow history, and first-preview timestamp.
+- PostgreSQL trigger guard that rejects state or signer changes outside the workflow persistence path.
+- Reason-required administrative corrections limited to recoverable pre-signing states and validated against current preconditions.
+- Admin `/referti` workflow UI for assignment, readiness, correction, missing-field diagnostics, version, first preview, and transition history.
+- Persisted workflow action texts in the admin translation profile and fully fictitious workflow/document fixtures.
+- Explicit UI states for loading, empty results, API failure, expired session, unavailable document, and incomplete Report.
+- Role-aware navigation and authenticated read-only access to administrator-configured labels/translations.
+- Responsive signer layout with page-width containment and horizontally scrollable Report table on narrow screens.
 - Regression test plan in `docs/test-plan.md`.
 
 ## Not Yet Implemented
 
 - Signature batch and signature attempt model.
-- Signer report list/detail/preview/signature workflow.
+- Signature execution and signature-provider workflow (the signer list/detail/preview portal is implemented).
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
 - Audit event persistence.
 - Analytics event persistence and publication interfaces.
@@ -79,7 +93,13 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: not rerun for this status update. Backend, frontend, API, Compose, and E2E checks were run separately.
+Result: pass on 2026-08-10.
+
+Evidence:
+
+- Backend: 37 tests, 0 failures, 0 errors, 0 skipped.
+- Frontend: `npm ci`, ESLint, type validation, and production build passed.
+- Completed at 2026-08-10T18:00:46+02:00.
 
 ### Backend
 
@@ -94,11 +114,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 27.
+- Tests run: 37.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-07-23T16:08:19+02:00.
+- Finished at: 2026-08-10T18:00:46+02:00.
 
 Notes:
 
@@ -120,13 +140,13 @@ Evidence:
 - `npm ci` completed.
 - `npm run lint` passed.
 - `npm run build` passed.
-- Next.js generated 11 routes/pages.
+- Next.js generated 16 application/API routes.
 
 Notes:
 
-- npm audit reported 3 vulnerabilities: 1 moderate and 2 high.
+- npm audit reported 6 high-severity dependency findings; no automatic dependency upgrade was included in this feature scope.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-07-23 16:11 Europe/Rome.
+- Last successful lint/build run completed at 2026-08-10 18:02 Europe/Rome.
 
 ### Docker Compose Authentication Flow
 
@@ -146,7 +166,8 @@ Evidence:
 - Frontend running on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 10 migrations and applied V9/V10 successfully.
+- Flyway validated 13 migrations and applied V13 successfully to the existing local database.
+- Browser-integrated checks confirmed no horizontal page overflow at 1265 px or 390 x 844, contained scrollable tables, one-column mobile workflow actions, and no JavaScript console errors.
 - The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
 
 API spot checks:
@@ -173,13 +194,15 @@ Result: pass.
 
 Evidence:
 
-- Playwright ran 1 Chromium test.
+- Playwright ran 2 Chromium tests sequentially against the shared demo database.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
+- The administrator assigned/removed the signer, uploaded a fictitious PDF, evaluated readiness to `READY_TO_SIGN`, observed the successful workflow POST, and verified configurable workflow button texts.
+- The signer opened a controlled PDF, observed `PREVIEWED`, and exercised the portal at a 390 x 844 viewport without page overflow or JavaScript errors.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-07-23 16:06 Europe/Rome.
+- Last successful run completed at 2026-08-10 18:03 Europe/Rome: 2 passed, 0 failed.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and user, organization, technical configuration, Practice/Report, and clinical-document administration are covered by backend integration and browser tests. Real signer-side signing and document transformation workflows remain pending.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer change passes through the versioned, idempotent workflow service with test-verifiable history. Real signature execution and document transformation workflows remain pending.

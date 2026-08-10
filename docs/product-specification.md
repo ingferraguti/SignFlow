@@ -75,7 +75,7 @@ The internal workflow states to support are:
 | `CONSERVATION_SENT` | Document sent to preservation. |
 | `CONSERVATION_ACCEPTED` | Document accepted by the preservation provider. |
 
-Every state transition must eventually create append-only audit and analytics events.
+Every state transition is executed by the dedicated `ReportWorkflowService`, protected by optimistic versioning and an append-only workflow-event record. Normal controllers and repositories do not expose arbitrary state mutation. Administrative recovery is limited to explicit recoverable states and requires a reason. Publication into the broader audit and analytics event foundation remains a later integration step.
 
 ## Source-System Pipeline
 

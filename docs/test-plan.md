@@ -1,6 +1,6 @@
 # Test Plan
 
-Last updated: 2026-07-23.
+Last updated: 2026-08-10.
 
 ## Baseline Regression
 
@@ -123,3 +123,58 @@ Non-regression checks:
 
 - all Goal 3, Goal 4, and Goal 5 backend integration tests pass;
 - authentication, organization, technical configuration, report search/detail, protected system status, and OIDC login/logout remain operational.
+
+## Goal 7 - Signer Portal
+
+Backend tests (`SignerReportIntegrationTest`):
+
+- direct assignment, group authorization, and partition authorization expose only the expected Reports;
+- a foreign Report is hidden with 404 from search-adjacent detail and document APIs;
+- simple and advanced filters cover patient, type, department, state, production/signature dates, paging, empty results, and invalid criteria;
+- home counters, profile, state legend, and authenticated UI-text reading are available to the signer;
+- administrator and anonymous access to signer APIs return 403 and 401;
+- opening a real PDF through MinIO transitions a ready Report to `PREVIEWED`, while download returns the PDF bytes.
+
+Frontend, network, and E2E checks (`signer.spec.ts`):
+
+- Keycloak login as `demo.signer`, role-specific navigation, portal home, and logout;
+- five directly/group/partition-authorized demo Reports are listed and `RPT-INT-005` remains invisible;
+- simple search, detail, real PDF viewer, `PREVIEWED`, unavailable-document and incomplete-report states;
+- legend, information, and profile pages, including the signer group;
+- successful real `/api/backend/signer/reports` network response and no unexpected JavaScript console errors;
+- responsive viewport at 390 x 844 has no page overflow, a horizontal menu, and table-contained scrolling.
+
+Non-regression checks:
+
+- the complete backend suite, frontend lint/build, and both admin/signer Playwright flows pass;
+- the admin remains able to manage translated menu/button labels, while authenticated signers can read them without admin privileges.
+
+## Goal 8 - Report Workflow and Assignment
+
+Backend tests (`ReportWorkflowRulesTest`, `ReportWorkflowIntegrationTest`, `SignerReportIntegrationTest`):
+
+- the complete explicit transition matrix covers every `ReportState` and rejects skipped or terminal transitions;
+- signer assignment validates an active application user with the `SIGNER` role and detects missing signer data;
+- missing document or mandatory metadata produces `INCOMPLETE`, missing signer data produces `MISSING_SIGNER`, and satisfied preconditions produce `READY_TO_SIGN`;
+- the first controlled PDF preview records its timestamp and moves `READY_TO_SIGN` to `PREVIEWED` only through `ReportWorkflowService`;
+- the same operation key is replayed without a second version increment or duplicate event, while reuse with different payload is rejected;
+- two operations using the same expected version yield exactly one success and one optimistic-concurrency conflict;
+- administrative correction requires a nonblank reason, is restricted to explicit recoverable states, and cannot override failed preconditions;
+- the PostgreSQL guard rejects direct state or signer updates outside the workflow persistence path;
+- administrator, signer, anonymous, malformed payload, invalid signer, stale version, and forbidden-transition responses are verified.
+
+Frontend and E2E checks:
+
+- `/referti` detail shows current state/version, first preview, missing preconditions, and append-only workflow history;
+- the admin can assign or remove a signer, evaluate readiness, and submit a reasoned correction from graphical forms;
+- action availability follows the current state and every mutation sends an operation key plus expected version;
+- all workflow action labels are persisted and editable in `Profilo admin · Testi e traduzioni`;
+- the demo flow uses only explicitly fictitious Reports, patients, documents, users, and identifiers;
+- desktop and 390 x 844 layouts remain contained, workflow cards collapse to one column, and tables scroll inside their containers;
+- browser checks cover successful workflow API calls, absence of unexpected JavaScript errors, and visible error feedback.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1` after the workflow-specific checks;
+- verify admin report/document management and signer preview still pass through the dedicated workflow service;
+- verify authentication, role navigation, organization and technical configuration, status page, and existing report searches.
