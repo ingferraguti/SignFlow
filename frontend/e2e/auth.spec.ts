@@ -38,9 +38,11 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByText("PRESIDIO-DEMO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
 
+  await expect(page.getByLabel("Bottone workflow: assegna firmatario")).toHaveValue("Assegna firmatario");
+
   await page.goto("/referti");
   await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(4);
+  await expect(page.locator("tbody tr")).toHaveCount(6);
   await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-001");
   await expect(page.getByLabel("Paziente")).toBeDisabled();
   await page.getByRole("button", { name: "Cerca" }).click();
@@ -64,6 +66,37 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   const download = page.waitForEvent("download");
   await documentRow.getByRole("button", { name: "Scarica" }).click();
   expect((await download).suggestedFilename()).toBe("e2e-allegato.pdf");
+
+  await page.getByRole("button", { name: "Chiudi dettaglio" }).click();
+  await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-003");
+  await page.getByRole("button", { name: "Cerca" }).click();
+  await page.getByRole("button", { name: "Dettaglio" }).click();
+  const workflow = page.getByRole("region", { name: "Workflow e assegnazione" });
+  await expect(workflow).toBeVisible();
+  await expect(workflow.getByText(/Versione \d+/)).toBeVisible();
+  const clearSigner = workflow.getByRole("button", { name: "Rimuovi assegnazione" });
+  if (await clearSigner.isEnabled()) {
+    await clearSigner.click();
+    await expect(workflow.getByRole("status").filter({ hasText: "Assegnazione rimossa" })).toBeVisible();
+  }
+  await workflow.getByLabel("Assegnazione").selectOption("55555555-5555-5555-5555-555555555552");
+  await workflow.getByRole("button", { name: "Assegna firmatario" }).click();
+  await expect(workflow.getByRole("status").filter({ hasText: "Firmatario assegnato" })).toBeVisible();
+  await page.getByLabel("File PDF").setInputFiles({
+    name: "workflow-referto-fittizio.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n"),
+  });
+  await page.getByRole("button", { name: "Carica PDF" }).click();
+  await expect(page.getByText(/Versione \d+ caricata e verificata/)).toBeVisible();
+  const readinessCall = page.waitForResponse((response) => response.url().includes(
+    "/api/backend/admin/reports/cccccccc-cccc-cccc-cccc-ccccccccccc3/workflow/evaluate-readiness")
+    && response.request().method() === "POST");
+  await workflow.getByRole("button", { name: "Verifica completezza" }).click();
+  expect((await readinessCall).status()).toBe(200);
+  await expect(workflow.getByRole("status").filter({ hasText: "Completezza verificata" })).toBeVisible();
+  await expect(workflow.getByText("READY_TO_SIGN", { exact: true }).first()).toBeVisible();
+  await expect(workflow.getByRole("button", { name: "Applica correzione" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);

@@ -102,7 +102,10 @@ export function setOrganizationItemActive(type: OrganizationType, id: string, ac
 }
 
 export function fetchUiTexts() {
-  return request<UiTexts>("ui-texts");
+  return fetch("/api/backend/ui-texts", { cache: "no-store" }).then(async (response) => {
+    if (!response.ok) throw new Error(`UI texts request failed with status ${response.status}`);
+    return response.json() as Promise<UiTexts>;
+  });
 }
 
 export function saveUiTexts(texts: UiTexts) {

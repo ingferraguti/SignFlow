@@ -21,6 +21,14 @@ const defaults: UiTexts = {
   "button.uploadDocument": "Carica PDF", "button.previewDocument": "Anteprima",
   "button.downloadDocument": "Scarica", "button.temporaryUrl": "URL temporaneo",
   "button.deleteDocument": "Elimina documento", "button.closePreview": "Chiudi anteprima",
+  "menu.signerHome": "Home firmatario", "menu.signerReports": "I miei referti",
+  "menu.signerStates": "Legenda stati", "menu.signerInfo": "Informazioni", "menu.signerProfile": "Profilo utente",
+  "button.simpleSearch": "Ricerca semplice", "button.advancedSearch": "Ricerca avanzata",
+  "button.openReport": "Apri referto", "button.previewPdf": "Visualizza PDF", "button.downloadPdf": "Scarica PDF",
+  "button.retry": "Riprova", "button.backToReports": "Torna ai referti", "button.clearSearch": "Azzera ricerca",
+  "button.assignSigner": "Assegna firmatario", "button.clearSigner": "Rimuovi assegnazione",
+  "button.evaluateReadiness": "Verifica completezza", "button.adminCorrection": "Applica correzione",
+  "button.refreshWorkflow": "Aggiorna workflow",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

@@ -26,5 +26,7 @@ public record ReportDetailResponse(
         boolean sendUnsigned,
         boolean createCda,
         boolean passthrough,
+        long workflowVersion,
+        OffsetDateTime firstPreviewedAt,
         ReportState state) {
 }

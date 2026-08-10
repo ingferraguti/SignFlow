@@ -11,6 +11,15 @@ type KeycloakProfile = {
   realm_access?: { roles?: string[] };
 };
 
+function accessTokenRoles(accessToken: string): string[] {
+  try {
+    const payload = JSON.parse(Buffer.from(accessToken.split(".")[1], "base64url").toString("utf8")) as KeycloakProfile;
+    return payload.realm_access?.roles?.filter((role) => role === "ADMINISTRATOR" || role === "SIGNER") ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     {
@@ -42,7 +51,10 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   callbacks: {
     jwt({ token, account, profile }) {
-      if (account?.access_token) token.accessToken = account.access_token;
+      if (account?.access_token) {
+        token.accessToken = account.access_token;
+        token.roles = accessTokenRoles(account.access_token);
+      }
       if (account?.id_token) token.idToken = account.id_token;
       const keycloakProfile = profile as KeycloakProfile | undefined;
       if (keycloakProfile?.preferred_username) token.username = keycloakProfile.preferred_username;

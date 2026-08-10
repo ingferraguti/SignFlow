@@ -21,6 +21,18 @@ const textLabels: Record<string, string> = {
   "button.uploadDocument": "Bottone: carica PDF", "button.previewDocument": "Bottone: anteprima PDF",
   "button.downloadDocument": "Bottone: scarica PDF", "button.temporaryUrl": "Bottone: URL temporaneo",
   "button.deleteDocument": "Bottone: elimina documento", "button.closePreview": "Bottone: chiudi anteprima",
+  "menu.signerHome": "Menu firmatario: home", "menu.signerReports": "Menu firmatario: referti",
+  "menu.signerStates": "Menu firmatario: legenda stati", "menu.signerInfo": "Menu firmatario: informazioni",
+  "menu.signerProfile": "Menu firmatario: profilo",
+  "button.simpleSearch": "Bottone: ricerca semplice", "button.advancedSearch": "Bottone: ricerca avanzata",
+  "button.openReport": "Bottone: apri referto", "button.previewPdf": "Bottone: visualizza PDF",
+  "button.downloadPdf": "Bottone: scarica PDF", "button.retry": "Bottone: riprova",
+  "button.backToReports": "Bottone: torna ai referti", "button.clearSearch": "Bottone: azzera ricerca",
+  "button.assignSigner": "Bottone workflow: assegna firmatario",
+  "button.clearSigner": "Bottone workflow: rimuovi assegnazione",
+  "button.evaluateReadiness": "Bottone workflow: verifica completezza",
+  "button.adminCorrection": "Bottone workflow: correzione amministrativa",
+  "button.refreshWorkflow": "Bottone workflow: aggiorna dati",
 };
 
 export function AdminUiTextsPanel() {

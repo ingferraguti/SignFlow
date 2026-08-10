@@ -63,7 +63,7 @@ class AdminReportIntegrationTest {
         expectIdentifiers("?signerFiscalCode=DMSLGN80A01H501U", "RPT-INT-001", "RPT-INT-002", "RPT-INT-004");
         expectOnly("?state=MISSING_SIGNER", "RPT-INT-003");
         expectIdentifiers("?sourceSystemId=66666666-6666-6666-6666-666666666661",
-                "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004");
+                "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004", "RPT-INT-005", "RPT-INT-006");
         expectIdentifiers("?department=Cardiologia", "RPT-INT-001", "RPT-INT-002");
     }
 
@@ -77,7 +77,7 @@ class AdminReportIntegrationTest {
     @Test
     void returnsPaginatedSearchAndCompleteReportDetail() throws Exception {
         mockMvc.perform(get(ROOT + "?page=0&size=2&sortBy=internalIdentifier&direction=asc").with(adminJwt()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(4)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(6)))
                 .andExpect(jsonPath("$.items", hasSize(2)))
                 .andExpect(jsonPath("$.items[0].internalIdentifier", equalTo("RPT-INT-001")));
 

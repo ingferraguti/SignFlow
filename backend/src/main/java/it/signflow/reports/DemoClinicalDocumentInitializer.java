@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(prefix = "signflow.documents", name = "demo-enabled", havingValue = "true")
 public class DemoClinicalDocumentInitializer implements ApplicationRunner {
     private static final UUID DEMO_REPORT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-ccccccccccc1");
+    private static final UUID READY_REPORT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-ccccccccccc2");
     private final ClinicalDocumentRepository repository;
     private final ClinicalDocumentService service;
 
@@ -26,6 +27,9 @@ public class DemoClinicalDocumentInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         if (repository.list(DEMO_REPORT_ID, true).isEmpty()) {
             service.upload(DEMO_REPORT_ID, "referto-dimostrativo.pdf", demoPdf(), "demo.admin");
+        }
+        if (repository.list(READY_REPORT_ID, true).isEmpty()) {
+            service.upload(READY_REPORT_ID, "referto-pronto-fittizio.pdf", demoPdf(), "demo.admin");
         }
     }
 

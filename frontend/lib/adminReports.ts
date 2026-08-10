@@ -29,12 +29,32 @@ export type ReportDetail = {
   producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState;
   pdfA3Conversion: boolean; visibleSignature: boolean; multipleSignature: boolean;
   sendUnsigned: boolean; createCda: boolean; passthrough: boolean;
+  workflowVersion: number; firstPreviewedAt?: string;
 };
 export type ReportPage = { items: ReportSummary[]; page: number; size: number; total: number };
 export type SourceSystemOption = { id: string; code: string; description: string };
+export type WorkflowOperation = "ASSIGN_SIGNER" | "EVALUATE_READINESS" | "FIRST_PREVIEW" | "ADMIN_CORRECTION";
+export type WorkflowEvent = {
+  id: string; reportId: string; operationKey: string; operationType: WorkflowOperation;
+  fromState: ReportState; toState: ReportState; previousSignerId?: string; newSignerId?: string;
+  actorUsername: string; reason?: string; missingFields: string[]; previousVersion: number;
+  resultingVersion: number; firstPreview: boolean; createdAt: string;
+};
+export type ReportWorkflow = {
+  reportId: string; state: ReportState; version: number; assignedSignerId?: string; signerUsername?: string;
+  firstPreviewedAt?: string; missingFields: string[]; allowedTargets: ReportState[];
+  signerAssignmentAllowed: boolean; readinessEvaluationAllowed: boolean;
+  administrativeCorrectionAllowed: boolean; history: WorkflowEvent[];
+};
+export type WorkflowSigner = { id: string; username: string; displayName: string; signerFiscalCode?: string };
+export type WorkflowOperationResult = {
+  reportId: string; operationType: WorkflowOperation; fromState: ReportState; toState: ReportState;
+  previousVersion: number; resultingVersion: number; assignedSignerId?: string;
+  firstPreviewedAt?: string; missingFields: string[]; idempotent: boolean;
+};
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`/api/backend/admin/${path}`, { cache: "no-store" });
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`/api/backend/admin/${path}`, { cache: "no-store", ...init });
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as { message?: string };
     throw new Error(body.message ?? `Ricerca referti non riuscita (${response.status})`);
@@ -56,3 +76,23 @@ export function fetchReports(filters: ReportFilters, page = 0, size = 20) {
 
 export function fetchReportDetail(id: string) { return request<ReportDetail>(`reports/${id}`); }
 export function fetchReportSourceSystems() { return request<SourceSystemOption[]>("technical-config/source-systems"); }
+export function fetchReportWorkflow(id: string) { return request<ReportWorkflow>(`reports/${id}/workflow`); }
+export function fetchWorkflowSigners() { return request<WorkflowSigner[]>("reports/workflow/signers"); }
+
+function workflowPost(path: string, body: object) {
+  return request<WorkflowOperationResult>(path, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+}
+
+export function assignWorkflowSigner(reportId: string, signerId: string | undefined, expectedVersion: number, operationKey: string) {
+  return workflowPost(`reports/${reportId}/workflow/assign-signer`, { signerId, expectedVersion, operationKey });
+}
+export function evaluateWorkflowReadiness(reportId: string, expectedVersion: number, operationKey: string) {
+  return workflowPost(`reports/${reportId}/workflow/evaluate-readiness`, { expectedVersion, operationKey });
+}
+export function applyAdministrativeCorrection(reportId: string, targetState: ReportState, reason: string,
+                                               expectedVersion: number, operationKey: string) {
+  return workflowPost(`reports/${reportId}/workflow/admin-correction`,
+    { targetState, reason, expectedVersion, operationKey });
+}

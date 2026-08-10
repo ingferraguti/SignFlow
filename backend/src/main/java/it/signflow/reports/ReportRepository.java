@@ -163,6 +163,7 @@ public class ReportRepository {
                 rs.getObject("signed_at", OffsetDateTime.class), rs.getBoolean("pdf_a3_conversion"),
                 rs.getBoolean("visible_signature"), rs.getBoolean("multiple_signature"),
                 rs.getBoolean("send_unsigned"), rs.getBoolean("create_cda"), rs.getBoolean("passthrough"),
+                rs.getLong("workflow_version"), rs.getObject("first_previewed_at", OffsetDateTime.class),
                 ReportState.valueOf(rs.getString("state")));
     }
 
