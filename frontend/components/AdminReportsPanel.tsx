@@ -12,6 +12,7 @@ import { useUiTexts } from "./UiTextProvider";
 import { ClinicalDocumentsPanel } from "./ClinicalDocumentsPanel";
 import { AdminReportWorkflowPanel } from "./AdminReportWorkflowPanel";
 import { AdminReportReviewPanel } from "./AdminReportReviewPanel";
+import { AdminReportAuditTimeline } from "./AdminReportAuditTimeline";
 
 export function AdminReportsPanel() {
   const { text } = useUiTexts();
@@ -98,6 +99,7 @@ function ReportDetailPanel({ detail, workflow, review, signers, approvers, reloa
     <AdminReportWorkflowPanel detail={detail} workflow={workflow} signers={signers} reload={reload} />
     <AdminReportReviewPanel detail={detail} review={review} approvers={approvers} signers={signers} reload={reload} />
     <ClinicalDocumentsPanel reportId={detail.id} />
+    <AdminReportAuditTimeline reportId={detail.id} />
   </section>;
 }
 

@@ -39,6 +39,10 @@ const defaults: UiTexts = {
   "button.cancelBatch": "Annulla batch", "button.retrySignature": "Riprova firma mock",
   "button.signMockSingle": "Firma singola mock", "button.openSignatureBatch": "Apri riepilogo batch",
   "button.downloadMockArtifact": "Scarica attestazione mock",
+  "button.searchAudit": "Cerca eventi", "button.exportAudit": "Esporta CSV",
+  "button.saveRetention": "Salva retention", "button.applyRetention": "Applica retention",
+  "button.openTimeline": "Apri timeline", "label.auditTitle": "Audit e monitoraggio",
+  "label.reportTimeline": "Timeline della pratica",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

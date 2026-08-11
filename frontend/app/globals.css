@@ -138,6 +138,24 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .signer-document { align-items: stretch; flex-direction: column; }
   .pdf-preview iframe { min-height: 440px; }
 }
+.audit-layout { display: grid; gap: 1rem; }
+.audit-filter-card, .audit-results-card, .audit-retention-card { max-width: none; }
+.audit-filter-form { display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 1rem; }
+.audit-filter-form label, .audit-retention-card label { display: grid; gap: .3rem; font-weight: 700; }
+.audit-filter-form .form-actions { grid-column: 1 / -1; }
+.audit-table { min-width: 78rem; }
+.audit-table code { font-size: .75rem; overflow-wrap: anywhere; }
+.audit-outcome { background: #eef4fb; border-radius: 999px; color: #284e78; display: inline-block; font-size: .72rem; font-weight: 800; padding: .3rem .5rem; white-space: nowrap; }
+.audit-outcome.success { background: #dff7e8; color: #116031; }
+.audit-outcome.failure, .audit-outcome.denied { background: #ffe4e4; color: #8a1f1f; }
+.audit-outcome.pending { background: #fff7dd; color: #6d5010; }
+.audit-retention-card { align-items: end; display: grid; gap: 1rem; grid-template-columns: minmax(15rem, 1fr) minmax(22rem, 1fr); }
+.audit-retention-card form { align-items: end; display: flex; flex-wrap: wrap; gap: .6rem; }
+.audit-retention-card form label { min-width: 12rem; }
+.audit-retention-card h2, .audit-retention-card p { margin-top: 0; }
+.audit-timeline .decision-timeline { margin-top: 1rem; }
+@media (max-width: 1050px) { .audit-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .audit-retention-card { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .audit-filter-form { grid-template-columns: 1fr; } .audit-filter-form .form-actions { align-items: stretch; flex-direction: column; } .audit-retention-card form { align-items: stretch; flex-direction: column; } }
 .workflow-panel { background: #f8fafc; border: 1px solid var(--border); border-radius: .7rem; margin-top: 1.5rem; padding: 1.1rem; }
 .workflow-panel h3, .workflow-panel h4 { margin-top: 0; }
 .workflow-summary { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }

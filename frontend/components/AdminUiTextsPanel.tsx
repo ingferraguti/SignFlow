@@ -52,6 +52,13 @@ const textLabels: Record<string, string> = {
   "button.signMockSingle": "Bottone firma mock: firma singola",
   "button.openSignatureBatch": "Bottone firma mock: apri riepilogo",
   "button.downloadMockArtifact": "Bottone firma mock: scarica attestazione",
+  "button.searchAudit": "Bottone audit: cerca eventi",
+  "button.exportAudit": "Bottone audit: esporta CSV",
+  "button.saveRetention": "Bottone audit: salva retention",
+  "button.applyRetention": "Bottone audit: applica retention",
+  "button.openTimeline": "Bottone audit: apri timeline",
+  "label.auditTitle": "Titolo: audit e monitoraggio",
+  "label.reportTimeline": "Titolo: timeline della pratica",
 };
 
 export function AdminUiTextsPanel() {

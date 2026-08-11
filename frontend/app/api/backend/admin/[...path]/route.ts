@@ -20,6 +20,7 @@ async function proxy(request: NextRequest, context: Context) {
     headers: {
       Authorization: `Bearer ${session.accessToken}`,
       "content-type": request.headers.get("content-type") ?? "application/json",
+      "X-Correlation-ID": request.headers.get("X-Correlation-ID") ?? crypto.randomUUID(),
     },
     body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(),
     cache: "no-store",
@@ -28,7 +29,7 @@ async function proxy(request: NextRequest, context: Context) {
   const body = await response.arrayBuffer();
   const headers = new Headers();
   headers.set("content-type", response.headers.get("content-type") ?? "application/json");
-  for (const name of ["content-disposition", "content-length", "x-content-type-options"]) {
+  for (const name of ["content-disposition", "content-length", "x-content-type-options", "x-correlation-id"]) {
     const value = response.headers.get(name);
     if (value) headers.set(name, value);
   }

@@ -13,6 +13,8 @@ export function UserMenu() {
   const roles = session.roles.length > 0 ? session.roles.join(", ") : "no mapped roles";
 
   async function logout() {
+    await fetch("/api/backend/session-audit/logout", { method: "POST", headers: { "X-Correlation-ID": crypto.randomUUID() } }).catch(() => undefined);
+    Object.keys(sessionStorage).filter((key) => key.startsWith("signflow-login-audited:")).forEach((key) => sessionStorage.removeItem(key));
     await signOut({ redirect: false });
     const issuer = process.env.NEXT_PUBLIC_KEYCLOAK_EXTERNAL_ISSUER ?? "http://localhost:8081/realms/signflow";
     const returnTo = encodeURIComponent(`${window.location.origin}/login`);
