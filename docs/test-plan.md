@@ -271,3 +271,32 @@ Workflow and migration regression:
 - run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
 - require all 58 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
 - scan domain and UI changes to ensure no real provider brand, endpoint, or provider DTO was introduced.
+
+## Goal 7 / Delivery Objective 12 - Append-only Audit and Monitoring
+
+Focused backend tests (`AuditIntegrationTest`):
+
+- Flyway V17 creates the ledger, retention policy, privacy-safe fictional FSE/preservation events, and source-table triggers on a fresh PostgreSQL 16 database;
+- direct `UPDATE` and arbitrary `DELETE` of an audit event fail at database level;
+- forbidden sensitive metadata keys and nested/non-scalar values are rejected before persistence;
+- login and sensitive Report searches preserve a valid correlation ID and actor;
+- document upload produces an event through the database trigger and appears in the related Report timeline;
+- event type filters, pagination, and minimal metadata serialization are verified;
+- a signer receives 403 from CSV export while an administrator receives a CSV attachment;
+- retention accepts only 30-3650 days, records configuration change, and removal is restricted to expired entries through the dedicated transaction.
+
+Frontend and integrated-browser checks:
+
+- `/monitoraggio` is enabled only in administrator navigation and exposes event/actor/correlation/entity/outcome/date filters, pagination, CSV export, and retention controls;
+- the Report detail exposes a chronological application timeline combining Report, review, document, and signature events;
+- audit menu, buttons, and section titles are editable in `Profilo admin - Testi e traduzioni`;
+- completely fictional FSE and preservation events are visible without clinical payloads;
+- filter and CSV requests complete successfully and the JavaScript console is empty;
+- 1440 x 900 and 390 x 844 layouts have no page-level horizontal overflow; the table and mobile navigation scroll only inside their containers.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and `test-all.ps1`;
+- verify workflow, review, signature, document, identity, organization, technical configuration, authorization, and PAdES/adapter suites remain green;
+- verify every workflow/review/signature test fixture can be reset without mutating existing audit rows;
+- verify the Docker Compose stack migrates from V16 to V17 and all five services reach healthy/running state.

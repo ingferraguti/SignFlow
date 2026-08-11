@@ -39,6 +39,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
 
   await expect(page.getByLabel("Bottone workflow: assegna firmatario")).toHaveValue("Assegna firmatario");
+  await expect(page.getByLabel("Bottone audit: cerca eventi")).toHaveValue("Cerca eventi");
 
   await page.goto("/referti");
   await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
@@ -97,6 +98,23 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(workflow.getByRole("status").filter({ hasText: "Completezza verificata" })).toBeVisible();
   await expect(workflow.getByText("READY_TO_SIGN", { exact: true }).first()).toBeVisible();
   await expect(workflow.getByRole("button", { name: "Applica correzione" })).toBeDisabled();
+
+  const auditPageCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/audit/events?")
+    && response.request().method() === "GET");
+  await page.goto("/monitoraggio");
+  expect((await auditPageCall).status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "Audit e monitoraggio" })).toBeVisible();
+  await page.getByLabel("Tipo evento").fill("DOCUMENT_UPLOADED");
+  const auditFilterCall = page.waitForResponse((response) => response.url().includes("eventType=DOCUMENT_UPLOADED"));
+  await page.getByRole("button", { name: "Cerca eventi" }).click();
+  expect((await auditFilterCall).status()).toBe(200);
+  await expect(page.getByText("DOCUMENT_UPLOADED", { exact: true }).first()).toBeVisible();
+  const auditDownload = page.waitForEvent("download");
+  await page.getByRole("link", { name: "Esporta CSV" }).click();
+  expect((await auditDownload).suggestedFilename()).toBe("signflow-audit.csv");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);

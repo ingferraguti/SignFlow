@@ -25,7 +25,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend shell with navigation.
 - Frontend home page.
 - Frontend system status page.
-- Active signer portal under `/firma`, active administration pages for `Referti` and `Configurazione`, and a placeholder for `Monitoraggio`.
+- Active signer portal under `/firma` and active administration pages for `Referti`, `Configurazione`, and append-only audit `Monitoraggio`.
 - Docker Compose services for PostgreSQL, Keycloak, private MinIO object storage, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
 - Local Keycloak realm import with `demo.admin`, `demo.signer`, and `demo.approver` users.
@@ -58,6 +58,11 @@ The repository currently contains a technical foundation for SignFlow:
 - Report visibility by direct signer assignment, active group membership, or partition authorization; inaccessible Reports are not disclosed.
 - Signer portal pages for home, simple/advanced search, Report detail, PDF viewer, state legend, information, profile, and logout.
 - Workflow-aware transition from `READY_TO_SIGN` to `PREVIEWED` when the signer successfully opens a PDF.
+- Flyway V17 append-only `audit_events` ledger with database-level mutation guard, correlation IDs, minimal JSON metadata, configurable retention, and fictional future FSE/preservation entries.
+- Database-triggered audit coverage for Report state/signer changes, review decisions, document upload/removal, signature batches, attempts, retries, and provider outcomes.
+- HTTP audit coverage for relevant login/logout, sensitive administrator searches, document opens/uploads, and configuration mutations without request bodies or sensitive query values.
+- Administrator-only filtered/paginated audit APIs, authorized CSV export, Report/document/signature histories, retention management, responsive `/monitoraggio`, and Report-detail timeline.
+- Audit UI labels and actions persisted in the administrator text/translation profile.
 - Explicit `Report` state machine with a dedicated application workflow service and no generic state-update API.
 - Signer assignment/removal, missing-signer and incomplete-precondition detection, and controlled promotion to `READY_TO_SIGN`.
 - Optimistic `workflow_version`, idempotency keys, append-only workflow history, and first-preview timestamp.
@@ -118,9 +123,9 @@ Result: pass on 2026-08-11.
 
 Evidence:
 
-- Backend: 58 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 65 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, ESLint, type validation, and production build passed.
-- Final full baseline completed after the Goal 11 functional commit; backend and frontend evidence below comes from
+- Final full baseline completed after the Goal 12 audit implementation; backend and frontend evidence below comes from
   the same successful `test-all.ps1` run.
 
 ### Backend
@@ -136,11 +141,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 58.
+- Tests run: 65.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-11T12:55:14+02:00.
+- Finished at: 2026-08-11T15:48:07+02:00.
 
 Notes:
 
@@ -188,9 +193,10 @@ Evidence:
 - Frontend running on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 16 migrations; V16 adds only opaque provider-session, challenge, and correlation references.
+- Flyway validated 17 migrations; V17 adds the append-only audit ledger, retention policy, privacy-safe demo events, and source-table audit triggers.
 - Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
 - Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
+- Browser-integrated audit checks confirmed administrator navigation, fictional FSE/preservation entries, login/logout and sensitive-search events, filters, CSV download, Report timeline, 1440 x 900 and 390 x 844 containment, and no JavaScript errors after the final session fix.
 - The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
 
 API spot checks:
@@ -220,6 +226,7 @@ Evidence:
 - Playwright ran 4 Chromium tests sequentially against the shared demo database.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
+- The authenticated admin visited `/monitoraggio`, observed HTTP 200 audit search calls, filtered `DOCUMENT_UPLOADED`, downloaded `signflow-audit.csv`, and verified 390 x 844 page containment.
 - The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
 - The administrator assigned/removed the signer, uploaded a fictitious PDF, evaluated readiness to `READY_TO_SIGN`, observed the successful workflow POST, and verified configurable workflow button texts.
 - The signer opened a controlled PDF, observed `PREVIEWED`, and exercised the portal at a 390 x 844 viewport without page overflow or JavaScript errors.
@@ -230,4 +237,4 @@ Evidence:
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Mock single and batch signatures are operational; a local fictional PAdES Baseline B is created and validated for technical testing; legally valid signature execution and real provider integrations remain pending.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Relevant activity is reconstructable through the privacy-minimized append-only audit timeline and administrator monitoring UI. Mock single and batch signatures are operational; a local fictional PAdES Baseline B is created and validated for technical testing; legally valid signature execution and real provider integrations remain pending.

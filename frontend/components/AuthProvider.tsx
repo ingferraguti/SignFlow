@@ -15,8 +15,11 @@ function SessionAuditTracker() {
     const key = `signflow-login-audited:${username}`;
     if (sessionStorage.getItem(key)) return;
     fetch("/api/backend/session-audit/login", { method: "POST", headers: { "X-Correlation-ID": crypto.randomUUID() } })
-      .then((response) => { if (response.ok) sessionStorage.setItem(key, "true"); })
-      .catch(() => undefined);
+      .then((response) => {
+        if (response.ok) sessionStorage.setItem(key, "true");
+        else console.warn("Session audit login could not be recorded", response.status);
+      })
+      .catch(() => console.warn("Session audit login request failed"));
   }, [session, status]);
   return null;
 }

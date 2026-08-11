@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,8 +112,8 @@ class AuditService {
     }
 
     private void validateRequired(AuditRecordCommand c) {
-        if (List.of(c.eventType(), c.actorType(), c.actorId(), c.correlationId(), c.entityType(), c.entityId(), c.outcome())
-                .stream().anyMatch(value -> value == null || value.isBlank())) {
+        if (Stream.of(c.eventType(), c.actorType(), c.actorId(), c.correlationId(), c.entityType(), c.entityId(), c.outcome())
+                .anyMatch(value -> value == null || value.isBlank())) {
             throw new IllegalArgumentException("Audit event required fields cannot be blank");
         }
     }

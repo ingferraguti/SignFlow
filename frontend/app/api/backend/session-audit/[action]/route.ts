@@ -15,5 +15,6 @@ export async function POST(request: NextRequest, context: Context) {
     headers: { Authorization: `Bearer ${session.accessToken}`, "X-Correlation-ID": request.headers.get("X-Correlation-ID") ?? crypto.randomUUID() },
     cache: "no-store",
   });
+  if (!response.ok) console.warn(`Session audit backend returned ${response.status}`);
   return new NextResponse(null, { status: response.status });
 }

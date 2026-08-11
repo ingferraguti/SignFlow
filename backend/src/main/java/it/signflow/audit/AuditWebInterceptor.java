@@ -6,22 +6,22 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-@ConditionalOnBean(AuditService.class)
 public class AuditWebInterceptor implements HandlerInterceptor {
     static final String CORRELATION_ATTRIBUTE = "signflow.audit.correlationId";
     private static final String EVENT_ATTRIBUTE = "signflow.audit.eventType";
     private static final Pattern DOCUMENT_ID = Pattern.compile("/documents/([0-9a-fA-F-]{36})");
-    private final AuditService service;
+    private final ObjectProvider<AuditService> serviceProvider;
 
-    AuditWebInterceptor(AuditService service) {
-        this.service = service;
+    AuditWebInterceptor(ObjectProvider<AuditService> serviceProvider) {
+        this.serviceProvider = serviceProvider;
     }
 
     @Override
@@ -40,8 +40,10 @@ public class AuditWebInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception exception) {
         Object classified = request.getAttribute(EVENT_ATTRIBUTE);
         if (classified == null) return;
+        AuditService service = serviceProvider.getIfAvailable();
+        if (service == null) return;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String actor = authentication == null ? "anonymous" : authentication.getName();
+        String actor = actor(authentication);
         String path = request.getRequestURI();
         String entityType = classified.toString().equals("DOCUMENT_OPENED") || classified.toString().equals("DOCUMENT_UPLOAD_REQUESTED")
                 ? "DOCUMENT" : classified.toString().equals("CONFIGURATION_CHANGED") ? "CONFIGURATION" : "ADMIN_SEARCH";
@@ -74,6 +76,15 @@ public class AuditWebInterceptor implements HandlerInterceptor {
                     || path.startsWith("/api/admin/users") || path.startsWith("/api/admin/ui-texts")))
             return "CONFIGURATION_CHANGED";
         return null;
+    }
+
+    private String actor(Authentication authentication) {
+        if (authentication instanceof JwtAuthenticationToken jwt) {
+            String username = jwt.getToken().getClaimAsString("preferred_username");
+            if (username != null && !username.isBlank()) return username;
+        }
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) return "anonymous";
+        return authentication.getName();
     }
 
     private String extractEntityId(String path, String type) {
