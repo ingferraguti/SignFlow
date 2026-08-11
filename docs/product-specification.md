@@ -118,7 +118,21 @@ For the local MVP, signature execution is provided by a strictly non-legal mock 
 - Batch execution is non-atomic and must retain per-document success when another document fails.
 - Repeated operation keys are idempotent and concurrent state changes are protected by Report workflow versions and locked batch operations.
 - Successful mock artifacts are plain-text test attestations marked `MOCK ONLY`; they must not contain or resemble a legally valid digital signature.
-- Real provider authentication, certificates, cryptographic signatures, and legal validity remain out of scope.
+- Production provider authentication, qualified certificates, and legal validity remain out of scope.
+
+The technical digital-signature boundary is implemented independently from the mock UI workflow:
+
+- `DigitalSignatureEngine` isolates EU DSS from the Report domain and provider adapters.
+- The EU DSS 6.4 implementation creates PAdES Baseline B with SHA-256 from an explicitly supplied test PKCS#12,
+  validates the result against an explicit local test trust anchor, and extracts essential signature/certificate data.
+- Test certificates and PKCS#12 containers are generated in memory with fictional identities and are never configured
+  as application or provider credentials.
+- `SignatureProviderAdapter` defines session opening, challenge, OTP/equivalent authentication, document-or-digest
+  submission, polling, signed-document retrieval, typed errors, timeout, retry policy, idempotency, and correlation ID.
+- The mock and local PAdES test adapters pass the same contract tests. The local PAdES adapter is not registered as a
+  production component.
+- No vendor-specific adapter is claimed without authoritative documentation, a sandbox, and credentials. The
+  integration gate and required inputs are recorded in `docs/provider-adapter-contract.md`.
 
 Authorization rule: a signer can only see reports assigned to that signer.
 

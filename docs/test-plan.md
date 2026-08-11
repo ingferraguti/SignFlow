@@ -205,7 +205,7 @@ Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated brows
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 50 backend tests pass;
+- verify all 58 backend tests pass;
 - verify existing administrator and signer E2E flows remain green before the review E2E.
 
 ## Goal 10 - Single and Batch Mock Signature
@@ -221,7 +221,7 @@ Backend tests (`MockSignatureWorkflowIntegrationTest`, `ReportWorkflowRulesTest`
 - a repeated single submission with the same operation key returns the original batch without duplicate attempts;
 - a confirmed batch can be cancelled before start and returns reserved Reports from `SIGN_BATCH_CREATED` to `APPROVED`;
 - every Report state transition is recorded by `ReportWorkflowService`; direct SQL state changes remain guarded;
-- the full backend suite contains 50 passing tests.
+- the full backend suite contains 58 passing tests.
 
 Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated browser):
 
@@ -237,5 +237,37 @@ Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated b
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 50 backend tests, frontend lint/build, and all 4 Playwright flows;
+- verify all 58 backend tests, frontend lint/build, and all 4 Playwright flows;
 - verify authentication, admin CRUD, documents, explicit workflow, independent review, signer preview, configurable labels, and responsive navigation.
+
+## Goal 11 - Digital Signature Engine and Provider Adapters
+
+PAdES engine tests (`DssPadesSignatureEngineTest`):
+
+- generate a new RSA private key, self-signed certificate, and PKCS#12 entirely in memory with a fictional test subject;
+- verify an unsigned fictional PDF is recognized as PDF and contains no signature;
+- create a SHA-256 PAdES Baseline B signature through EU DSS 6.4 and the PDFBox implementation;
+- validate the output against the explicit local test trust anchor and require `TOTAL_PASSED`;
+- extract signature format, indication, signer/subject, issuer, serial number, digest algorithm, signing time, and
+  certificate validity interval;
+- reject non-PDF input and an invalid PKCS#12 password;
+- ensure no generated test key or authorization secret is persisted by the application.
+
+Shared adapter contract tests (`SignatureProviderAdapterContractTest`):
+
+- run the same lifecycle tests against `MockSignatureProvider` and `LocalTestSignatureProviderAdapter`;
+- open a temporary session, obtain a challenge, authenticate, submit, poll, and retrieve the result;
+- require correlation ID propagation through every response;
+- repeat a submission with the same idempotency key and require the same provider operation reference;
+- require typed, non-retryable authentication failures and typed, retryable timeout failures;
+- exercise both document and digest submission modes through the common response/error contract;
+- keep the local PAdES adapter outside the production Spring component registry.
+
+Workflow and migration regression:
+
+- run `MockSignatureWorkflowIntegrationTest` after the adapter refactor and require all seven single/batch mock
+  scenarios to remain green;
+- validate Flyway V16 on a fresh PostgreSQL 16 container and confirm the session table stores only opaque references;
+- run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
+- require all 58 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
+- scan domain and UI changes to ensure no real provider brand, endpoint, or provider DTO was introduced.

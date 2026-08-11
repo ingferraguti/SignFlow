@@ -69,12 +69,22 @@ The repository currently contains a technical foundation for SignFlow:
 - Assigned approver distinct from signer, configurable separation from producer/uploader, optimistic version protection, idempotency, and append-only decision timeline.
 - Approver-only `/api/approver/**` APIs and `/approvazioni` UI with queue, PDF viewer, decisions, and explicit preview-review-signature stepper.
 - Admin review forms for approver assignment, separation rules, return reason, and counter-signature preparation without real digital signature execution.
-- `SignatureProviderAdapter` contract and fully in-process mock provider with a five-minute provider session; the submitted mock authorization code is validated in memory and never persisted.
+- `SignatureProviderAdapter` contract and fully in-process mock provider with a short-lived provider session and
+  challenge; the submitted mock authorization code is validated in memory and never persisted.
 - `SignatureBatch` and `SignatureAttempt` persistence with manual, filtered “firma tutti”, and single selection modes; draft confirmation, pre-start cancellation, non-atomic execution, per-document outcomes, partial success, bounded retry, and idempotent operations.
 - All Report signature state changes delegate to `ReportWorkflowService`; optimistic Report versions and locked/idempotent batch operations protect repeated or concurrent submission.
 - Successful outcomes create only a plain-text `MOCK ONLY` attestation and mark the Report signature kind as `MOCK`; no certificate, cryptographic signature, or legally valid signed document is produced.
 - Signer UI under `/firma/batch` plus single-signature controls in Report detail, graphical temporary-session form, batch controls, attempt errors/retry, final summary, downloadable mock attestation, responsive layout, and administrator-configurable labels.
 - Four additional completely fictitious approved Reports exercise success, planned failure, success-after-one-retry, and multi-document success.
+- EU DSS 6.4 technical signature engine with PDFBox-backed PAdES Baseline B creation, SHA-256 signature-value verification,
+  signed-PDF validation, and extraction of format, indication, signer, subject, issuer, serial, digest, signing time, and
+  certificate validity interval.
+- Provider-neutral adapter lifecycle for session, challenge, transient OTP/equivalent authentication, document or
+  digest submission, polling, retrieval, typed errors, timeouts, retry policy, idempotency key, and correlation ID.
+- Mock and local PAdES test adapters share one contract-test suite. The local adapter is not registered in the normal
+  application context; its fictional self-signed certificate and PKCS#12 are generated in memory by tests only.
+- Provider session persistence now retains opaque provider/challenge references and correlation ID while continuing
+  to exclude OTPs, passwords, private keys, and document payloads.
 - Explicit UI states for loading, empty results, API failure, expired session, unavailable document, and incomplete Report.
 - Role-aware navigation and authenticated read-only access to administrator-configured labels/translations.
 - Responsive signer layout with page-width containment and horizontally scrollable Report table on narrow screens.
@@ -82,7 +92,9 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Not Yet Implemented
 
-- Real signature-provider integration and legally valid signature execution.
+- Real signature-provider integration, qualified certificates, and legally valid signature execution. The required
+  documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
+  `docs/provider-adapter-contract.md`.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
 - Audit event persistence.
 - Analytics event persistence and publication interfaces.
@@ -106,9 +118,10 @@ Result: pass on 2026-08-11.
 
 Evidence:
 
-- Backend: 50 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 58 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, ESLint, type validation, and production build passed.
-- Backend feature and regression suite completed at 2026-08-11T11:45:52+02:00; the final full baseline is recorded after documentation updates.
+- Final full baseline completed after the Goal 11 functional commit; backend and frontend evidence below comes from
+  the same successful `test-all.ps1` run.
 
 ### Backend
 
@@ -123,11 +136,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 50.
+- Tests run: 58.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-11T11:45:52+02:00.
+- Finished at: 2026-08-11T12:55:14+02:00.
 
 Notes:
 
@@ -155,7 +168,7 @@ Notes:
 
 - npm audit reported 6 high-severity dependency findings; no automatic dependency upgrade was included in this feature scope.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed at 2026-08-11 11:10 Europe/Rome.
+- Last successful lint/build run completed on 2026-08-11 during the final full baseline.
 
 ### Docker Compose Authentication Flow
 
@@ -175,7 +188,7 @@ Evidence:
 - Frontend running on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 15 migrations and applied V15 successfully to the existing local database.
+- Flyway validated 16 migrations; V16 adds only opaque provider-session, challenge, and correlation references.
 - Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
 - Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
 - The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
@@ -217,4 +230,4 @@ Evidence:
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Mock single and batch signatures are operational; legally valid signature execution and real provider integrations remain pending.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Mock single and batch signatures are operational; a local fictional PAdES Baseline B is created and validated for technical testing; legally valid signature execution and real provider integrations remain pending.

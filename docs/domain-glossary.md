@@ -42,6 +42,8 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | --- | --- |
 | SignatureAttempt | One attempt to sign one report, either standalone or inside a batch. Stores state, retry count, provider error, timestamps, provider ids, and optional batch reference. |
 | ProviderSession | Temporary authentication/session context with a signature provider. Must not persist provider credentials. |
+| DigitalSignatureEngine | Provider-independent cryptographic component for document verification, PAdES construction, result validation, and signature-information extraction. It does not authenticate application users or remote providers. |
+| ProviderCorrelationId | Non-sensitive identifier propagated through session, challenge, authentication, submit, polling, and retrieval operations for technical traceability. |
 | Visible signature | Provider or document configuration that makes signature appearance visible in a PDF. |
 | Multiple signature | Workflow where more than one signer/approver may be involved. The first MVP may model the flag and defer complex rules. |
 
