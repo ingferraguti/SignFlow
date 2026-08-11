@@ -8,6 +8,7 @@ export default function LoginPage() {
       <div className="demo-credentials">
         <p><strong>Administrator:</strong> demo.admin / local-admin-password</p>
         <p><strong>Signer:</strong> demo.signer / local-signer-password</p>
+        <p><strong>Approver:</strong> demo.approver / local-approver-password</p>
       </div>
       <LoginButton />
     </section>

@@ -17,6 +17,10 @@
       {
         "name": "SIGNER",
         "description": "Local demo signer role for SignFlow"
+      },
+      {
+        "name": "APPROVER",
+        "description": "Local fictional approver role for SignFlow"
       }
     ]
   },
@@ -91,6 +95,24 @@
       ],
       "realmRoles": [
         "SIGNER"
+      ]
+    },
+    {
+      "username": "demo.approver",
+      "firstName": "Demo",
+      "lastName": "Approvatore Fittizio",
+      "email": "demo.approver@signflow.invalid",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-approver-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "APPROVER"
       ]
     }
   ]

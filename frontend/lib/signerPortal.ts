@@ -1,5 +1,5 @@
 import type { ClinicalDocument } from "./adminDocuments";
-import type { ReportDetail, ReportPage, ReportState, ReportSummary } from "./adminReports";
+import type { ReportDetail, ReportPage, ReportReview, ReportState, ReportSummary, ReviewOperationResult } from "./adminReports";
 
 export type SignerFilters = {
   query: string; patient: string; documentType: string; department: string; state: string;
@@ -40,6 +40,11 @@ export const fetchSignerProfile = () => request<SignerProfile>("profile");
 export const fetchStateLegend = () => request<StateLegend[]>("states");
 export const fetchSignerReport = (id: string) => request<ReportDetail>(`reports/${id}`);
 export const fetchSignerDocuments = (id: string) => request<ClinicalDocument[]>(`reports/${id}/documents`);
+export const fetchSignerReview = (id: string) => request<ReportReview>(`reports/${id}/review`);
+export const requestSignerReview = (id: string, expectedVersion: number) => request<ReviewOperationResult>(`reports/${id}/review/request`, {
+  method: "POST", headers: { "content-type": "application/json" },
+  body: JSON.stringify({ expectedVersion, operationKey: crypto.randomUUID() }),
+});
 export const previewSignerDocument = (reportId: string, documentId: string, expectedVersion: number, operationKey: string) =>
   request<Preview>(`reports/${reportId}/documents/${documentId}/preview`, {
     method: "POST", headers: { "content-type": "application/json" },

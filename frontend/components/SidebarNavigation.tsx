@@ -25,10 +25,12 @@ export function SidebarNavigation() {
   const { data: session } = useSession();
   const isAdmin = session?.roles?.includes("ADMINISTRATOR");
   const isSigner = session?.roles?.includes("SIGNER");
+  const isApprover = session?.roles?.includes("APPROVER");
   return <aside className="sidebar" aria-label="Navigazione principale"><nav>
     {isAdmin ? adminNavigation.map((item) => item.enabled
       ? <Link key={item.href} href={item.href}>{text(item.key)}</Link>
       : <span key={item.href} aria-disabled="true">{text(item.key)}<small>planned</small></span>) : null}
     {isSigner ? signerNavigation.map((item) => <Link key={item.href} href={item.href}>{text(item.key)}</Link>) : null}
+    {isApprover ? <Link href="/approvazioni">{text("menu.approvals")}</Link> : null}
   </nav></aside>;
 }

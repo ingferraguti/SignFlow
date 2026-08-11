@@ -29,6 +29,10 @@ const defaults: UiTexts = {
   "button.assignSigner": "Assegna firmatario", "button.clearSigner": "Rimuovi assegnazione",
   "button.evaluateReadiness": "Verifica completezza", "button.adminCorrection": "Applica correzione",
   "button.refreshWorkflow": "Aggiorna workflow",
+  "menu.approvals": "Approvazioni", "button.requestApproval": "Richiedi approvazione",
+  "button.approveReport": "Approva referto", "button.rejectReport": "Rifiuta referto",
+  "button.returnReview": "Ritorna al passaggio precedente", "button.configureReview": "Salva regole di revisione",
+  "button.prepareCounterSignature": "Predisponi controfirma", "button.openReviewDocument": "Apri documento da revisionare",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

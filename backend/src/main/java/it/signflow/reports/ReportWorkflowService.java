@@ -128,6 +128,32 @@ public class ReportWorkflowService {
                 request.targetState(), current.assignedSignerId(), actor(actor), reason, missing, false);
     }
 
+    @Transactional
+    ReportWorkflowOperationResponse transitionForReview(UUID reportId, long expectedVersion, String operationKey,
+                                                        ReportWorkflowOperation operation, ReportState target,
+                                                        String actor, String reason) {
+        if (!Set.of(ReportWorkflowOperation.REQUEST_REVIEW, ReportWorkflowOperation.VIEW_REVIEW_DOCUMENT,
+                ReportWorkflowOperation.APPROVE_REVIEW, ReportWorkflowOperation.REJECT_REVIEW,
+                ReportWorkflowOperation.RETURN_REVIEW, ReportWorkflowOperation.PREPARE_COUNTER_SIGNATURE)
+                .contains(operation)) {
+            throw new IllegalArgumentException("Unsupported review workflow operation");
+        }
+        String key = operationKey(operationKey);
+        String normalizedReason = blank(reason) ? null : reason.trim();
+        String requestFingerprint = fingerprint(operation, null, target, normalizedReason);
+        ReportWorkflowOperationResponse repeated = repeated(reportId, key, requestFingerprint);
+        if (repeated != null) return repeated;
+        ReportWorkflowSnapshot current = snapshot(reportId);
+        requireVersion(current, expectedVersion);
+        ensureTransition(current.state(), target);
+        return apply(current, key, operation, requestFingerprint, target, current.assignedSignerId(),
+                actor(actor), normalizedReason, missingFields(current), false);
+    }
+
+    ReportWorkflowSnapshot currentSnapshot(UUID reportId) {
+        return snapshot(reportId);
+    }
+
     private ReportWorkflowOperationResponse apply(ReportWorkflowSnapshot current, String operationKey,
                                                    ReportWorkflowOperation operation, String fingerprint,
                                                    ReportState target, UUID newSignerId, String actor, String reason,

@@ -33,6 +33,14 @@ const textLabels: Record<string, string> = {
   "button.evaluateReadiness": "Bottone workflow: verifica completezza",
   "button.adminCorrection": "Bottone workflow: correzione amministrativa",
   "button.refreshWorkflow": "Bottone workflow: aggiorna dati",
+  "menu.approvals": "Menu approvatore: approvazioni",
+  "button.requestApproval": "Bottone revisione: richiedi approvazione",
+  "button.approveReport": "Bottone revisione: approva referto",
+  "button.rejectReport": "Bottone revisione: rifiuta referto",
+  "button.returnReview": "Bottone revisione: ritorna al passaggio precedente",
+  "button.configureReview": "Bottone revisione: salva regole",
+  "button.prepareCounterSignature": "Bottone revisione: predisponi controfirma",
+  "button.openReviewDocument": "Bottone revisione: apri documento",
 };
 
 export function AdminUiTextsPanel() {

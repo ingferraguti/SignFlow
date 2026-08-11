@@ -21,7 +21,7 @@ public final class JwtRoleExtractor {
         return collection.stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .filter(role -> role.equals("ADMINISTRATOR") || role.equals("SIGNER"))
+                .filter(role -> role.equals("ADMINISTRATOR") || role.equals("SIGNER") || role.equals("APPROVER"))
                 .sorted()
                 .toList();
     }

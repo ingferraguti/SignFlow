@@ -33,7 +33,9 @@ export type ReportDetail = {
 };
 export type ReportPage = { items: ReportSummary[]; page: number; size: number; total: number };
 export type SourceSystemOption = { id: string; code: string; description: string };
-export type WorkflowOperation = "ASSIGN_SIGNER" | "EVALUATE_READINESS" | "FIRST_PREVIEW" | "ADMIN_CORRECTION";
+export type WorkflowOperation = "ASSIGN_SIGNER" | "EVALUATE_READINESS" | "FIRST_PREVIEW" | "ADMIN_CORRECTION"
+  | "REQUEST_REVIEW" | "VIEW_REVIEW_DOCUMENT" | "APPROVE_REVIEW" | "REJECT_REVIEW"
+  | "RETURN_REVIEW" | "PREPARE_COUNTER_SIGNATURE";
 export type WorkflowEvent = {
   id: string; reportId: string; operationKey: string; operationType: WorkflowOperation;
   fromState: ReportState; toState: ReportState; previousSignerId?: string; newSignerId?: string;
@@ -47,6 +49,22 @@ export type ReportWorkflow = {
   administrativeCorrectionAllowed: boolean; history: WorkflowEvent[];
 };
 export type WorkflowSigner = { id: string; username: string; displayName: string; signerFiscalCode?: string };
+export type WorkflowApprover = { id: string; username: string; displayName: string };
+export type ReviewDecision = {
+  id: string; reportId: string; operationKey: string;
+  decisionType: "CONFIGURED" | "REQUESTED" | "VIEWED" | "APPROVED" | "REJECTED" | "RETURNED" | "COUNTER_SIGNATURE_PREPARED";
+  actorUsername: string; actorRole: string; reason?: string; fromState: ReportState; toState: ReportState;
+  previousVersion: number; resultingVersion: number; createdAt: string;
+};
+export type ReportReview = {
+  reportId: string; state: ReportState; version: number; assignedSignerId?: string; signerUsername?: string;
+  assignedApproverId?: string; approverUsername?: string; producedBy?: string; uploadedBy: string[];
+  separationRequired: boolean; counterSignatureRequired: boolean; counterSignerId?: string;
+  counterSignerUsername?: string; counterSignaturePreparedAt?: string; requestAllowed: boolean;
+  reviewDecisionAllowed: boolean; returnAllowed: boolean; counterSignaturePreparationAllowed: boolean;
+  timeline: ReviewDecision[];
+};
+export type ReviewOperationResult = { operation: ReviewDecision["decisionType"]; state: ReportState; version: number; idempotent: boolean; review: ReportReview };
 export type WorkflowOperationResult = {
   reportId: string; operationType: WorkflowOperation; fromState: ReportState; toState: ReportState;
   previousVersion: number; resultingVersion: number; assignedSignerId?: string;
@@ -78,6 +96,8 @@ export function fetchReportDetail(id: string) { return request<ReportDetail>(`re
 export function fetchReportSourceSystems() { return request<SourceSystemOption[]>("technical-config/source-systems"); }
 export function fetchReportWorkflow(id: string) { return request<ReportWorkflow>(`reports/${id}/workflow`); }
 export function fetchWorkflowSigners() { return request<WorkflowSigner[]>("reports/workflow/signers"); }
+export function fetchWorkflowApprovers() { return request<WorkflowApprover[]>("reports/review/approvers"); }
+export function fetchReportReview(id: string) { return request<ReportReview>(`reports/${id}/review`); }
 
 function workflowPost(path: string, body: object) {
   return request<WorkflowOperationResult>(path, {
@@ -95,4 +115,21 @@ export function applyAdministrativeCorrection(reportId: string, targetState: Rep
                                                expectedVersion: number, operationKey: string) {
   return workflowPost(`reports/${reportId}/workflow/admin-correction`,
     { targetState, reason, expectedVersion, operationKey });
+}
+
+function reviewPost(path: string, body: object) {
+  return request<ReviewOperationResult>(path, {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
+  });
+}
+
+export function configureReportReview(reportId: string, body: {
+  approverId?: string; separationRequired: boolean; counterSignatureRequired: boolean;
+  counterSignerId?: string; expectedVersion: number; operationKey: string;
+}) { return reviewPost(`reports/${reportId}/review/configure`, body); }
+export function returnReportReview(reportId: string, expectedVersion: number, reason: string, operationKey: string) {
+  return reviewPost(`reports/${reportId}/review/return`, { expectedVersion, reason, operationKey });
+}
+export function prepareCounterSignature(reportId: string, expectedVersion: number, counterSignerId: string | undefined, operationKey: string) {
+  return reviewPost(`reports/${reportId}/review/prepare-counter-signature`, { expectedVersion, counterSignerId, operationKey });
 }

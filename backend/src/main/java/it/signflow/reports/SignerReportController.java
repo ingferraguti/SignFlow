@@ -26,9 +26,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/signer")
 public class SignerReportController {
     private final SignerReportService service;
+    private final ReportReviewService reviewService;
 
-    public SignerReportController(SignerReportService service) {
+    public SignerReportController(SignerReportService service, ReportReviewService reviewService) {
         this.service = service;
+        this.reviewService = reviewService;
     }
 
     @GetMapping("/home")
@@ -69,6 +71,20 @@ public class SignerReportController {
                                   @Valid @RequestBody PreviewRegistrationRequest request,
                                   @AuthenticationPrincipal Jwt jwt) {
         return service.preview(username(jwt), reportId, documentId, request);
+    }
+
+    @GetMapping("/reports/{reportId}/review")
+    ReportReviewOverviewResponse review(@PathVariable UUID reportId, @AuthenticationPrincipal Jwt jwt) {
+        service.detail(username(jwt), reportId);
+        return reviewService.overview(reportId);
+    }
+
+    @PostMapping("/reports/{reportId}/review/request")
+    ReviewOperationResponse requestReview(@PathVariable UUID reportId,
+                                          @Valid @RequestBody ReviewActionRequest request,
+                                          @AuthenticationPrincipal Jwt jwt) {
+        service.detail(username(jwt), reportId);
+        return reviewService.requestReview(reportId, request, username(jwt));
     }
 
     @GetMapping("/reports/{reportId}/documents/{documentId}/content")

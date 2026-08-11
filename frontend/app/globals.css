@@ -152,3 +152,26 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .workflow-action-card .form-actions { align-items: stretch; flex-direction: column; grid-column: auto; }
 @media (max-width: 1050px) { .workflow-actions { grid-template-columns: 1fr; } }
 @media (max-width: 650px) { .workflow-panel { padding: .8rem; } .workflow-summary { align-items: flex-start; flex-direction: column; } }
+.workflow-steps { display: grid; gap: .6rem; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; margin: 1.25rem 0; padding: 0; }
+.workflow-steps li { align-items: center; background: #f0f1f4; border: 1px solid var(--border); border-radius: .6rem; color: var(--muted); display: grid; gap: .15rem; grid-template-columns: auto 1fr; min-width: 0; padding: .75rem; }
+.workflow-steps li strong { align-items: center; background: #cbd5e1; border-radius: 999px; display: flex; height: 1.8rem; justify-content: center; width: 1.8rem; }
+.workflow-steps li small { grid-column: 2; }
+.workflow-steps li.active { background: #eef4fb; border-color: #7aa8d8; color: #173f69; }
+.workflow-steps li.active strong { background: var(--accent); color: white; }
+.workflow-steps li.done { background: #e6f7ed; border-color: #8dd0a8; color: #116031; }
+.workflow-steps li.done strong { background: #21844a; color: white; }
+.decision-timeline { display: grid; gap: .6rem; }
+.decision-timeline article { align-items: start; background: white; border: 1px solid var(--border); border-radius: .55rem; display: grid; gap: .75rem; grid-template-columns: auto minmax(0, 1fr); padding: .75rem; }
+.decision-timeline small { color: var(--muted); display: block; margin-top: .2rem; }
+.decision-timeline p { margin: .35rem 0 0; }
+.review-queue { display: grid; gap: .7rem; margin-top: 1rem; }
+.review-queue article { align-items: center; border: 1px solid var(--border); border-radius: .6rem; display: grid; gap: .75rem; grid-template-columns: minmax(0, 1fr) auto auto; padding: .9rem; }
+.review-queue article div { display: grid; gap: .25rem; min-width: 0; }
+.review-queue article div span { color: var(--muted); overflow-wrap: anywhere; }
+.review-decision { display: grid; gap: .8rem; max-width: 38rem; }
+.review-decision label { display: grid; font-weight: 700; gap: .3rem; }
+@media (max-width: 650px) {
+  .workflow-steps { grid-template-columns: 1fr; }
+  .review-queue article { align-items: stretch; grid-template-columns: 1fr; }
+  .review-queue .preview-link { text-align: center; }
+}
