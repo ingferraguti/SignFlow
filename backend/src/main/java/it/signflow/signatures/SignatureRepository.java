@@ -51,13 +51,19 @@ class SignatureRepository {
                 rs.getString("provider_code"), rs.getString("adapter_type"))).optional();
     }
 
-    ProviderSessionResponse insertSession(UUID id, SignerAccount account, String username, OffsetDateTime expiresAt) {
+    ProviderSessionResponse insertSession(UUID id, SignerAccount account, String username, OffsetDateTime expiresAt,
+                                          String providerSessionReference, String challengeReference,
+                                          String correlationId) {
         jdbc.sql("""
                 insert into provider_sessions
-                    (id, signature_account_id, actor_username, provider_code, state, expires_at)
-                values (:id, :accountId, :username, :providerCode, 'ACTIVE', :expiresAt)
+                    (id, signature_account_id, actor_username, provider_code, state, expires_at,
+                     provider_session_reference, challenge_reference, correlation_id)
+                values (:id, :accountId, :username, :providerCode, 'ACTIVE', :expiresAt,
+                        :providerSessionReference, :challengeReference, :correlationId)
                 """).param("id", id).param("accountId", account.id()).param("username", username)
-                .param("providerCode", account.providerCode()).param("expiresAt", expiresAt).update();
+                .param("providerCode", account.providerCode()).param("expiresAt", expiresAt)
+                .param("providerSessionReference", providerSessionReference)
+                .param("challengeReference", challengeReference).param("correlationId", correlationId).update();
         return new ProviderSessionResponse(id, account.providerCode(), "ACTIVE", expiresAt,
                 MockSignatureProvider.MOCK_NOTICE);
     }
@@ -65,6 +71,7 @@ class SignatureRepository {
     Optional<SessionData> session(UUID id, String username) {
         return jdbc.sql("""
                 select ps.id, ps.signature_account_id, ps.provider_code, ps.expires_at, ps.state,
+                       ps.provider_session_reference, ps.challenge_reference, ps.correlation_id,
                        sa.account_alias, sp.adapter_type
                 from provider_sessions ps
                 join signature_accounts sa on sa.id=ps.signature_account_id
@@ -73,7 +80,9 @@ class SignatureRepository {
                 """).param("id", id).param("username", username).query((rs, row) -> new SessionData(
                 rs.getObject("id", UUID.class), rs.getObject("signature_account_id", UUID.class),
                 rs.getString("provider_code"), rs.getString("account_alias"), rs.getString("adapter_type"),
-                rs.getString("state"), rs.getObject("expires_at", OffsetDateTime.class))).optional();
+                rs.getString("state"), rs.getObject("expires_at", OffsetDateTime.class),
+                rs.getString("provider_session_reference"), rs.getString("challenge_reference"),
+                rs.getString("correlation_id"))).optional();
     }
 
     List<EligibleReport> eligible(String username, SignatureSelectionMode mode, List<UUID> reportIds,
@@ -227,7 +236,7 @@ class SignatureRepository {
                 """).param("retry", retry).param("id", attemptId).update();
     }
 
-    void succeed(UUID attemptId, SignatureProviderAdapter.SignatureResult result) {
+    void succeed(UUID attemptId, ProviderArtifact result) {
         jdbc.sql("""
                 update signature_attempts set state='SUCCEEDED', provider_reference=:reference,
                     artifact_id=:artifactId, artifact_name=:artifactName,
@@ -235,11 +244,11 @@ class SignatureRepository {
                     error_code=null, error_message=null, completed_at=now()
                 where id=:id
                 """).param("reference", result.providerReference()).param("artifactId", UUID.randomUUID())
-                .param("artifactName", result.artifactName()).param("notice", MockSignatureProvider.MOCK_NOTICE)
+                .param("artifactName", result.artifactName()).param("notice", result.notice())
                 .param("content", result.artifactContent()).param("id", attemptId).update();
     }
 
-    void fail(UUID attemptId, SignatureProviderAdapter.SignatureResult result) {
+    void fail(UUID attemptId, ProviderFailure result) {
         jdbc.sql("""
                 update signature_attempts set state='FAILED', error_code=:code,
                     error_message=:message, completed_at=now() where id=:id
@@ -306,10 +315,13 @@ class SignatureRepository {
 
     record SignerAccount(UUID id, String accountAlias, String providerCode, String adapterType) {}
     record SessionData(UUID id, UUID accountId, String providerCode, String accountAlias, String adapterType,
-                       String state, OffsetDateTime expiresAt) {}
+                       String state, OffsetDateTime expiresAt, String providerSessionReference,
+                       String challengeReference, String correlationId) {}
     record EligibleReport(UUID id, String identifier, long workflowVersion, int failuresBeforeSuccess) {}
     record StoredCreate(UUID batchId, String fingerprint) {}
     record StoredOperation(String type, String fingerprint) {}
+    record ProviderArtifact(String providerReference, String artifactName, String artifactContent, String notice) {}
+    record ProviderFailure(String errorCode, String errorMessage) {}
     record BatchData(UUID id, String signerUsername, String providerCode, SignatureSelectionMode selectionMode,
                      String filterSnapshot, SignatureBatchState state, long version, int totalCount,
                      int successCount, int failureCount, OffsetDateTime createdAt, OffsetDateTime confirmedAt,

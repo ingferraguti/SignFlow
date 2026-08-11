@@ -119,6 +119,15 @@ class MockSignatureWorkflowIntegrationTest {
                 .andExpect(header().string("Content-Disposition", startsWith("attachment")));
         assertThat(jdbc.sql("select signature_kind from reports where id=:id").param("id", SUCCESS_A)
                 .query(String.class).single()).isEqualTo("MOCK");
+        assertThat(jdbc.sql("""
+                select count(*) from provider_sessions
+                where provider_session_reference is not null and challenge_reference is not null
+                  and correlation_id is not null
+                """).query(Integer.class).single()).isEqualTo(1);
+        assertThat(jdbc.sql("""
+                select count(*) from information_schema.columns
+                where table_name='provider_sessions' and column_name in ('authorization_code','otp','password')
+                """).query(Integer.class).single()).isZero();
     }
 
     @Test

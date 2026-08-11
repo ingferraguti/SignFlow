@@ -8,6 +8,7 @@ import it.signflow.reports.ReportWorkflowService;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -25,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class SignatureService {
+    private static final Duration PROVIDER_TIMEOUT = Duration.ofSeconds(10);
+    private static final SignatureProviderAdapter.RetryPolicy PROVIDER_RETRY =
+            new SignatureProviderAdapter.RetryPolicy(3, Duration.ofMillis(100));
     private final SignatureRepository repository;
     private final ReportWorkflowService workflow;
     private final ObjectMapper objectMapper;
@@ -43,10 +47,17 @@ public class SignatureService {
     public ProviderSessionResponse openSession(String username, ProviderSessionRequest request) {
         SignatureRepository.SignerAccount account = account(username);
         SignatureProviderAdapter adapter = adapter(account.adapterType());
+        String correlationId = UUID.randomUUID().toString();
+        var providerSession = adapter.openSession(new SignatureProviderAdapter.OpenSessionCommand(
+                account.providerCode(), account.accountAlias(), correlationId, PROVIDER_TIMEOUT));
+        var challenge = adapter.requestChallenge(new SignatureProviderAdapter.ChallengeCommand(
+                providerSession.sessionReference(), correlationId, PROVIDER_TIMEOUT));
         var result = adapter.authenticate(new SignatureProviderAdapter.AuthenticationCommand(
-                account.providerCode(), account.accountAlias(), request.authorizationCode()));
+                providerSession.sessionReference(), challenge.challengeReference(), request.authorizationCode(),
+                correlationId, PROVIDER_TIMEOUT));
         if (!result.authenticated()) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, result.message());
-        return repository.insertSession(UUID.randomUUID(), account, username, OffsetDateTime.now().plusMinutes(5));
+        return repository.insertSession(UUID.randomUUID(), account, username, providerSession.expiresAt(),
+                providerSession.sessionReference(), challenge.challengeReference(), correlationId);
     }
 
     @Transactional
@@ -202,22 +213,64 @@ public class SignatureService {
                 startOperation, ReportState.SIGNING, username, "Provider " + session.providerCode());
         repository.markSigning(attempt.id(), retry);
         SignatureRepository.AttemptData signing = repository.attempt(batchId, attempt.id()).orElseThrow();
-        var result = adapter(session.adapterType()).sign(new SignatureProviderAdapter.SignatureCommand(
-                session.providerCode(), session.accountAlias(), signing.reportIdentifier(),
-                signing.retryCount(), signing.failuresBeforeSuccess()));
-        if (result.successful()) {
-            repository.succeed(signing.id(), result);
+        SignatureProviderAdapter provider = adapter(session.adapterType());
+        String correlationId = UUID.randomUUID().toString();
+        SignatureProviderAdapter.SubmissionResult submission;
+        try {
+            submission = provider.submit(new SignatureProviderAdapter.SignatureCommand(
+                    session.providerSessionReference(), signing.reportIdentifier(),
+                    SignatureProviderAdapter.PayloadMode.DOCUMENT,
+                    signing.reportIdentifier().getBytes(StandardCharsets.UTF_8), "SHA-256",
+                    signing.retryCount(), signing.failuresBeforeSuccess(),
+                    batchId + "-" + signing.id() + "-" + signing.retryCount(), PROVIDER_RETRY,
+                    correlationId, PROVIDER_TIMEOUT));
+            for (int poll = 0; poll < PROVIDER_RETRY.maxAttempts()
+                    && (submission.state() == SignatureProviderAdapter.SubmissionState.ACCEPTED
+                    || submission.state() == SignatureProviderAdapter.SubmissionState.PROCESSING); poll++) {
+                var polled = provider.poll(new SignatureProviderAdapter.PollCommand(
+                        session.providerSessionReference(), submission.operationReference(), correlationId,
+                        PROVIDER_TIMEOUT));
+                submission = new SignatureProviderAdapter.SubmissionResult(polled.operationReference(),
+                        polled.state(), polled.providerReference(), polled.error(), polled.correlationId());
+            }
+        } catch (SignatureProviderAdapter.ProviderAdapterException exception) {
+            failProviderAttempt(username, batchId, signing, exception.error().code(), exception.error().message());
+            return;
+        }
+        if (submission.state() == SignatureProviderAdapter.SubmissionState.SUCCEEDED) {
+            SignatureProviderAdapter.RetrievedDocument document;
+            try {
+                document = provider.retrieve(new SignatureProviderAdapter.RetrieveCommand(
+                        session.providerSessionReference(), submission.operationReference(), correlationId,
+                        PROVIDER_TIMEOUT));
+            } catch (SignatureProviderAdapter.ProviderAdapterException exception) {
+                failProviderAttempt(username, batchId, signing, exception.error().code(), exception.error().message());
+                return;
+            }
+            String artifactContent = document.mediaType().startsWith("text/")
+                    ? new String(document.content(), StandardCharsets.UTF_8)
+                    : java.util.Base64.getEncoder().encodeToString(document.content());
+            repository.succeed(signing.id(), new SignatureRepository.ProviderArtifact(document.providerReference(),
+                    document.filename(), artifactContent, MockSignatureProvider.MOCK_NOTICE));
             workflow.transitionForSignature(signing.reportId(), signing.workflowVersion(),
                     batchId + "-success-" + signing.id() + "-" + signing.retryCount(),
                     ReportWorkflowOperation.COMPLETE_MOCK_SIGNATURE, ReportState.SIGNED, username,
-                    result.providerReference());
+                    document.providerReference());
         } else {
-            repository.fail(signing.id(), result);
-            workflow.transitionForSignature(signing.reportId(), signing.workflowVersion(),
-                    batchId + "-failure-" + signing.id() + "-" + signing.retryCount(),
-                    ReportWorkflowOperation.FAIL_MOCK_SIGNATURE, ReportState.SIGN_ERROR, username,
-                    result.errorCode());
+            SignatureProviderAdapter.ProviderError error = submission.error() == null
+                    ? new SignatureProviderAdapter.ProviderError("PROVIDER_TIMEOUT",
+                    "Il provider non ha completato l'operazione entro il limite di polling",
+                    SignatureProviderAdapter.ErrorCategory.TIMEOUT, true) : submission.error();
+            failProviderAttempt(username, batchId, signing, error.code(), error.message());
         }
+    }
+
+    private void failProviderAttempt(String username, UUID batchId, SignatureRepository.AttemptData signing,
+                                     String errorCode, String errorMessage) {
+        repository.fail(signing.id(), new SignatureRepository.ProviderFailure(errorCode, errorMessage));
+        workflow.transitionForSignature(signing.reportId(), signing.workflowVersion(),
+                batchId + "-failure-" + signing.id() + "-" + signing.retryCount(),
+                ReportWorkflowOperation.FAIL_MOCK_SIGNATURE, ReportState.SIGN_ERROR, username, errorCode);
     }
 
     private boolean repeated(UUID batchId, String key, String fingerprint) {
