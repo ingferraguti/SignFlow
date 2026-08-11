@@ -99,6 +99,8 @@ The signer-facing application must provide:
 - Report list with simple and advanced search.
 - Selectable table of assigned reports.
 - Report detail and controlled PDF preview.
+- Optional independent review before signature, with assigned approver, reason-required rejection, controlled return, and decision timeline.
+- Counter-signature participant preparation without executing the real digital signature.
 - Single report signature.
 - Batch signature creation from selected reports or "sign all" filtered results.
 - Batch review before execution.

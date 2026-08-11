@@ -1,6 +1,6 @@
 # Test Plan
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 ## Baseline Regression
 
@@ -178,3 +178,32 @@ Non-regression checks:
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1` after the workflow-specific checks;
 - verify admin report/document management and signer preview still pass through the dedicated workflow service;
 - verify authentication, role navigation, organization and technical configuration, status page, and existing report searches.
+
+## Goal 9 - Review, Approval, and Counter-signature Preparation
+
+Backend tests (`ReportReviewIntegrationTest`, `ReportWorkflowRulesTest`):
+
+- the assigned signer requests review only after preview and the state moves from `PREVIEWED` to `REVIEW_PENDING`;
+- the assigned approver records document view, approves to `APPROVED`, or rejects to `PREVIEWED` with a mandatory reason;
+- an administrator can return `APPROVED` to `REVIEW_PENDING` and `REVIEW_PENDING` to `PREVIEWED`, always with a reason;
+- role separation blocks an approver who is also the signer, producer, or active-document uploader when independence is required;
+- `APPROVER`, `SIGNER`, and `ADMINISTRATOR` endpoints reject callers with the wrong role;
+- repeated operation keys replay the stored result, while concurrent approvals using the same expected version yield one success and one conflict;
+- counter-signature preparation records participant and timestamp while leaving `signed_at` empty and state `APPROVED`;
+- the append-only decision timeline records request, view, approval, rejection, return, configuration, and counter-signature preparation.
+
+Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated browser):
+
+- signer and approver detail show preview, review, and signature as three explicit steps;
+- `/approvazioni` exposes queue, PDF view, approval, reason-required rejection, and decision timeline only to the approver;
+- admin Report detail configures approver, separation, controlled return, and counter-signature preparation;
+- new menu and action labels are persisted in `Profilo admin - Testi e traduzioni`;
+- review request, document view, and approval POSTs return HTTP 200;
+- desktop and 390 x 844 layouts have no page overflow and the stepper changes from three columns to one;
+- the integrated browser confirms the PDF iframe, `VIEWED`/`APPROVED` timeline entries, success feedback, and an empty JavaScript console.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
+- verify all 43 backend tests pass;
+- verify existing administrator and signer E2E flows remain green before the review E2E.
