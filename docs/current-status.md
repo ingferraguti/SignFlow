@@ -69,6 +69,12 @@ The repository currently contains a technical foundation for SignFlow:
 - Assigned approver distinct from signer, configurable separation from producer/uploader, optimistic version protection, idempotency, and append-only decision timeline.
 - Approver-only `/api/approver/**` APIs and `/approvazioni` UI with queue, PDF viewer, decisions, and explicit preview-review-signature stepper.
 - Admin review forms for approver assignment, separation rules, return reason, and counter-signature preparation without real digital signature execution.
+- `SignatureProviderAdapter` contract and fully in-process mock provider with a five-minute provider session; the submitted mock authorization code is validated in memory and never persisted.
+- `SignatureBatch` and `SignatureAttempt` persistence with manual, filtered “firma tutti”, and single selection modes; draft confirmation, pre-start cancellation, non-atomic execution, per-document outcomes, partial success, bounded retry, and idempotent operations.
+- All Report signature state changes delegate to `ReportWorkflowService`; optimistic Report versions and locked/idempotent batch operations protect repeated or concurrent submission.
+- Successful outcomes create only a plain-text `MOCK ONLY` attestation and mark the Report signature kind as `MOCK`; no certificate, cryptographic signature, or legally valid signed document is produced.
+- Signer UI under `/firma/batch` plus single-signature controls in Report detail, graphical temporary-session form, batch controls, attempt errors/retry, final summary, downloadable mock attestation, responsive layout, and administrator-configurable labels.
+- Four additional completely fictitious approved Reports exercise success, planned failure, success-after-one-retry, and multi-document success.
 - Explicit UI states for loading, empty results, API failure, expired session, unavailable document, and incomplete Report.
 - Role-aware navigation and authenticated read-only access to administrator-configured labels/translations.
 - Responsive signer layout with page-width containment and horizontally scrollable Report table on narrow screens.
@@ -76,8 +82,7 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Not Yet Implemented
 
-- Signature batch and signature attempt model.
-- Signature execution and signature-provider workflow (the signer list/detail/preview portal is implemented).
+- Real signature-provider integration and legally valid signature execution.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
 - Audit event persistence.
 - Analytics event persistence and publication interfaces.
@@ -85,7 +90,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Digital preservation packaging/submission.
 - ClickHouse, OpenSearch, Kafka/RabbitMQ, Superset, or Knowage.
 - Production identity-provider hardening and real organization user provisioning.
-- Signature-provider authentication, which remains a separate future concern.
+- Production signature-provider authentication and credential-vault integration.
 
 ## Baseline Commands
 
@@ -101,9 +106,9 @@ Result: pass on 2026-08-11.
 
 Evidence:
 
-- Backend: 43 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 50 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, ESLint, type validation, and production build passed.
-- Completed at 2026-08-11T11:09:44+02:00 for backend, followed by a successful frontend build.
+- Backend feature and regression suite completed at 2026-08-11T11:45:52+02:00; the final full baseline is recorded after documentation updates.
 
 ### Backend
 
@@ -118,11 +123,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 43.
+- Tests run: 50.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-11T11:09:44+02:00.
+- Finished at: 2026-08-11T11:45:52+02:00.
 
 Notes:
 
@@ -144,7 +149,7 @@ Evidence:
 - `npm ci` completed.
 - `npm run lint` passed.
 - `npm run build` passed.
-- Next.js generated 17 application pages plus the approver backend proxy route.
+- Next.js generated the signer batch list/detail routes together with all existing admin, signer, and approver routes.
 
 Notes:
 
@@ -170,8 +175,9 @@ Evidence:
 - Frontend running on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 14 migrations and applied V14 successfully to the existing local database.
-- Browser-integrated checks confirmed no horizontal page overflow at 1440 px or 390 x 844, a three-column/one-column responsive review stepper, controlled PDF viewer, review timeline, and no JavaScript console errors.
+- Flyway validated 15 migrations and applied V15 successfully to the existing local database.
+- Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
+- Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
 - The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
 
 API spot checks:
@@ -198,16 +204,17 @@ Result: pass.
 
 Evidence:
 
-- Playwright ran 3 Chromium tests sequentially against the shared demo database.
+- Playwright ran 4 Chromium tests sequentially against the shared demo database.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
 - The administrator assigned/removed the signer, uploaded a fictitious PDF, evaluated readiness to `READY_TO_SIGN`, observed the successful workflow POST, and verified configurable workflow button texts.
 - The signer opened a controlled PDF, observed `PREVIEWED`, and exercised the portal at a 390 x 844 viewport without page overflow or JavaScript errors.
 - The signer requested review, the approver recorded document view and approved to `APPROVED`, and the administrator restored the fictitious demo through controlled returns.
+- The signer opened a temporary mock-provider session, executed one approved Report, received HTTP 200 for both network calls, saw the explicit non-legal outcome and responsive final batch summary, and the test runner restored the four signature fixtures afterward.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-08-11 Europe/Rome: 3 passed, 0 failed.
+- Last successful run completed at 2026-08-11 Europe/Rome: 4 passed, 0 failed.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer change passes through the versioned, idempotent workflow service with test-verifiable history. Real signature execution and document transformation workflows remain pending.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Mock single and batch signatures are operational; legally valid signature execution and real provider integrations remain pending.

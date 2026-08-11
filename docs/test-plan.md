@@ -205,5 +205,37 @@ Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated brows
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 43 backend tests pass;
+- verify all 50 backend tests pass;
 - verify existing administrator and signer E2E flows remain green before the review E2E.
+
+## Goal 10 - Single and Batch Mock Signature
+
+Backend tests (`MockSignatureWorkflowIntegrationTest`, `ReportWorkflowRulesTest`):
+
+- a temporary provider session accepts only the explicit demo code, expires after five minutes, and persists no submitted credential;
+- a successful single operation reaches `SIGNED`, stores `signature_kind=MOCK`, and exposes only a text artifact marked `MOCK ONLY`;
+- a planned single failure reaches `SIGN_ERROR` with provider error code/message and no artifact;
+- a filtered “firma tutti” batch snapshots all matching visible `APPROVED` Reports and completes with per-document results;
+- a manual batch preserves successful attempts and reports `PARTIAL_SUCCESS` when another document fails;
+- a bounded retry increments `retryCount` and can turn the configured fail-once scenario into success;
+- a repeated single submission with the same operation key returns the original batch without duplicate attempts;
+- a confirmed batch can be cancelled before start and returns reserved Reports from `SIGN_BATCH_CREATED` to `APPROVED`;
+- every Report state transition is recorded by `ReportWorkflowService`; direct SQL state changes remain guarded;
+- the full backend suite contains 50 passing tests.
+
+Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated browser):
+
+- the Report detail preserves the explicit Anteprima, Revisione, Firma sequence and labels the provider as non-legal mock;
+- selection checkboxes are enabled only for `APPROVED` Reports, with manual batch and filtered “firma tutti” controls;
+- `/firma/batch` lists batches and the detail exposes provider session, confirmation, start, pre-start cancellation, retry, per-document result, and final summary;
+- every new menu/button label is persisted and editable in the administrator text/translation profile;
+- provider-session and single-signature POSTs return HTTP 200 and lead to `COMPLETED`/`SUCCEEDED`;
+- downloadable output is a text attestation with the `MOCK-NON-LEGAL` response header, never a signed PDF;
+- 1440 x 900 and 390 x 844 layouts have no page overflow, the batch summary changes from four to two columns, and the JavaScript console is empty;
+- the E2E runner restores only the four fully fictitious signature fixtures before and after the suite.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
+- verify all 50 backend tests, frontend lint/build, and all 4 Playwright flows;
+- verify authentication, admin CRUD, documents, explicit workflow, independent review, signer preview, configurable labels, and responsive navigation.

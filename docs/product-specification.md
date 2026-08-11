@@ -107,6 +107,19 @@ The signer-facing application must provide:
 - Temporary provider authentication/session flow.
 - Per-document result display after batch execution.
 
+For the local MVP, signature execution is provided by a strictly non-legal mock adapter:
+
+- `SignatureProviderAdapter` keeps provider-specific behavior outside the Report workflow and UI.
+- `ProviderSession` is temporary and never stores the submitted authorization code.
+- `SignatureBatch` has draft, confirmed, running, completed, partial-success, failed, and cancelled states.
+- Each selected Report has a `SignatureAttempt` with its own outcome, bounded retry counter, provider error, and timestamps.
+- Manual selection and “sign all” operate on a deterministic snapshot of Reports visible to the signer and currently `APPROVED`.
+- Confirmation reserves every Report through the workflow service; cancellation before start returns confirmed Reports to `APPROVED`.
+- Batch execution is non-atomic and must retain per-document success when another document fails.
+- Repeated operation keys are idempotent and concurrent state changes are protected by Report workflow versions and locked batch operations.
+- Successful mock artifacts are plain-text test attestations marked `MOCK ONLY`; they must not contain or resemble a legally valid digital signature.
+- Real provider authentication, certificates, cryptographic signatures, and legal validity remain out of scope.
+
 Authorization rule: a signer can only see reports assigned to that signer.
 
 ## Admin Application
@@ -132,14 +145,16 @@ Signer APIs to implement:
 | `GET` | `/api/reports` | Filtered list of reports visible to the signer. |
 | `GET` | `/api/reports/{id}` | Report detail. |
 | `GET` | `/api/reports/{id}/preview` | Temporary URL or controlled PDF stream. |
-| `POST` | `/api/reports/{id}/sign` | Single signature. |
-| `POST` | `/api/signature-batches` | Create batch from selection or filters. |
-| `GET` | `/api/signature-batches/{id}` | Batch detail and included reports. |
-| `POST` | `/api/signature-batches/{id}/confirm` | Confirm reviewed batch. |
-| `POST` | `/api/signature-batches/{id}/sign` | Start batch signature. |
-| `GET` | `/api/signature-batches/{id}/result` | Batch outcome. |
+| `POST` | `/api/signer/signatures/single` | Execute one mock signature through a temporary provider session. |
+| `POST` | `/api/signer/signatures/batches` | Create a draft batch from manual selection or filtered results. |
+| `GET` | `/api/signer/signatures/batches/{id}` | Batch summary and per-document attempts. |
+| `POST` | `/api/signer/signatures/batches/{id}/confirm` | Confirm and reserve the reviewed batch. |
+| `POST` | `/api/signer/signatures/batches/{id}/start` | Start mock batch execution. |
+| `POST` | `/api/signer/signatures/batches/{id}/attempts/{attemptId}/retry` | Retry one failed attempt within its configured limit. |
+| `POST` | `/api/signer/signatures/batches/{id}/cancel` | Cancel a draft or confirmed batch before start. |
+| `GET` | `/api/signer/signatures/artifacts/{artifactId}` | Download a non-legal plain-text mock attestation. |
 | `GET` | `/api/signature-providers` | Available providers for the user. |
-| `POST` | `/api/signature-providers/{id}/session` | Temporary provider session. |
+| `POST` | `/api/signer/signatures/provider-sessions` | Create a temporary mock provider session without persisting the code. |
 
 Admin APIs to implement:
 
