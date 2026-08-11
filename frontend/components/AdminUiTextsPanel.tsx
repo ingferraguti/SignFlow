@@ -41,6 +41,17 @@ const textLabels: Record<string, string> = {
   "button.configureReview": "Bottone revisione: salva regole",
   "button.prepareCounterSignature": "Bottone revisione: predisponi controfirma",
   "button.openReviewDocument": "Bottone revisione: apri documento",
+  "menu.signatureBatches": "Menu firmatario: firma mock",
+  "button.startProviderSession": "Bottone firma mock: avvia sessione",
+  "button.createManualBatch": "Bottone firma mock: batch manuale",
+  "button.signAllFiltered": "Bottone firma mock: firma tutti filtrati",
+  "button.confirmBatch": "Bottone firma mock: conferma batch",
+  "button.startBatch": "Bottone firma mock: avvia batch",
+  "button.cancelBatch": "Bottone firma mock: annulla batch",
+  "button.retrySignature": "Bottone firma mock: retry",
+  "button.signMockSingle": "Bottone firma mock: firma singola",
+  "button.openSignatureBatch": "Bottone firma mock: apri riepilogo",
+  "button.downloadMockArtifact": "Bottone firma mock: scarica attestazione",
 };
 
 export function AdminUiTextsPanel() {

@@ -33,6 +33,12 @@ const defaults: UiTexts = {
   "button.approveReport": "Approva referto", "button.rejectReport": "Rifiuta referto",
   "button.returnReview": "Ritorna al passaggio precedente", "button.configureReview": "Salva regole di revisione",
   "button.prepareCounterSignature": "Predisponi controfirma", "button.openReviewDocument": "Apri documento da revisionare",
+  "menu.signatureBatches": "Firma mock", "button.startProviderSession": "Avvia sessione mock",
+  "button.createManualBatch": "Crea batch dai selezionati", "button.signAllFiltered": "Firma tutti i risultati filtrati",
+  "button.confirmBatch": "Conferma batch", "button.startBatch": "Avvia firma mock",
+  "button.cancelBatch": "Annulla batch", "button.retrySignature": "Riprova firma mock",
+  "button.signMockSingle": "Firma singola mock", "button.openSignatureBatch": "Apri riepilogo batch",
+  "button.downloadMockArtifact": "Scarica attestazione mock",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

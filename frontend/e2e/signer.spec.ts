@@ -13,7 +13,7 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   await page.goto("/firma");
 
   await expect(page.getByRole("heading", { name: "Home firmatario" })).toBeVisible();
-  await expect(page.getByText("5", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("9", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("link", { name: "I miei referti" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Configurazione" })).toHaveCount(0);
 
@@ -21,7 +21,7 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   await page.goto("/firma/referti");
   expect((await reportsCall).status()).toBe(200);
   await expect(page.getByRole("heading", { name: "I miei referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(5);
+  await expect(page.locator("tbody tr")).toHaveCount(9);
   await expect(page.getByText("RPT-INT-006")).toBeVisible();
   await expect(page.getByText("RPT-INT-003")).toBeVisible();
   await expect(page.getByText("RPT-INT-005")).toHaveCount(0);

@@ -107,9 +107,10 @@ class SignerReportIntegrationTest {
     @Test
     void exposesOnlyDirectGroupAndPartitionAuthorizedReports() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?size=20").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(5)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)))
                 .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder(
-                        "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004", "RPT-INT-006")));
+                        "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004", "RPT-INT-006",
+                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002")));
         mockMvc.perform(get(ROOT + "/reports/" + GROUP_REPORT).with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.internalIdentifier", equalTo("RPT-INT-003")));
         mockMvc.perform(get(ROOT + "/reports/" + PARTITION_REPORT).with(signerJwt("demo.signer")))
@@ -127,7 +128,7 @@ class SignerReportIntegrationTest {
     @Test
     void supportsSimpleAdvancedDateStateAndPagingSearches() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?query=Bruno").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(2)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(4)));
         mockMvc.perform(get(ROOT + "/reports?patient=Dario&documentType=PDF-REF&department=Diagnostica")
                         .with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(1)))
@@ -180,7 +181,7 @@ class SignerReportIntegrationTest {
     @Test
     void exposesHomeProfileLegendAndEnforcesAuthenticationAndRole() throws Exception {
         mockMvc.perform(get(ROOT + "/home").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(5)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)));
         mockMvc.perform(get(ROOT + "/profile").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.username", equalTo("demo.signer")))
                 .andExpect(jsonPath("$.partitionCode", equalTo("LOCAL")))

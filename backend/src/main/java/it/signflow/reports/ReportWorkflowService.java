@@ -154,11 +154,55 @@ public class ReportWorkflowService {
         return snapshot(reportId);
     }
 
+    @Transactional
+    public ReportWorkflowOperationResponse transitionForSignature(UUID reportId, long expectedVersion,
+                                                                  String operationKey,
+                                                                  ReportWorkflowOperation operation,
+                                                                  ReportState target, String actor,
+                                                                  String reference) {
+        if (!Set.of(ReportWorkflowOperation.CREATE_SIGNATURE_BATCH, ReportWorkflowOperation.START_SIGNATURE,
+                ReportWorkflowOperation.COMPLETE_MOCK_SIGNATURE, ReportWorkflowOperation.FAIL_MOCK_SIGNATURE,
+                ReportWorkflowOperation.RETRY_MOCK_SIGNATURE, ReportWorkflowOperation.CANCEL_SIGNATURE_BATCH)
+                .contains(operation)) {
+            throw new IllegalArgumentException("Unsupported signature workflow operation");
+        }
+        String key = operationKey(operationKey);
+        String normalizedReference = blank(reference) ? null : reference.trim();
+        String requestFingerprint = fingerprint(operation, null, target, normalizedReference);
+        ReportWorkflowOperationResponse repeated = repeated(reportId, key, requestFingerprint);
+        if (repeated != null) return repeated;
+        ReportWorkflowSnapshot current = snapshot(reportId);
+        requireVersion(current, expectedVersion);
+        ensureTransition(current.state(), target);
+        boolean markMockSigned = operation == ReportWorkflowOperation.COMPLETE_MOCK_SIGNATURE;
+        return applySignature(current, key, operation, requestFingerprint, target, actor(actor),
+                normalizedReference, markMockSigned);
+    }
+
+    private ReportWorkflowOperationResponse applySignature(ReportWorkflowSnapshot current, String operationKey,
+                                                            ReportWorkflowOperation operation, String fingerprint,
+                                                            ReportState target, String actor, String reference,
+                                                            boolean markMockSigned) {
+        boolean changed = repository.applyChange(current.reportId(), current.version(), target,
+                current.assignedSignerId(), false, markMockSigned);
+        if (!changed) {
+            ReportWorkflowOperationResponse repeated = repeated(current.reportId(), operationKey, fingerprint);
+            if (repeated != null) return repeated;
+            throw conflict("The report was updated by another operation; reload it and retry");
+        }
+        long resultingVersion = current.version() + 1;
+        ReportWorkflowEventResponse event = repository.insertEvent(UUID.randomUUID(), current.reportId(), operationKey,
+                operation, fingerprint, current.state(), target, current.assignedSignerId(),
+                current.assignedSignerId(), actor, reference, missingFields(current), current.version(),
+                resultingVersion, false);
+        return response(event, snapshot(current.reportId()).firstPreviewedAt(), false);
+    }
+
     private ReportWorkflowOperationResponse apply(ReportWorkflowSnapshot current, String operationKey,
                                                    ReportWorkflowOperation operation, String fingerprint,
                                                    ReportState target, UUID newSignerId, String actor, String reason,
                                                    List<String> missingFields, boolean firstPreview) {
-        boolean changeApplied = repository.applyChange(current.reportId(), current.version(), target, newSignerId, firstPreview);
+        boolean changeApplied = repository.applyChange(current.reportId(), current.version(), target, newSignerId, firstPreview, false);
         if (!changeApplied) {
             ReportWorkflowOperationResponse repeated = repeated(current.reportId(), operationKey, fingerprint);
             if (repeated != null) return repeated;

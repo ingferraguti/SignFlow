@@ -15,6 +15,11 @@ import org.springframework.stereotype.Component;
 public class DemoClinicalDocumentInitializer implements ApplicationRunner {
     private static final UUID DEMO_REPORT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-ccccccccccc1");
     private static final UUID READY_REPORT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-ccccccccccc2");
+    private static final List<UUID> MOCK_SIGNATURE_REPORTS = List.of(
+            UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1"),
+            UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee2"),
+            UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3"),
+            UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee4"));
     private final ClinicalDocumentRepository repository;
     private final ClinicalDocumentService service;
 
@@ -30,6 +35,11 @@ public class DemoClinicalDocumentInitializer implements ApplicationRunner {
         }
         if (repository.list(READY_REPORT_ID, true).isEmpty()) {
             service.upload(READY_REPORT_ID, "referto-pronto-fittizio.pdf", demoPdf(), "demo.admin");
+        }
+        for (UUID reportId : MOCK_SIGNATURE_REPORTS) {
+            if (repository.list(reportId, true).isEmpty()) {
+                service.upload(reportId, "referto-firma-mock-totalmente-fittizio.pdf", demoPdf(), "demo.producer");
+            }
         }
     }
 

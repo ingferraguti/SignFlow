@@ -29,7 +29,7 @@ export type ReportDetail = {
   producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState;
   pdfA3Conversion: boolean; visibleSignature: boolean; multipleSignature: boolean;
   sendUnsigned: boolean; createCda: boolean; passthrough: boolean;
-  workflowVersion: number; firstPreviewedAt?: string;
+  workflowVersion: number; firstPreviewedAt?: string; signatureKind?: string; signatureArtifactNotice?: string;
 };
 export type ReportPage = { items: ReportSummary[]; page: number; size: number; total: number };
 export type SourceSystemOption = { id: string; code: string; description: string };

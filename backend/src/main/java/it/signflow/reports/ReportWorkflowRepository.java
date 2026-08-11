@@ -81,7 +81,7 @@ class ReportWorkflowRepository {
     }
 
     boolean applyChange(UUID reportId, long expectedVersion, ReportState state, UUID signerId,
-                        boolean registerFirstPreview) {
+                        boolean registerFirstPreview, boolean markMockSigned) {
         jdbcClient.sql("select set_config('signflow.workflow_transition_allowed', 'true', true)")
                 .query(String.class).single();
         return jdbcClient.sql("""
@@ -90,11 +90,17 @@ class ReportWorkflowRepository {
                     assigned_signer_id=:signerId,
                     first_previewed_at=case when :registerFirstPreview
                         then coalesce(first_previewed_at, now()) else first_previewed_at end,
+                    signed_at=case when :markMockSigned then now() else signed_at end,
+                    signature_kind=case when :markMockSigned then 'MOCK' else signature_kind end,
+                    signature_artifact_notice=case when :markMockSigned
+                        then 'MOCK ONLY - attestazione di collaudo, non è una firma digitale valida'
+                        else signature_artifact_notice end,
                     workflow_version=workflow_version + 1,
                     modified_at=now(), updated_at=now()
                 where id=:reportId and workflow_version=:expectedVersion
                 """).param("state", state.name()).param("signerId", signerId)
                 .param("registerFirstPreview", registerFirstPreview).param("reportId", reportId)
+                .param("markMockSigned", markMockSigned)
                 .param("expectedVersion", expectedVersion).update() == 1;
     }
 

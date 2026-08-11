@@ -164,6 +164,7 @@ public class ReportRepository {
                 rs.getBoolean("visible_signature"), rs.getBoolean("multiple_signature"),
                 rs.getBoolean("send_unsigned"), rs.getBoolean("create_cda"), rs.getBoolean("passthrough"),
                 rs.getLong("workflow_version"), rs.getObject("first_previewed_at", OffsetDateTime.class),
+                rs.getString("signature_kind"), rs.getString("signature_artifact_notice"),
                 ReportState.valueOf(rs.getString("state")));
     }
 

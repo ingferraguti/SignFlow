@@ -15,6 +15,7 @@ const adminNavigation = [
 const signerNavigation = [
   { href: "/firma", key: "menu.signerHome" },
   { href: "/firma/referti", key: "menu.signerReports" },
+  { href: "/firma/batch", key: "menu.signatureBatches" },
   { href: "/firma/stati", key: "menu.signerStates" },
   { href: "/firma/informazioni", key: "menu.signerInfo" },
   { href: "/firma/profilo", key: "menu.signerProfile" },

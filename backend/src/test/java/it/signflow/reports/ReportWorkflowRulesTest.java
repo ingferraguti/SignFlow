@@ -20,7 +20,8 @@ class ReportWorkflowRulesTest {
                         ReportState.REVIEW_PENDING, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING)),
                 Map.entry(ReportState.REVIEW_PENDING, Set.of(ReportState.INCOMPLETE, ReportState.PREVIEWED, ReportState.APPROVED)),
                 Map.entry(ReportState.APPROVED, Set.of(ReportState.REVIEW_PENDING, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING)),
-                Map.entry(ReportState.SIGN_BATCH_CREATED, Set.of(ReportState.SIGNING, ReportState.SIGN_ERROR)),
+                Map.entry(ReportState.SIGN_BATCH_CREATED, Set.of(
+                        ReportState.APPROVED, ReportState.SIGNING, ReportState.SIGN_ERROR)),
                 Map.entry(ReportState.SIGNING, Set.of(ReportState.SIGNED, ReportState.SIGN_ERROR)),
                 Map.entry(ReportState.SIGN_ERROR, Set.of(ReportState.READY_TO_SIGN, ReportState.SIGNING)),
                 Map.entry(ReportState.SIGNED, Set.of(ReportState.FSE_VALIDATION_ERROR, ReportState.FSE_SENT,

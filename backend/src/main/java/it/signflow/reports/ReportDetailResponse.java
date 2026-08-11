@@ -28,5 +28,7 @@ public record ReportDetailResponse(
         boolean passthrough,
         long workflowVersion,
         OffsetDateTime firstPreviewedAt,
+        String signatureKind,
+        String signatureArtifactNotice,
         ReportState state) {
 }

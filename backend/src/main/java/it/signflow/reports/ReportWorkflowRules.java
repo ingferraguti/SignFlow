@@ -63,7 +63,7 @@ final class ReportWorkflowRules {
                 ReportState.REVIEW_PENDING, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING));
         rules.put(ReportState.REVIEW_PENDING, states(ReportState.INCOMPLETE, ReportState.PREVIEWED, ReportState.APPROVED));
         rules.put(ReportState.APPROVED, states(ReportState.REVIEW_PENDING, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING));
-        rules.put(ReportState.SIGN_BATCH_CREATED, states(ReportState.SIGNING, ReportState.SIGN_ERROR));
+        rules.put(ReportState.SIGN_BATCH_CREATED, states(ReportState.APPROVED, ReportState.SIGNING, ReportState.SIGN_ERROR));
         rules.put(ReportState.SIGNING, states(ReportState.SIGNED, ReportState.SIGN_ERROR));
         rules.put(ReportState.SIGN_ERROR, states(ReportState.READY_TO_SIGN, ReportState.SIGNING));
         rules.put(ReportState.SIGNED, states(ReportState.FSE_VALIDATION_ERROR, ReportState.FSE_SENT,

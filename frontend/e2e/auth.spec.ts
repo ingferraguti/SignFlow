@@ -42,7 +42,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
 
   await page.goto("/referti");
   await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(6);
+  await expect(page.locator("tbody tr")).toHaveCount(10);
   await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-001");
   await expect(page.getByLabel("Paziente")).toBeDisabled();
   await page.getByRole("button", { name: "Cerca" }).click();
