@@ -23,7 +23,17 @@ export function AdminOrganizationPanel() {
     setItems({ partitions, companies, groups });
   }, []);
 
-  useEffect(() => { load().catch((reason: Error) => setError(reason.message)); }, [load]);
+  useEffect(() => {
+    let active = true;
+    Promise.all(types.map(fetchOrganizationItems))
+      .then(([partitions, companies, groups]) => {
+        if (active) setItems({ partitions, companies, groups });
+      })
+      .catch((reason: Error) => {
+        if (active) setError(reason.message);
+      });
+    return () => { active = false; };
+  }, []);
 
   function startNew(nextType = type) {
     setType(nextType);

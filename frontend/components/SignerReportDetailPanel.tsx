@@ -21,7 +21,21 @@ export function SignerReportDetailPanel({ reportId }: { reportId: string }) {
   const load = () => { setLoading(true); setError(undefined); Promise.all([fetchSignerReport(reportId), fetchSignerDocuments(reportId), fetchSignerReview(reportId)])
     .then(([loadedReport, loadedDocuments, loadedReview]) => { setReport(loadedReport); setDocuments(loadedDocuments); setReview(loadedReview); })
     .catch((reason) => setError(reason instanceof Error ? reason : new Error("Referto non disponibile"))).finally(() => setLoading(false)); };
-  useEffect(load, [reportId]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchSignerReport(reportId), fetchSignerDocuments(reportId), fetchSignerReview(reportId)])
+      .then(([loadedReport, loadedDocuments, loadedReview]) => {
+        if (!active) return;
+        setReport(loadedReport);
+        setDocuments(loadedDocuments);
+        setReview(loadedReview);
+      })
+      .catch((reason) => {
+        if (active) setError(reason instanceof Error ? reason : new Error("Referto non disponibile"));
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [reportId]);
   async function openPdf(document: ClinicalDocument) {
     setOpening(true); setError(undefined);
     try { const preview = await previewSignerDocument(reportId, document.id, report?.workflowVersion ?? 0, crypto.randomUUID()); setPreviewUrl(preview.url); setReport((current) => current ? { ...current, state: preview.reportState, workflowVersion: preview.workflowVersion, firstPreviewedAt: preview.firstPreviewedAt } : current); setReview(await fetchSignerReview(reportId)); }

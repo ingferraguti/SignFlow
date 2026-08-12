@@ -71,11 +71,22 @@ export function AdminUsersPanel() {
   }, []);
 
   useEffect(() => {
-    load("").catch((reason: Error) => {
-      setError(reason.message);
-      setStatus("Unable to load administrative users");
-    });
-  }, [load]);
+    let active = true;
+    Promise.all([fetchOrganizationOptions(), fetchUsers("")])
+      .then(([loadedOptions, userPage]) => {
+        if (!active) return;
+        setOptions(loadedOptions);
+        setUsers(userPage.items);
+        setForm((current) => current.partitionId ? current : emptyUser(loadedOptions));
+        setStatus(`${userPage.total} users found`);
+      })
+      .catch((reason: Error) => {
+        if (!active) return;
+        setError(reason.message);
+        setStatus("Unable to load administrative users");
+      });
+    return () => { active = false; };
+  }, []);
 
   const selectedUser = useMemo(() => users.find((user) => user.id === editingId), [editingId, users]);
 

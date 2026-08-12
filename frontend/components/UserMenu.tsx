@@ -18,8 +18,10 @@ export function UserMenu() {
     Object.keys(sessionStorage).filter((key) => key.startsWith("signflow-login-audited:")).forEach((key) => sessionStorage.removeItem(key));
     await signOut({ redirect: false });
     const issuer = process.env.NEXT_PUBLIC_KEYCLOAK_EXTERNAL_ISSUER ?? "http://localhost:8081/realms/signflow";
-    const returnTo = encodeURIComponent(`${window.location.origin}/login`);
-    window.location.assign(`${issuer}/protocol/openid-connect/logout?client_id=signflow-frontend&post_logout_redirect_uri=${returnTo}`);
+    const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`);
+    logoutUrl.searchParams.set("client_id", "signflow-frontend");
+    logoutUrl.searchParams.set("post_logout_redirect_uri", `${window.location.origin}/login`);
+    window.location.replace(logoutUrl);
   }
 
   return (

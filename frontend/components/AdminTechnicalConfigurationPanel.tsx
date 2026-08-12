@@ -19,7 +19,17 @@ export function AdminTechnicalConfigurationPanel() {
   const [data, setData] = useState<TechnicalConfigurationData>();
   const [error, setError] = useState<string>();
   const load = useCallback(async () => { setData(await fetchTechnicalConfiguration()); }, []);
-  useEffect(() => { load().catch((reason: Error) => setError(reason.message)); }, [load]);
+  useEffect(() => {
+    let active = true;
+    fetchTechnicalConfiguration()
+      .then((configuration) => {
+        if (active) setData(configuration);
+      })
+      .catch((reason: Error) => {
+        if (active) setError(reason.message);
+      });
+    return () => { active = false; };
+  }, []);
 
   async function execute(action: () => Promise<unknown>) {
     setError(undefined);

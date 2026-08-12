@@ -11,7 +11,14 @@ export function SignerHomePanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error>();
   const load = () => { setLoading(true); setError(undefined); fetchSignerHome().then(setHome).catch(setError).finally(() => setLoading(false)); };
-  useEffect(load, []);
+  useEffect(() => {
+    let active = true;
+    fetchSignerHome()
+      .then((loadedHome) => { if (active) setHome(loadedHome); })
+      .catch((reason: Error) => { if (active) setError(reason); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
   if (loading) return <section className="card signer-wide" aria-busy="true"><h1>Home firmatario</h1><p>Caricamento attività in corso…</p></section>;
   if (error) return <PortalError error={error} retry={load} />;
   return <div className="signer-layout"><section className="card signer-wide"><div className="section-title"><div><h1>Home firmatario</h1><p>La tua area operativa personale</p></div><Link className="primary link-button" href="/firma/referti">{text("button.openReport")}</Link></div>

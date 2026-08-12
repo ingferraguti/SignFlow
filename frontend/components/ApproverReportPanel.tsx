@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { ClinicalDocument } from "../lib/adminDocuments";
 import type { ReportDetail, ReportReview } from "../lib/adminReports";
 import { approveReport, fetchApproverDocuments, fetchApproverReport, fetchApproverReview, openApproverDocument, rejectReport } from "../lib/approverPortal";
@@ -10,8 +10,20 @@ import { useUiTexts } from "./UiTextProvider";
 export function ApproverReportPanel({ reportId }: { reportId: string }) {
   const { text } = useUiTexts(); const [report, setReport] = useState<ReportDetail>(); const [review, setReview] = useState<ReportReview>(); const [documents, setDocuments] = useState<ClinicalDocument[]>([]);
   const [preview, setPreview] = useState<string>(); const [reason, setReason] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState<string>(); const [status, setStatus] = useState<string>();
-  const load = useCallback(async () => { const [loadedReport, loadedReview, loadedDocuments] = await Promise.all([fetchApproverReport(reportId), fetchApproverReview(reportId), fetchApproverDocuments(reportId)]); setReport(loadedReport); setReview(loadedReview); setDocuments(loadedDocuments); }, [reportId]);
-  useEffect(() => { load().catch((cause: Error) => setError(cause.message)); }, [load]);
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchApproverReport(reportId), fetchApproverReview(reportId), fetchApproverDocuments(reportId)])
+      .then(([loadedReport, loadedReview, loadedDocuments]) => {
+        if (!active) return;
+        setReport(loadedReport);
+        setReview(loadedReview);
+        setDocuments(loadedDocuments);
+      })
+      .catch((cause: Error) => {
+        if (active) setError(cause.message);
+      });
+    return () => { active = false; };
+  }, [reportId]);
   async function run(action: () => Promise<{ review: ReportReview }>, message: string) { setBusy(true); setError(undefined); try { const result = await action(); setReview(result.review); setReport((current) => current ? { ...current, state: result.review.state, workflowVersion: result.review.version } : current); setStatus(message); } catch (cause) { setError(cause instanceof Error ? cause.message : "Decisione non registrata"); } finally { setBusy(false); } }
   async function open(document: ClinicalDocument) { if (!review) return; setBusy(true); setError(undefined); try { const result = await openApproverDocument(reportId, document.id, review.version); setPreview(result.url); setReview(result.review); setReport((current) => current ? { ...current, workflowVersion: result.workflowVersion } : current); setStatus("Presa visione registrata"); } catch (cause) { setError(cause instanceof Error ? cause.message : "Documento non disponibile"); } finally { setBusy(false); } }
   if (!report || !review) return <section className="card signer-wide"><h1>Revisione referto</h1>{error ? <p className="inline-error">{error}</p> : <p>Caricamento…</p>}</section>;

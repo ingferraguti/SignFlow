@@ -9,7 +9,8 @@ Branch: `chore/signflow-local-test-environment`.
 The repository currently contains a technical foundation for SignFlow:
 
 - Spring Boot backend.
-- Next.js frontend.
+- Next.js 16.3 frontend with React 19.2, native flat ESLint configuration, Turbopack production builds, and the
+  Next.js `proxy.ts` convention for route protection.
 - PostgreSQL and Flyway setup.
 - Docker Compose local stack.
 - PowerShell helper scripts.
@@ -101,7 +102,6 @@ The repository currently contains a technical foundation for SignFlow:
   documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
   `docs/provider-adapter-contract.md`.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
-- Audit event persistence.
 - Analytics event persistence and publication interfaces.
 - FSE 2.0 validation/submission.
 - Digital preservation packaging/submission.
@@ -124,7 +124,7 @@ Result: pass on 2026-08-11.
 Evidence:
 
 - Backend: 65 tests, 0 failures, 0 errors, 0 skipped.
-- Frontend: `npm ci`, ESLint, type validation, and production build passed.
+- Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
 - Final full baseline completed after the Goal 12 audit implementation; backend and frontend evidence below comes from
   the same successful `test-all.ps1` run.
 
@@ -145,7 +145,7 @@ Evidence:
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-11T15:48:07+02:00.
+- Finished at: 2026-08-11T17:08:34+02:00.
 
 Notes:
 
@@ -165,15 +165,18 @@ Result: pass.
 Evidence:
 
 - `npm ci` completed.
+- `npm audit` reported 0 vulnerabilities.
 - `npm run lint` passed.
 - `npm run build` passed.
-- Next.js generated the signer batch list/detail routes together with all existing admin, signer, and approver routes.
+- Next.js 16.3.0 and React 19.2.8 compiled successfully with Turbopack and generated the signer batch list/detail routes
+  together with all existing admin, signer, approver, audit, and API routes.
+- Next.js recognized `proxy.ts` as the application request boundary and TypeScript validation passed with the React
+  automatic JSX runtime.
 
 Notes:
 
-- npm audit reported 6 high-severity dependency findings; no automatic dependency upgrade was included in this feature scope.
 - No automated frontend unit tests are currently defined.
-- Last successful lint/build run completed on 2026-08-11 during the final full baseline.
+- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-11 during the final full baseline.
 
 ### Docker Compose Authentication Flow
 
@@ -190,7 +193,7 @@ Evidence:
 - PostgreSQL healthy on `127.0.0.1:5432`.
 - Keycloak running on `127.0.0.1:8081`.
 - Backend healthy on `127.0.0.1:18080` in this local environment.
-- Frontend running on `127.0.0.1:3000`.
+- Frontend running Next.js 16.3.0 on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
 - Flyway validated 17 migrations; V17 adds the append-only audit ledger, retention policy, privacy-safe demo events, and source-table audit triggers.
@@ -230,6 +233,8 @@ Evidence:
 - The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
 - The administrator assigned/removed the signer, uploaded a fictitious PDF, evaluated readiness to `READY_TO_SIGN`, observed the successful workflow POST, and verified configurable workflow button texts.
 - The signer opened a controlled PDF, observed `PREVIEWED`, and exercised the portal at a 390 x 844 viewport without page overflow or JavaScript errors.
+- The signer authentication test waits for the OAuth callback session to settle before navigating, preventing aborted
+  NextAuth session requests while retaining strict browser-console error assertions.
 - The signer requested review, the approver recorded document view and approved to `APPROVED`, and the administrator restored the fictitious demo through controlled returns.
 - The signer opened a temporary mock-provider session, executed one approved Report, received HTTP 200 for both network calls, saw the explicit non-legal outcome and responsive final batch summary, and the test runner restored the four signature fixtures afterward.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
