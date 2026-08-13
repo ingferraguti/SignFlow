@@ -232,7 +232,7 @@ Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated brows
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 58 backend tests pass;
+- verify all 71 backend tests pass;
 - verify existing administrator and signer E2E flows remain green before the review E2E.
 
 ## Goal 10 - Single and Batch Mock Signature
@@ -248,7 +248,7 @@ Backend tests (`MockSignatureWorkflowIntegrationTest`, `ReportWorkflowRulesTest`
 - a repeated single submission with the same operation key returns the original batch without duplicate attempts;
 - a confirmed batch can be cancelled before start and returns reserved Reports from `SIGN_BATCH_CREATED` to `APPROVED`;
 - every Report state transition is recorded by `ReportWorkflowService`; direct SQL state changes remain guarded;
-- the full backend suite contains 58 passing tests.
+- the full backend suite contains 71 passing tests.
 
 Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated browser):
 
@@ -264,7 +264,7 @@ Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated b
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 58 backend tests, frontend lint/build, and all 4 Playwright flows;
+- verify all 71 backend tests, frontend lint/build, and all 4 Playwright flows;
 - verify authentication, admin CRUD, documents, explicit workflow, independent review, signer preview, configurable labels, and responsive navigation.
 
 ## Goal 11 - Digital Signature Engine and Provider Adapters
@@ -296,7 +296,7 @@ Workflow and migration regression:
   scenarios to remain green;
 - validate Flyway V16 on a fresh PostgreSQL 16 container and confirm the session table stores only opaque references;
 - run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
-- require all 58 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
+- require all 71 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
 - scan domain and UI changes to ensure no real provider brand, endpoint, or provider DTO was introduced.
 
 ## Goal 7 / Delivery Objective 12 - Append-only Audit and Monitoring
