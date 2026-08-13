@@ -34,9 +34,13 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | Term | Definition |
 | --- | --- |
 | FseFacilityMapping | Mapping between facility, company, operating unit, department, and source system for FSE metadata normalization. |
+| FseDocumentType | Controlled high-level FSE 2.0 document nature (`REF`, `LDO`, `VRB`, and the other admitted class codes). Every Report and ClinicalDocument must reference one; it is distinct from a CDA implementation-guide/profile identifier. |
+| SourceSystemFseDocumentType | Per-source-system allow-list that selects the FSE document types for which CDA preparation and PDF injection are enabled. Both the source-system pipeline and the type mapping must enable the behavior. |
 | PatientMetadata | Minimal patient data needed to correlate and display a report. Must be minimized and protected. |
 | Hl7Message | Input or output HL7 message metadata and processing state. Raw payload belongs in object storage and must be masked in UI/logs. |
 | CdaBuilder | Interface responsible for building CDA2 when `SourceSystem.createCda` requires it. |
+| PdfCdaInjector | Interface responsible for embedding an already generated CDA R2 as the case-insensitive `cda.xml` PDF associated file expected by the national FSE Gateway. It does not generate or clinically validate CDA content. |
+| NationalFseGatewayConnector | Outbound port for future Gateway validation and publication. Application authentication, Gateway JWT construction, accreditation assets, and provider transport remain outside the core domain. |
 | PdfA3Converter | Interface responsible for PDF/A3 conversion when configured by the source system. |
 
 ## Signature Flow

@@ -167,6 +167,10 @@ Purpose:
 Acceptance:
 
 - FSE facility mappings normalize facility/company/unit/source-system metadata.
+- A controlled high-level FSE document-type catalog identifies every Report/ClinicalDocument nature.
+- A per-source-system/type allow-list controls which document types enter CDA preparation.
+- `CdaBuilder`, `PdfCdaInjector`, preparation decision service, and national Gateway connector are isolated ports/components.
+- Existing CDA XML can be injected as `cda.xml`; actual clinical CDA generation remains deferred and is represented as pending.
 - Report states include FSE validation, sent, accepted, and rejected outcomes.
 - Interfaces isolate official validator/gateway integration.
 

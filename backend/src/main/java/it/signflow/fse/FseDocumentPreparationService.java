@@ -31,6 +31,10 @@ public class FseDocumentPreparationService {
     public PreparationResult prepare(UUID reportId, byte[] pdf, CdaBuildRequest request) {
         FsePreparationDecision decision = evaluate(reportId);
         if (!decision.cdaInjectionRequired()) return new PreparationResult(PreparationStatus.NOT_REQUIRED, pdf);
+        if (request == null || !reportId.equals(request.reportId())
+                || !decision.documentTypeCode().equals(request.documentTypeCode())) {
+            throw new IllegalArgumentException("CDA build request must match the Report and its FSE document type");
+        }
         return cdaBuilder.build(request)
                 .map(cda -> new PreparationResult(PreparationStatus.INJECTED, injector.inject(pdf, cda)))
                 .orElseGet(() -> new PreparationResult(PreparationStatus.PENDING_CDA_GENERATION, null));

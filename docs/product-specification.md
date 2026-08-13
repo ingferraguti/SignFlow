@@ -92,6 +92,15 @@ Every state transition is executed by the dedicated `ReportWorkflowService`, pro
 
 Contradictory combinations, such as `createCda = true` and `passthrough = true`, must be rejected or clearly warned before activation.
 
+### FSE document nature and CDA preparation
+
+- Every `Report` and `ClinicalDocument` has one controlled high-level `FseDocumentType` using the admitted FSE class-code catalog (for example `REF`, `LDO`, or `VRB`).
+- The FSE document nature is not a free-form CDA profile name: the future CDA implementation guide/profile is selected separately by the CDA builder.
+- CDA preparation is enabled only when the `SourceSystem` is active, `createCda` is enabled, `passthrough` is disabled, and the Report document type is enabled in `SourceSystemFseDocumentType`.
+- The PDF injector accepts already generated CDA XML and embeds it as `cda.xml`; it does not synthesize clinical content.
+- Until profile-specific CDA generation is implemented, enabled documents remain explicitly `PENDING_CDA` and no placeholder clinical CDA is fabricated.
+- National Gateway validation/publication remains behind `NationalFseGatewayConnector`; the deferred adapter must never imply successful submission.
+
 ## Signer Application
 
 The signer-facing application must provide:

@@ -59,8 +59,12 @@ The repository currently contains a technical foundation for SignFlow:
 - Source-system pipeline flags with explicit rejection of simultaneous CDA creation and passthrough.
 - Non-secret signature-provider authentication configuration and external credential references; provider passwords are not stored.
 - Technical configuration UI with demo data and configurable action/tab texts.
-- Preparatory FSE document-type catalog and source-system mappings, with an explicitly deferred national gateway/CDA
-  builder, decision service, and tested PDFBox injection of an existing fictional CDA XML as a PDF associated file.
+- Preparatory controlled FSE document-type catalog (`REF`, `LDO`, `VRB`, and the remaining admitted high-level codes),
+  mandatory Report/ClinicalDocument type association, and per-source-system/type CDA activation matrix exposed in the
+  technical configuration API and UI.
+- Explicitly deferred national Gateway/CDA builder, configuration decision service, and tested PDFBox injection of an
+  existing fictional CDA XML as the `cda.xml` PDF associated file; selected documents expose `PENDING_CDA` rather than
+  fabricating clinical CDA content.
 - Practice container, Report aggregate, minimized PatientMetadata, complete report state enum, technical flags, and fictitious demo records.
 - Paginated admin report search/detail APIs with exact-ID precedence and filters for patient, signer, signer fiscal code, state, source system, department, and all report date intervals.
 - Active `/referti` administration page with advanced filters, pagination, detail consultation, and configurable action texts.
@@ -120,7 +124,7 @@ The repository currently contains a technical foundation for SignFlow:
   `docs/provider-adapter-contract.md`.
 - HL7 ingestion, parsing, monitoring, and raw payload storage.
 - Analytics event persistence and publication interfaces.
-- FSE 2.0 validation/submission.
+- FSE 2.0 CDA clinical generation, official validation, JWT transport, accreditation, and real submission.
 - Digital preservation packaging/submission.
 - ClickHouse, OpenSearch, Kafka/RabbitMQ, Superset, or Knowage.
 - Production identity-provider hardening and real organization user provisioning.
@@ -140,7 +144,7 @@ Result: pass on 2026-08-13.
 
 Evidence:
 
-- Backend: 70 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 71 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
 - Final full baseline completed after the natural-person/authentication/signature-account separation; backend and
   frontend evidence below comes from the same successful `test-all.ps1` run.
@@ -158,7 +162,7 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 70.
+- Tests run: 71.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.

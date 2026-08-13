@@ -1,6 +1,7 @@
 package it.signflow.fse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -29,5 +30,25 @@ class PdfBoxCdaInjectorTest {
             assertThat(specification.getEmbeddedFile().toByteArray()).isEqualTo(cda);
             assertThat(specification.getEmbeddedFile().getSubtype()).isEqualTo("application/xml");
         }
+    }
+
+    @Test
+    void rejectsNonCdaAndUnsafeXml() throws Exception {
+        byte[] pdf;
+        try (PDDocument document = new PDDocument(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            document.addPage(new PDPage());
+            document.save(output);
+            pdf = output.toByteArray();
+        }
+        PdfBoxCdaInjector injector = new PdfBoxCdaInjector();
+
+        assertThatThrownBy(() -> injector.inject(pdf, "<root/>".getBytes(StandardCharsets.UTF_8)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("CDA XML root must be hl7:ClinicalDocument");
+        assertThatThrownBy(() -> injector.inject(pdf,
+                "<!DOCTYPE x [<!ENTITY e SYSTEM 'file:///tmp/secret'>]><ClinicalDocument xmlns='urn:hl7-org:v3'/>"
+                        .getBytes(StandardCharsets.UTF_8)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("CDA XML must be well-formed and safe to parse");
     }
 }
