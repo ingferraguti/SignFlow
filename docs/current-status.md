@@ -81,6 +81,11 @@ The repository currently contains a technical foundation for SignFlow:
 - Database-triggered audit coverage for Report state/signer changes, review decisions, document upload/removal, signature batches, attempts, retries, and provider outcomes.
 - HTTP audit coverage for relevant login/logout, sensitive administrator searches, document opens/uploads, and configuration mutations without request bodies or sensitive query values.
 - Administrator-only filtered/paginated audit APIs, authorized CSV export, Report/document/signature histories, retention management, responsive `/monitoraggio`, and Report-detail timeline.
+- Report timelines resolve document-open and signature-batch events through links preserved in the append-only ledger,
+  so the complete flow remains reconstructable without source rows or duplicated patient/clinical identifiers.
+- Flyway V21 indexes the privacy-minimized document/attempt links used to reconstruct Report timelines at scale.
+- Audit metadata validation rejects sensitive key families and complete Italian tax-code patterns even when supplied
+  under an otherwise generic metadata key.
 - Audit UI labels and actions persisted in the administrator text/translation profile.
 - Explicit `Report` state machine with a dedicated application workflow service and no generic state-update API.
 - Signer assignment/removal, missing-signer and incomplete-precondition detection, and controlled promotion to `READY_TO_SIGN`.
@@ -144,10 +149,10 @@ Result: pass on 2026-08-13.
 
 Evidence:
 
-- Backend: 71 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 72 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed after the natural-person/authentication/signature-account separation; backend and
-  frontend evidence below comes from the same successful `test-all.ps1` run.
+- Final full baseline completed after the Objective 12 timeline/privacy hardening; backend and frontend evidence
+  below comes from the same successful `test-all.ps1` run.
 
 ### Backend
 
@@ -162,7 +167,7 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 71.
+- Tests run: 72.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
@@ -217,8 +222,9 @@ Evidence:
 - Frontend running Next.js 16.3.0 on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 20 migrations; V19 separates natural persons, authentication identities, and digital signatures,
-  while V20 scopes authentication subjects by issuer and protects identity-link history from mutation.
+- Flyway validated 21 migrations; V19 separates natural persons, authentication identities, and digital signatures,
+  V20 scopes authentication subjects by issuer and protects identity-link history from mutation, and V21 indexes
+  append-only audit timeline links.
 - Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
 - Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
 - Browser-integrated audit checks confirmed administrator navigation, fictional FSE/preservation entries, login/logout and sensitive-search events, filters, CSV download, Report timeline, 1440 x 900 and 390 x 844 containment, and no JavaScript errors after the final session fix.
@@ -255,6 +261,10 @@ Evidence:
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The authenticated admin visited `/monitoraggio`, observed HTTP 200 audit search calls, filtered `DOCUMENT_UPLOADED`, downloaded `signflow-audit.csv`, and verified 390 x 844 page containment.
+- The final integrated-browser pass filtered the fictional `FSE_OPERATION_RESERVED` event, exported CSV, verified the
+  retention controls, found no JavaScript errors, and measured no page-level overflow at 390 x 844.
+- The final Report timeline check found batch creation, attempt creation, provider outcome, FSE, and preservation
+  events after the E2E cleanup had removed the related operational signature rows.
 - The authenticated admin uploaded a PDF, saw the versioned metadata, opened the expiring presigned preview, and downloaded the original filename.
 - The administrator assigned/removed the signer, uploaded a fictitious PDF, evaluated readiness to `READY_TO_SIGN`, observed the successful workflow POST, and verified configurable workflow button texts.
 - The signer opened a controlled PDF, observed `PREVIEWED`, and exercised the portal at a 390 x 844 viewport without page overflow or JavaScript errors.

@@ -71,7 +71,10 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await page.getByRole("button", { name: "Chiudi dettaglio" }).click();
   await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-003");
   await page.getByRole("button", { name: "Cerca" }).click();
-  await page.getByRole("button", { name: "Dettaglio" }).click();
+  const workflowReportRow = page.getByRole("row", { name: /RPT-INT-003/ });
+  await expect(workflowReportRow).toBeVisible();
+  await workflowReportRow.getByRole("button", { name: "Dettaglio" }).click();
+  await expect(page.getByRole("heading", { name: "Dettaglio referto RPT-INT-003" })).toBeVisible();
   const workflow = page.getByRole("region", { name: "Workflow e assegnazione" });
   await expect(workflow).toBeVisible();
   await expect(workflow.getByText(/Versione \d+/)).toBeVisible();

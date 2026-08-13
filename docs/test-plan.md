@@ -232,7 +232,7 @@ Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated brows
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 71 backend tests pass;
+- verify all 72 backend tests pass;
 - verify existing administrator and signer E2E flows remain green before the review E2E.
 
 ## Goal 10 - Single and Batch Mock Signature
@@ -264,7 +264,7 @@ Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated b
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 71 backend tests, frontend lint/build, and all 4 Playwright flows;
+- verify all 72 backend tests, frontend lint/build, and all 4 Playwright flows;
 - verify authentication, admin CRUD, documents, explicit workflow, independent review, signer preview, configurable labels, and responsive navigation.
 
 ## Goal 11 - Digital Signature Engine and Provider Adapters
@@ -296,7 +296,7 @@ Workflow and migration regression:
   scenarios to remain green;
 - validate Flyway V16 on a fresh PostgreSQL 16 container and confirm the session table stores only opaque references;
 - run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
-- require all 71 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
+- require all 72 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
 - scan domain and UI changes to ensure no real provider brand, endpoint, or provider DTO was introduced.
 
 ## Goal 7 / Delivery Objective 12 - Append-only Audit and Monitoring
@@ -304,11 +304,14 @@ Workflow and migration regression:
 Focused backend tests (`AuditIntegrationTest`):
 
 - Flyway V17 creates the ledger, retention policy, privacy-safe fictional FSE/preservation events, and source-table triggers on a fresh PostgreSQL 16 database;
+- Flyway V21 creates partial expression indexes for document/report and signature-batch/report audit links;
 - direct `UPDATE` and arbitrary `DELETE` of an audit event fail at database level;
 - forbidden sensitive metadata keys and nested/non-scalar values are rejected before persistence;
 - login and sensitive Report searches preserve a valid correlation ID and actor;
-- document upload produces an event through the database trigger and appears in the related Report timeline;
+- document upload produces an event through the database trigger, and document-open events linked by document ID
+  appear in the related Report timeline without duplicating clinical metadata;
 - event type filters, pagination, and minimal metadata serialization are verified;
+- a complete Italian tax code is rejected even when disguised under a generic metadata key;
 - a signer receives 403 from CSV export while an administrator receives a CSV attachment;
 - retention accepts only 30-3650 days, records configuration change, and removal is restricted to expired entries through the dedicated transaction.
 
@@ -316,6 +319,8 @@ Frontend and integrated-browser checks:
 
 - `/monitoraggio` is enabled only in administrator navigation and exposes event/actor/correlation/entity/outcome/date filters, pagination, CSV export, and retention controls;
 - the Report detail exposes a chronological application timeline combining Report, review, document, and signature events;
+- batch creation/state and provider-attempt events are resolved through append-only audit links and appear in
+  the related Report timeline even when source rows are unavailable and metadata omits clinical identifiers;
 - audit menu, buttons, and section titles are editable in `Profilo admin - Testi e traduzioni`;
 - completely fictional FSE and preservation events are visible without clinical payloads;
 - filter and CSV requests complete successfully and the JavaScript console is empty;
