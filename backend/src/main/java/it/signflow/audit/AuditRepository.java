@@ -60,7 +60,17 @@ class AuditRepository {
         return jdbc.sql("""
                 select distinct a.* from audit_events a
                 where (a.entity_type='REPORT' and a.entity_id=:reportId)
-                   or (a.entity_type='DOCUMENT' and a.metadata->>'reportId'=:reportId)
+                   or (a.entity_type='DOCUMENT' and (
+                       a.metadata->>'reportId'=:reportId
+                       or exists (select 1 from audit_events linked
+                           where linked.entity_type='DOCUMENT'
+                             and linked.entity_id=a.entity_id
+                             and linked.metadata->>'reportId'=:reportId)))
+                   or (a.entity_type='SIGNATURE_BATCH' and exists (
+                       select 1 from audit_events linked
+                       where linked.entity_type='SIGNATURE_ATTEMPT'
+                         and linked.metadata->>'batchId'=a.entity_id
+                         and linked.metadata->>'reportId'=:reportId))
                    or (a.entity_type='SIGNATURE_ATTEMPT' and a.metadata->>'reportId'=:reportId)
                 order by a.occurred_at, a.id
                 """).param("reportId", reportId.toString()).query(this::map).list();

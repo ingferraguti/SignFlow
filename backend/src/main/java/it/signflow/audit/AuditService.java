@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +21,8 @@ class AuditService {
     private static final Set<String> FORBIDDEN_METADATA = Set.of(
             "document", "content", "payload", "password", "token", "authorization", "otp",
             "fiscalcode", "taxcode", "patient", "diagnosis", "healthdata", "clinicaldata");
+    private static final Pattern ITALIAN_TAX_CODE = Pattern.compile(
+            "(?i)(?<![A-Z0-9])[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z](?![A-Z0-9])");
     private final AuditRepository repository;
     private final ObjectMapper objectMapper;
 
@@ -106,6 +109,9 @@ class AuditService {
                 throw new IllegalArgumentException("Audit metadata values must be scalar");
             }
             String text = value instanceof String string ? string : null;
+            if (text != null && ITALIAN_TAX_CODE.matcher(text).find()) {
+                throw new IllegalArgumentException("Full Italian tax codes are forbidden in audit metadata");
+            }
             safe.put(key, text != null && text.length() > 200 ? text.substring(0, 200) : value);
         });
         return safe;

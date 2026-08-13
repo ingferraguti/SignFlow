@@ -128,6 +128,11 @@ class MockSignatureWorkflowIntegrationTest {
                 select count(*) from information_schema.columns
                 where table_name='provider_sessions' and column_name in ('authorization_code','otp','password')
                 """).query(Integer.class).single()).isZero();
+        mockMvc.perform(get("/api/admin/audit/reports/" + SUCCESS_A + "/timeline").with(adminJwt()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.eventType == 'SIGNATURE_BATCH_CREATED')]").isNotEmpty())
+                .andExpect(jsonPath("$[?(@.eventType == 'SIGNATURE_ATTEMPT_CREATED')]").isNotEmpty())
+                .andExpect(jsonPath("$[?(@.eventType == 'SIGNATURE_PROVIDER_OUTCOME')]").isNotEmpty());
     }
 
     @Test
@@ -254,5 +259,11 @@ class MockSignatureWorkflowIntegrationTest {
         return jwt().jwt(token -> token.claim("preferred_username", username)
                         .claim("realm_access", Map.of("roles", List.of("SIGNER"))))
                 .authorities(new SimpleGrantedAuthority("ROLE_SIGNER"));
+    }
+
+    private static RequestPostProcessor adminJwt() {
+        return jwt().jwt(token -> token.claim("preferred_username", "demo.admin")
+                        .claim("realm_access", Map.of("roles", List.of("ADMINISTRATOR"))))
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMINISTRATOR"));
     }
 }

@@ -62,12 +62,16 @@ class AuditIntegrationTest {
     }
 
     @Test
-    void recordsLoginAndSensitiveSearchWithCorrelationIds() throws Exception {
+    void recordsLoginLogoutAndSensitiveSearchWithCorrelationIds() throws Exception {
         mockMvc.perform(post("/api/session-audit/login").header("X-Correlation-ID", "login-test-12").with(admin()))
                 .andExpect(status().isOk()).andExpect(header().string("X-Correlation-ID", "login-test-12"));
+        mockMvc.perform(post("/api/session-audit/logout").header("X-Correlation-ID", "logout-test-12").with(admin()))
+                .andExpect(status().isOk()).andExpect(header().string("X-Correlation-ID", "logout-test-12"));
         mockMvc.perform(get("/api/admin/reports").param("internalIdentifier", "RPT-NOT-REAL").with(admin()))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/admin/audit/events").param("eventType", "LOGIN").param("correlationId", "login-test-12").with(admin()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(1)));
+        mockMvc.perform(get("/api/admin/audit/events").param("eventType", "LOGOUT").param("correlationId", "logout-test-12").with(admin()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(1)));
         mockMvc.perform(get("/api/admin/audit/events").param("eventType", "ADMIN_SENSITIVE_SEARCH").with(admin()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total", greaterThanOrEqualTo(1)));
@@ -92,6 +96,11 @@ class AuditIntegrationTest {
                 "REPORT", "fictional-report", "SUCCESS", Map.of("nested", List.of("not", "allowed")), null);
         assertThatThrownBy(() -> service.record(nested)).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("scalar");
+        AuditRecordCommand disguisedFiscalCode = new AuditRecordCommand("TEST_EVENT", "TECHNICAL", "test.adapter",
+                "test-correlation-3", "REPORT", "fictional-report", "SUCCESS",
+                Map.of("reference", "DMSLGN80A01H501U"), null);
+        assertThatThrownBy(() -> service.record(disguisedFiscalCode)).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("tax codes");
     }
 
     @Test
@@ -104,9 +113,28 @@ class AuditIntegrationTest {
                     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                     'application/pdf', 42, 99, 'fictional-audit.pdf', :objectKey, 'demo.admin', 'ACTIVE')
                 """).param("id", documentId).param("objectKey", "audit-test/" + documentId).update();
+        service.record(new AuditRecordCommand("DOCUMENT_OPENED", "USER", "demo.admin", "document-open-test-12",
+                "DOCUMENT", documentId.toString(), "SUCCESS", Map.of("channel", "WEB"), null));
+        jdbc.sql("delete from clinical_documents where id=:id").param("id", documentId).update();
         mockMvc.perform(get("/api/admin/audit/reports/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1/timeline").with(admin()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.eventType == 'DOCUMENT_UPLOADED')].entityId").isNotEmpty());
+                .andExpect(jsonPath("$[?(@.eventType == 'DOCUMENT_UPLOADED')].entityId").isNotEmpty())
+                .andExpect(jsonPath("$[?(@.eventType == 'DOCUMENT_OPENED')].entityId").isNotEmpty());
+    }
+
+    @Test
+    void resolvesSignatureBatchFromAppendOnlyLinksWithoutSourceRows() throws Exception {
+        String reportId = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1";
+        String batchId = UUID.randomUUID().toString();
+        service.record(new AuditRecordCommand("SIGNATURE_BATCH_CREATED", "USER", "demo.signer", "batch-audit-test-12",
+                "SIGNATURE_BATCH", batchId, "SUCCESS", Map.of("selectionMode", "MANUAL"), null));
+        service.record(new AuditRecordCommand("SIGNATURE_ATTEMPT_CREATED", "USER", "demo.signer", "attempt-audit-test-12",
+                "SIGNATURE_ATTEMPT", UUID.randomUUID().toString(), "SUCCESS",
+                Map.of("batchId", batchId, "reportId", reportId), null));
+
+        mockMvc.perform(get("/api/admin/audit/reports/" + reportId + "/timeline").with(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.eventType == 'SIGNATURE_BATCH_CREATED' && @.entityId == '" + batchId + "')]").isNotEmpty());
     }
 
     @Test
