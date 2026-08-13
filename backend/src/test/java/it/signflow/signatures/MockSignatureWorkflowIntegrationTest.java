@@ -197,6 +197,24 @@ class MockSignatureWorkflowIntegrationTest {
     }
 
     @Test
+    void linkedLoginProfilesShareBatchesSessionsAndPersonScopedIdempotency() throws Exception {
+        String session = session();
+        Map<String, Object> body = Map.of("selectionMode", "MANUAL",
+                "reportIds", List.of(SUCCESS_A), "operationKey", "same-person-operation");
+        JsonNode created = postJson(ROOT + "/batches", body);
+        MvcResult replay = mockMvc.perform(post(ROOT + "/batches").with(signerJwt("demo.signer.alt"))
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(objectMapper.readTree(replay.getResponse().getContentAsByteArray()).path("id").asText())
+                .isEqualTo(created.path("id").asText());
+        mockMvc.perform(post(ROOT + "/batches/" + created.path("id").asText() + "/confirm")
+                        .with(signerJwt("demo.signer.alt")).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("providerSessionId", session,
+                                "operationKey", "alternate-confirm"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state", equalTo("CONFIRMED")));
+    }
+
+    @Test
     void confirmedBatchCanBeCancelledBeforeStart() throws Exception {
         String session = session();
         JsonNode draft = postJson(ROOT + "/batches", Map.of("selectionMode", "MANUAL",
@@ -229,7 +247,11 @@ class MockSignatureWorkflowIntegrationTest {
     }
 
     private static RequestPostProcessor signerJwt() {
-        return jwt().jwt(token -> token.claim("preferred_username", "demo.signer")
+        return signerJwt("demo.signer");
+    }
+
+    private static RequestPostProcessor signerJwt(String username) {
+        return jwt().jwt(token -> token.claim("preferred_username", username)
                         .claim("realm_access", Map.of("roles", List.of("SIGNER"))))
                 .authorities(new SimpleGrantedAuthority("ROLE_SIGNER"));
     }

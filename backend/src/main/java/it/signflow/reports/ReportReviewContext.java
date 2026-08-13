@@ -5,8 +5,10 @@ import java.util.UUID;
 
 record ReportReviewContext(
         UUID reportId, ReportState state, long version,
-        UUID signerId, String signerUsername,
-        UUID approverId, String approverUsername, boolean approverActive, boolean approverRole,
+        UUID signerId, UUID signerNaturalPersonId, String signerUsername,
+        UUID approverId, UUID approverNaturalPersonId, String approverUsername,
+        boolean approverActive, boolean approverRole,
         String producedBy, boolean separationRequired, boolean counterSignatureRequired,
-        UUID counterSignerId, String counterSignerUsername, OffsetDateTime counterSignaturePreparedAt) {
+        UUID counterSignerId, UUID counterSignerNaturalPersonId, String counterSignerUsername,
+        OffsetDateTime counterSignaturePreparedAt) {
 }

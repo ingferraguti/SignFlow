@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -30,8 +32,9 @@ public class AdminApplicationUserController {
     }
 
     @PostMapping
-    ApplicationUserResponse create(@Valid @RequestBody ApplicationUserRequest request) {
-        return applicationUserService.create(request);
+    ApplicationUserResponse create(@Valid @RequestBody ApplicationUserRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        return applicationUserService.create(request, username(jwt));
     }
 
     @GetMapping("/{id}")
@@ -40,8 +43,9 @@ public class AdminApplicationUserController {
     }
 
     @PutMapping("/{id}")
-    ApplicationUserResponse update(@PathVariable UUID id, @Valid @RequestBody ApplicationUserRequest request) {
-        return applicationUserService.update(id, request);
+    ApplicationUserResponse update(@PathVariable UUID id, @Valid @RequestBody ApplicationUserRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+        return applicationUserService.update(id, request, username(jwt));
     }
 
     @PostMapping("/{id}/activate")
@@ -52,5 +56,9 @@ public class AdminApplicationUserController {
     @PostMapping("/{id}/deactivate")
     ApplicationUserResponse deactivate(@PathVariable UUID id) {
         return applicationUserService.setActive(id, false);
+    }
+
+    private String username(Jwt jwt) {
+        return jwt == null ? "system" : jwt.getClaimAsString("preferred_username");
     }
 }

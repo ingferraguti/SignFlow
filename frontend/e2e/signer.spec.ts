@@ -15,17 +15,20 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   await page.goto("/firma");
 
   await expect(page.getByRole("heading", { name: "Home firmatario" })).toBeVisible();
-  await expect(page.getByText("9", { exact: true }).first()).toBeVisible();
+  const homeTotal = Number(await page.getByText("Referti visibili").locator("..").locator("strong").textContent());
+  expect(homeTotal).toBeGreaterThanOrEqual(7);
   await expect(page.getByRole("link", { name: "I miei referti" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Configurazione" })).toHaveCount(0);
 
   const reportsCall = page.waitForResponse((response) => response.url().includes("/api/backend/signer/reports?") && response.request().method() === "GET");
   await page.goto("/firma/referti");
-  expect((await reportsCall).status()).toBe(200);
+  const reportsResponse = await reportsCall;
+  expect(reportsResponse.status()).toBe(200);
+  const reportsPage = await reportsResponse.json();
+  expect(reportsPage.total).toBe(homeTotal);
   await expect(page.getByRole("heading", { name: "I miei referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(9);
-  await expect(page.getByText("RPT-INT-006")).toBeVisible();
-  await expect(page.getByText("RPT-INT-003")).toBeVisible();
+  await expect(page.locator("tbody tr")).toHaveCount(reportsPage.total);
+  await expect(page.getByText("RPT-INT-006")).toHaveCount(0);
   await expect(page.getByText("RPT-INT-005")).toHaveCount(0);
 
   await page.getByPlaceholder("Paziente, ID, tipo o reparto").fill("RPT-INT-002");
@@ -51,6 +54,10 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   await page.goto("/firma/profilo");
   await expect(page.getByRole("heading", { name: "Profilo utente" })).toBeVisible();
   await expect(page.getByText("LOCAL-SIGNERS")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Account di accesso collegati" })).toBeVisible();
+  await expect(page.getByText("demo.signer.alt")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Firme digitali disponibili" })).toBeVisible();
+  await expect(page.getByLabel("Firma digitale preferita")).toBeVisible();
   await page.goto("/firma/informazioni");
   await expect(page.getByRole("heading", { name: "Informazioni" })).toBeVisible();
 

@@ -33,8 +33,8 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await page.getByRole("button", { name: "Provider di firma" }).click();
   await expect(page.getByText("MOCK-REMOTE")).toBeVisible();
   await page.getByRole("button", { name: "Account di firma" }).click();
-  await expect(page.getByRole("cell", { name: "demo-signer", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Mappature FSE" }).click();
+  await expect(page.getByRole("cell", { name: "Firma remota demo principale", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /Mapping presidi FSE|Mappature FSE/ }).click();
   await expect(page.getByText("PRESIDIO-DEMO")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Profilo admin · Testi e traduzioni" })).toBeVisible();
 
@@ -98,6 +98,9 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(workflow.getByRole("status").filter({ hasText: "Completezza verificata" })).toBeVisible();
   await expect(workflow.getByText("READY_TO_SIGN", { exact: true }).first()).toBeVisible();
   await expect(workflow.getByRole("button", { name: "Applica correzione" })).toBeDisabled();
+  await workflow.getByRole("button", { name: "Rimuovi assegnazione" }).click();
+  await expect(workflow.getByRole("status").filter({ hasText: "Assegnazione rimossa" })).toBeVisible();
+  await expect(workflow.getByText("MISSING_SIGNER", { exact: true }).first()).toBeVisible();
 
   const auditPageCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/audit/events?")
     && response.request().method() === "GET");

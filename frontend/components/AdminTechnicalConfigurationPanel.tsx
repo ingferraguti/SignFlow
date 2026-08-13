@@ -3,18 +3,23 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   deleteTechnicalConfiguration, fetchTechnicalConfiguration, saveFseFacilityMapping, saveSignatureAccount,
-  saveSignatureProvider, saveSourceSystem, type FseFacilityMapping, type FseFacilityMappingRequest,
+  saveSignatureProvider, saveSourceSystem, saveSourceSystemFseDocumentTypes,
+  type FseFacilityMapping, type FseFacilityMappingRequest,
   type SignatureAccount, type SignatureAccountRequest, type SignatureAuthenticationMode,
   type SignatureProvider, type SignatureProviderRequest, type SourceSystem, type SourceSystemRequest,
   type TechnicalConfigurationData,
 } from "../lib/adminTechnicalConfig";
 import { useUiTexts } from "./UiTextProvider";
 
-type Tab = "sourceSystems" | "signatureProviders" | "signatureAccounts" | "fseFacilityMappings";
-const tabs: Tab[] = ["sourceSystems", "signatureProviders", "signatureAccounts", "fseFacilityMappings"];
+type Tab = "sourceSystems" | "fseDocumentTypes" | "signatureProviders" | "signatureAccounts" | "fseFacilityMappings";
+const tabs: Tab[] = ["sourceSystems", "fseDocumentTypes", "signatureProviders", "signatureAccounts", "fseFacilityMappings"];
+const tabLabels: Record<Tab, string> = {
+  sourceSystems: "Sistemi eroganti", fseDocumentTypes: "Tipi documento FSE",
+  signatureProviders: "Provider di firma", signatureAccounts: "Account di firma",
+  fseFacilityMappings: "Mapping presidi FSE",
+};
 
 export function AdminTechnicalConfigurationPanel() {
-  const { text } = useUiTexts();
   const [tab, setTab] = useState<Tab>("sourceSystems");
   const [data, setData] = useState<TechnicalConfigurationData>();
   const [error, setError] = useState<string>();
@@ -41,9 +46,10 @@ export function AdminTechnicalConfigurationPanel() {
 
   return <section className="card organization-card">
     <div className="section-title"><div><h2>Configurazioni tecniche</h2><p>Pipeline documentali, firma remota e normalizzazione FSE.</p></div></div>
-    <div className="admin-tabs technical-tabs">{tabs.map((item) => <button className={tab === item ? "active" : ""} key={item} onClick={() => setTab(item)}>{text(`button.${item}`)}</button>)}</div>
+    <div className="admin-tabs technical-tabs">{tabs.map((item) => <button className={tab === item ? "active" : ""} key={item} onClick={() => setTab(item)}>{tabLabels[item]}</button>)}</div>
     {error ? <p className="inline-error" role="alert">{error}</p> : null}
     {tab === "sourceSystems" ? <SourceSystemsSection data={data} execute={execute} /> : null}
+    {tab === "fseDocumentTypes" ? <FseDocumentTypesSection data={data} execute={execute} /> : null}
     {tab === "signatureProviders" ? <SignatureProvidersSection data={data} execute={execute} /> : null}
     {tab === "signatureAccounts" ? <SignatureAccountsSection data={data} execute={execute} /> : null}
     {tab === "fseFacilityMappings" ? <FseMappingsSection data={data} execute={execute} /> : null}
@@ -51,6 +57,44 @@ export function AdminTechnicalConfigurationPanel() {
 }
 
 type SectionProps = { data: TechnicalConfigurationData; execute: (action: () => Promise<unknown>) => Promise<boolean> };
+
+function FseDocumentTypesSection({ data, execute }: SectionProps) {
+  const firstSourceId = data.sourceSystems[0]?.id ?? "";
+  const [sourceSystemId, setSourceSystemId] = useState(firstSourceId);
+  const configured = data.sourceSystemFseDocumentTypes
+    .filter((item) => item.sourceSystemId === sourceSystemId && item.cdaInjectionEnabled)
+    .map((item) => item.documentTypeCode);
+  const [selected, setSelected] = useState<string[]>(configured);
+  const source = data.sourceSystems.find((item) => item.id === sourceSystemId);
+
+  function changeSource(id: string) {
+    setSourceSystemId(id);
+    setSelected(data.sourceSystemFseDocumentTypes
+      .filter((item) => item.sourceSystemId === id && item.cdaInjectionEnabled)
+      .map((item) => item.documentTypeCode));
+  }
+  function toggle(code: string, enabled: boolean) {
+    setSelected(enabled ? [...selected, code] : selected.filter((item) => item !== code));
+  }
+
+  return <div className="technical-grid">
+    <div>
+      <h3>Catalogo nazionale FSE 2.0</h3>
+      <p className="form-hint">Ogni documento usa una natura codificata. Il catalogo è controllato e non accetta valori liberi.</p>
+      <div className="table-wrap"><table className="compact-table"><thead><tr><th>Codice</th><th>Tipologia</th><th>Descrizione</th></tr></thead><tbody>
+        {data.fseDocumentTypes.map((item) => <tr key={item.code}><td><strong>{item.code}</strong></td><td>{item.displayName}</td><td>{item.description}</td></tr>)}
+      </tbody></table></div>
+    </div>
+    <form className="admin-form" onSubmit={(event) => { event.preventDefault(); execute(() => saveSourceSystemFseDocumentTypes(sourceSystemId, selected)); }}>
+      <h3>Attivazione CDA per tipologia</h3>
+      <label>Sistema erogante<select value={sourceSystemId} onChange={(event) => changeSource(event.target.value)}>{data.sourceSystems.map((item) => <option key={item.id} value={item.id}>{item.code} - {item.description}</option>)}</select></label>
+      <p className="form-hint">La preparazione PDF+CDA si attiva soltanto per le tipologie selezionate. Il sistema deve avere “Creazione CDA” attiva e “Passthrough” disattivo.</p>
+      {data.fseDocumentTypes.map((item) => <Check key={item.code} label={`${item.code} · ${item.displayName}`} value={selected.includes(item.code)} onChange={(value) => toggle(item.code, value)} />)}
+      {!source?.createCda || source?.passthrough ? <p className="inline-error" role="alert">Abilita prima Creazione CDA e disattiva Passthrough sul sistema erogante.</p> : null}
+      <button className="primary" disabled={!sourceSystemId || !source?.createCda || source?.passthrough} type="submit">Salva tipologie abilitate</button>
+    </form>
+  </div>;
+}
 
 function SourceSystemsSection({ data, execute }: SectionProps) {
   const { text } = useUiTexts();
@@ -101,18 +145,23 @@ function SignatureProvidersSection({ data, execute }: SectionProps) {
 
 function SignatureAccountsSection({ data, execute }: SectionProps) {
   const { text } = useUiTexts();
-  const signers = data.users.filter((user) => user.roles.some((role) => role.code === "SIGNER"));
-  const blank = (): SignatureAccountRequest => ({ applicationUserId: signers[0]?.id ?? "", signatureProviderId: data.signatureProviders[0]?.id ?? "", accountAlias: "", providerUsername: "", certificateAlias: "", active: true });
+  const signers = Array.from(new Map(data.users
+    .filter((user) => user.roles.some((role) => role.code === "SIGNER"))
+    .map((user) => [user.naturalPersonId, user])).values());
+  const blank = (): SignatureAccountRequest => ({ applicationUserId: signers[0]?.id ?? "", signatureProviderId: data.signatureProviders[0]?.id ?? "", accountAlias: "", providerUsername: "", certificateAlias: "", displayName: "", signatureType: "REMOTE", qualified: false, active: true });
   const [id, setId] = useState<string>(); const [form, setForm] = useState<SignatureAccountRequest>(blank);
-  function edit(item: SignatureAccount) { setId(item.id); setForm({ applicationUserId: item.applicationUserId, signatureProviderId: item.signatureProviderId, accountAlias: item.accountAlias, providerUsername: item.providerUsername, certificateAlias: item.certificateAlias, active: item.active }); }
+  function edit(item: SignatureAccount) { setId(item.id); setForm({ applicationUserId: item.applicationUserId, signatureProviderId: item.signatureProviderId, accountAlias: item.accountAlias, providerUsername: item.providerUsername, certificateAlias: item.certificateAlias, displayName: item.displayName, signatureType: item.signatureType, qualified: item.qualified, active: item.active }); }
   async function submit(event: FormEvent) { event.preventDefault(); if (await execute(() => saveSignatureAccount(form, id))) { setId(undefined); setForm(blank()); } }
-  return <div className="technical-grid"><ConfigTable headers={["Alias", "Firmatario", "Provider", "Certificato", "Stato"]} rows={data.signatureAccounts.map((item) => ({ id: item.id, cells: [item.accountAlias, item.applicationUsername, item.signatureProviderCode, item.certificateAlias, item.active ? "Attivo" : "Disattivato"], edit: () => edit(item), remove: () => execute(() => deleteTechnicalConfiguration("signature-accounts", item.id)) }))} />
+  return <div className="technical-grid"><ConfigTable headers={["Firma digitale", "Persona naturale", "Provider", "Certificato", "Stato"]} rows={data.signatureAccounts.map((item) => ({ id: item.id, cells: [item.displayName, item.naturalPersonId, item.signatureProviderCode, item.certificateAlias, item.active ? "Attiva" : "Disattivata"], edit: () => edit(item), remove: () => execute(() => deleteTechnicalConfiguration("signature-accounts", item.id)) }))} />
     <form className="admin-form" onSubmit={submit}><FormTitle id={id} onNew={() => { setId(undefined); setForm(blank()); }} />
-      <label>Firmatario<select required value={form.applicationUserId} onChange={(e) => setForm({ ...form, applicationUserId: e.target.value })}>{signers.map((user) => <option key={user.id} value={user.id}>{user.username} - {user.lastName} {user.firstName}</option>)}</select></label>
+      <label>Persona naturale<select required value={form.applicationUserId} onChange={(e) => setForm({ ...form, applicationUserId: e.target.value })}>{signers.map((user) => <option key={user.id} value={user.id}>{user.lastName} {user.firstName} · {user.personalIdentifier} · account {user.username}</option>)}</select></label>
       <label>Provider<select required value={form.signatureProviderId} onChange={(e) => setForm({ ...form, signatureProviderId: e.target.value })}>{data.signatureProviders.map((provider) => <option key={provider.id} value={provider.id}>{provider.code} - {provider.name}</option>)}</select></label>
       <label>Alias account<input required maxLength={120} value={form.accountAlias} onChange={(e) => setForm({ ...form, accountAlias: e.target.value })} /></label>
       <label>Username provider<input maxLength={160} value={form.providerUsername} onChange={(e) => setForm({ ...form, providerUsername: e.target.value })} /></label>
       <label>Alias certificato<input maxLength={200} value={form.certificateAlias} onChange={(e) => setForm({ ...form, certificateAlias: e.target.value })} /></label>
+      <label>Nome firma digitale<input required maxLength={160} value={form.displayName} onChange={(e) => setForm({ ...form, displayName: e.target.value })} /></label>
+      <label>Tipo firma<select value={form.signatureType} onChange={(e) => setForm({ ...form, signatureType: e.target.value })}><option>REMOTE</option><option>LOCAL_TEST</option><option>MOCK</option></select></label>
+      <Check label="Firma qualificata" value={form.qualified} onChange={(qualified) => setForm({ ...form, qualified })} />
       <p className="form-hint">Le password del provider non vengono richieste né memorizzate.</p>
       <Check label="Attivo" value={form.active} onChange={(value) => setForm({ ...form, active: value })} />
       <button className="primary" type="submit">{text("button.confirm")}</button>

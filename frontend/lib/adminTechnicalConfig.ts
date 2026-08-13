@@ -17,9 +17,11 @@ export type SignatureProviderRequest = Omit<SignatureProvider, "id">;
 
 export type SignatureAccount = {
   id: string; applicationUserId: string; applicationUsername: string; signatureProviderId: string;
-  signatureProviderCode: string; accountAlias: string; providerUsername: string; certificateAlias: string; active: boolean;
+  naturalPersonId: string; signatureProviderCode: string; accountAlias: string; providerUsername: string;
+  certificateAlias: string; displayName: string; signatureType: string; qualified: boolean; active: boolean;
 };
-export type SignatureAccountRequest = Omit<SignatureAccount, "id" | "applicationUsername" | "signatureProviderCode">;
+export type SignatureAccountRequest = Omit<SignatureAccount,
+  "id" | "applicationUsername" | "naturalPersonId" | "signatureProviderCode">;
 
 export type FseFacilityMapping = {
   id: string; facilityCode: string; facilityName: string; companyId: string; companyCode: string;
@@ -27,9 +29,16 @@ export type FseFacilityMapping = {
 };
 export type FseFacilityMappingRequest = Omit<FseFacilityMapping, "id" | "companyCode" | "sourceSystemCode">;
 
+export type FseDocumentType = { code: string; displayName: string; description: string; active: boolean };
+export type SourceSystemFseDocumentType = {
+  sourceSystemId: string; sourceSystemCode: string; documentTypeCode: string;
+  documentTypeName: string; cdaInjectionEnabled: boolean;
+};
+
 export type TechnicalConfigurationData = {
   sourceSystems: SourceSystem[]; signatureProviders: SignatureProvider[];
   signatureAccounts: SignatureAccount[]; fseFacilityMappings: FseFacilityMapping[];
+  fseDocumentTypes: FseDocumentType[]; sourceSystemFseDocumentTypes: SourceSystemFseDocumentType[];
   organization: OrganizationOptions; users: ApplicationUser[];
 };
 
@@ -48,15 +57,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export async function fetchTechnicalConfiguration(): Promise<TechnicalConfigurationData> {
-  const [sourceSystems, signatureProviders, signatureAccounts, fseFacilityMappings, organization, users] = await Promise.all([
+  const [sourceSystems, signatureProviders, signatureAccounts, fseFacilityMappings, fseDocumentTypes, organization, users] = await Promise.all([
     request<SourceSystem[]>("technical-config/source-systems"),
     request<SignatureProvider[]>("technical-config/signature-providers"),
     request<SignatureAccount[]>("technical-config/signature-accounts"),
     request<FseFacilityMapping[]>("technical-config/fse-facility-mappings"),
+    request<FseDocumentType[]>("technical-config/fse-document-types"),
     import("./adminUsers").then(({ fetchOrganizationOptions }) => fetchOrganizationOptions()),
     import("./adminUsers").then(({ fetchUsers }) => fetchUsers("").then((page) => page.items)),
   ]);
-  return { sourceSystems, signatureProviders, signatureAccounts, fseFacilityMappings, organization, users };
+  const sourceSystemFseDocumentTypes = (await Promise.all(sourceSystems.map((source) =>
+    request<SourceSystemFseDocumentType[]>(`technical-config/source-systems/${source.id}/fse-document-types`)
+  ))).flat();
+  return { sourceSystems, signatureProviders, signatureAccounts, fseFacilityMappings, fseDocumentTypes, sourceSystemFseDocumentTypes, organization, users };
 }
 
 function save<TRequest, TResponse>(resource: string, value: TRequest, id?: string) {
@@ -69,4 +82,9 @@ export const saveSourceSystem = (value: SourceSystemRequest, id?: string) => sav
 export const saveSignatureProvider = (value: SignatureProviderRequest, id?: string) => save<SignatureProviderRequest, SignatureProvider>("signature-providers", value, id);
 export const saveSignatureAccount = (value: SignatureAccountRequest, id?: string) => save<SignatureAccountRequest, SignatureAccount>("signature-accounts", value, id);
 export const saveFseFacilityMapping = (value: FseFacilityMappingRequest, id?: string) => save<FseFacilityMappingRequest, FseFacilityMapping>("fse-facility-mappings", value, id);
+export const saveSourceSystemFseDocumentTypes = (sourceSystemId: string, documentTypeCodes: string[]) =>
+  request<SourceSystemFseDocumentType[]>(`technical-config/source-systems/${sourceSystemId}/fse-document-types`, {
+    method: "PUT",
+    body: JSON.stringify(documentTypeCodes.map((documentTypeCode) => ({ documentTypeCode, cdaInjectionEnabled: true }))),
+  });
 export const deleteTechnicalConfiguration = (resource: string, id: string) => request<void>(`technical-config/${resource}/${id}`, { method: "DELETE" });

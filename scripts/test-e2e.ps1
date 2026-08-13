@@ -13,12 +13,15 @@ delete from signature_batches;
 delete from provider_sessions;
 delete from report_workflow_events where report_id in (
  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1','eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee2',
- 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3','eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee4');
+ 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3','eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee4',
+ 'cccccccc-cccc-cccc-cccc-ccccccccccc3');
 update reports set state='APPROVED', workflow_version=0, signed_at=null,
  signature_kind=null, signature_artifact_notice=null
 where id in (
  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee1','eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee2',
  'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3','eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee4');
+update reports set state='MISSING_SIGNER', workflow_version=0, assigned_signer_id=null
+where id='cccccccc-cccc-cccc-cccc-ccccccccccc3';
 commit;
 "@
     $composeArguments = @(

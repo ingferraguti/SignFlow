@@ -23,7 +23,10 @@ public class ApplicationUserRepository {
                    or lower(u.username) like '%' || :query || '%'
                    or lower(u.first_name) like '%' || :query || '%'
                    or lower(u.last_name) like '%' || :query || '%'
-                   or lower(coalesce(u.fiscal_code, '')) like '%' || :query || '%')
+                   or lower(coalesce(u.fiscal_code, '')) like '%' || :query || '%'
+                   or exists (select 1 from natural_person_identifiers pi
+                       where pi.natural_person_id=u.natural_person_id
+                         and lower(pi.normalized_value) like '%' || :query || '%'))
                   and (:activeFilter = false or u.active = :active)
                 """;
         long total = jdbcClient.sql("select count(*) from application_users u " + filter)
@@ -34,10 +37,18 @@ public class ApplicationUserRepository {
                 .single();
         List<ApplicationUserResponse> items = jdbcClient.sql("""
                 select u.*, p.code partition_code, p.name partition_name, p.active partition_active,
-                       c.code company_code, c.name company_name, c.active company_active
+                       c.code company_code, c.name company_name, c.active company_active,
+                       pi.scheme identifier_scheme, pi.issuing_country, pi.issuer identifier_issuer,
+                       pi.normalized_value personal_identifier,
+                       ai.issuer authentication_issuer, ai.authentication_method
                 from application_users u
                 join partitions p on p.id = u.partition_id
                 join companies c on c.id = u.company_id
+                left join lateral (select * from natural_person_identifiers x
+                    where x.natural_person_id=u.natural_person_id and x.active=true
+                    order by x.verified desc, x.created_at limit 1) pi on true
+                left join lateral (select * from authentication_identities x
+                    where x.application_user_id=u.id and x.active=true order by x.created_at limit 1) ai on true
                 """ + filter + " order by u.last_name, u.first_name limit :limit offset :offset")
                 .param("query", normalizedQuery)
                 .param("activeFilter", active != null)
@@ -52,10 +63,18 @@ public class ApplicationUserRepository {
     public Optional<ApplicationUserResponse> findById(UUID id) {
         return jdbcClient.sql("""
                 select u.*, p.code partition_code, p.name partition_name, p.active partition_active,
-                       c.code company_code, c.name company_name, c.active company_active
+                       c.code company_code, c.name company_name, c.active company_active,
+                       pi.scheme identifier_scheme, pi.issuing_country, pi.issuer identifier_issuer,
+                       pi.normalized_value personal_identifier,
+                       ai.issuer authentication_issuer, ai.authentication_method
                 from application_users u
                 join partitions p on p.id = u.partition_id
                 join companies c on c.id = u.company_id
+                left join lateral (select * from natural_person_identifiers x
+                    where x.natural_person_id=u.natural_person_id and x.active=true
+                    order by x.verified desc, x.created_at limit 1) pi on true
+                left join lateral (select * from authentication_identities x
+                    where x.application_user_id=u.id and x.active=true order by x.created_at limit 1) ai on true
                 where u.id = :id
                 """)
                 .param("id", id)
@@ -63,14 +82,17 @@ public class ApplicationUserRepository {
                 .optional();
     }
 
-    public UUID create(ApplicationUserRequest request) {
+    public UUID create(ApplicationUserRequest request, UUID naturalPersonId) {
         UUID id = UUID.randomUUID();
+        String canonicalFiscalCode = canonicalFiscalCode(request);
         jdbcClient.sql("""
                 insert into application_users (
                     id, username, oidc_subject, first_name, last_name, email, fiscal_code,
-                    signer_fiscal_code, counter_signer_fiscal_code, active, partition_id, company_id
+                    signer_fiscal_code, counter_signer_fiscal_code, active, partition_id, company_id,
+                    natural_person_id
                 ) values (:id, :username, :oidcSubject, :firstName, :lastName, :email, :fiscalCode,
-                    :signerFiscalCode, :counterSignerFiscalCode, :active, :partitionId, :companyId)
+                    :signerFiscalCode, :counterSignerFiscalCode, :active, :partitionId, :companyId,
+                    :naturalPersonId)
                 """)
                 .param("id", id)
                 .param("username", request.username())
@@ -78,18 +100,20 @@ public class ApplicationUserRepository {
                 .param("firstName", request.firstName())
                 .param("lastName", request.lastName())
                 .param("email", request.email())
-                .param("fiscalCode", request.fiscalCode())
-                .param("signerFiscalCode", request.signerFiscalCode())
+                .param("fiscalCode", canonicalFiscalCode == null ? request.fiscalCode() : canonicalFiscalCode)
+                .param("signerFiscalCode", canonicalFiscalCode == null ? request.signerFiscalCode() : canonicalFiscalCode)
                 .param("counterSignerFiscalCode", request.counterSignerFiscalCode())
                 .param("active", request.active())
                 .param("partitionId", request.partitionId())
                 .param("companyId", request.companyId())
+                .param("naturalPersonId", naturalPersonId)
                 .update();
         replaceAssignments(id, request);
         return id;
     }
 
-    public void update(UUID id, ApplicationUserRequest request) {
+    public void update(UUID id, ApplicationUserRequest request, UUID naturalPersonId) {
+        String canonicalFiscalCode = canonicalFiscalCode(request);
         jdbcClient.sql("""
                 update application_users
                 set username = :username,
@@ -103,6 +127,7 @@ public class ApplicationUserRepository {
                     active = :active,
                     partition_id = :partitionId,
                     company_id = :companyId,
+                    natural_person_id = :naturalPersonId,
                     updated_at = now()
                 where id = :id
                 """)
@@ -112,12 +137,13 @@ public class ApplicationUserRepository {
                 .param("firstName", request.firstName())
                 .param("lastName", request.lastName())
                 .param("email", request.email())
-                .param("fiscalCode", request.fiscalCode())
-                .param("signerFiscalCode", request.signerFiscalCode())
+                .param("fiscalCode", canonicalFiscalCode == null ? request.fiscalCode() : canonicalFiscalCode)
+                .param("signerFiscalCode", canonicalFiscalCode == null ? request.signerFiscalCode() : canonicalFiscalCode)
                 .param("counterSignerFiscalCode", request.counterSignerFiscalCode())
                 .param("active", request.active())
                 .param("partitionId", request.partitionId())
                 .param("companyId", request.companyId())
+                .param("naturalPersonId", naturalPersonId)
                 .update();
         replaceAssignments(id, request);
     }
@@ -142,6 +168,13 @@ public class ApplicationUserRepository {
         }
     }
 
+    private String canonicalFiscalCode(ApplicationUserRequest request) {
+        String scheme = NaturalPersonRepository.normalizeScheme(request.identifierScheme());
+        if (!"IT_TAX_CODE".equals(scheme) || request.personalIdentifier() == null
+                || request.personalIdentifier().isBlank()) return null;
+        return NaturalPersonRepository.normalizeIdentifier(request.personalIdentifier(), scheme);
+    }
+
     private ApplicationUserResponse mapUser(ResultSet rs, int rowNum) throws SQLException {
         UUID userId = rs.getObject("id", UUID.class);
         return new ApplicationUserResponse(
@@ -154,6 +187,13 @@ public class ApplicationUserRepository {
                 rs.getString("fiscal_code"),
                 rs.getString("signer_fiscal_code"),
                 rs.getString("counter_signer_fiscal_code"),
+                rs.getObject("natural_person_id", UUID.class),
+                rs.getString("identifier_scheme"),
+                rs.getString("issuing_country"),
+                rs.getString("identifier_issuer"),
+                rs.getString("personal_identifier"),
+                rs.getString("authentication_issuer"),
+                rs.getString("authentication_method"),
                 rs.getBoolean("active"),
                 new OptionResponse(rs.getObject("partition_id", UUID.class), rs.getString("partition_code"), rs.getString("partition_name"), rs.getBoolean("partition_active")),
                 new OptionResponse(rs.getObject("company_id", UUID.class), rs.getString("company_code"), rs.getString("company_name"), rs.getBoolean("company_active")),

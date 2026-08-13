@@ -26,6 +26,21 @@ public class AdminTechnicalConfigurationController {
     @PutMapping("/source-systems/{id}") SourceSystemResponse updateSourceSystem(@PathVariable UUID id, @Valid @RequestBody SourceSystemRequest request) { return service.updateSourceSystem(id, request); }
     @DeleteMapping("/source-systems/{id}") ResponseEntity<Void> deleteSourceSystem(@PathVariable UUID id) { service.deleteSourceSystem(id); return ResponseEntity.noContent().build(); }
 
+    @GetMapping("/fse-document-types") List<FseDocumentTypeResponse> fseDocumentTypes() {
+        return service.fseDocumentTypes();
+    }
+
+    @GetMapping("/source-systems/{id}/fse-document-types")
+    List<SourceSystemFseDocumentTypeResponse> sourceSystemFseDocumentTypes(@PathVariable UUID id) {
+        return service.sourceSystemFseDocumentTypes(id);
+    }
+
+    @PutMapping("/source-systems/{id}/fse-document-types")
+    List<SourceSystemFseDocumentTypeResponse> replaceSourceSystemFseDocumentTypes(@PathVariable UUID id,
+            @Valid @RequestBody List<@Valid SourceSystemFseDocumentTypeRequest> configurations) {
+        return service.replaceSourceSystemFseDocumentTypes(id, configurations);
+    }
+
     @GetMapping("/signature-providers") List<SignatureProviderResponse> signatureProviders() { return service.signatureProviders(); }
     @GetMapping("/signature-providers/{id}") SignatureProviderResponse signatureProvider(@PathVariable UUID id) { return service.signatureProvider(id); }
     @PostMapping("/signature-providers") SignatureProviderResponse createSignatureProvider(@Valid @RequestBody SignatureProviderRequest request) { return service.createSignatureProvider(request); }

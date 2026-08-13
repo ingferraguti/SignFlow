@@ -6,6 +6,8 @@ import java.util.UUID;
 public record ClinicalDocumentResponse(
         UUID id,
         UUID reportId,
+        String documentTypeCode,
+        String cdaInjectionStatus,
         String sha256,
         String mimeType,
         long sizeBytes,

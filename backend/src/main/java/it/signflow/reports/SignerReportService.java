@@ -78,6 +78,15 @@ public class SignerReportService {
         return repository.profile(username).orElseThrow(() -> forbidden("Signer profile not available"));
     }
 
+    @Transactional
+    public SignerProfileResponse setPreferredSignature(String username, UUID signatureId) {
+        requireSigner(username);
+        if (!repository.setPreferredSignature(username, signatureId)) {
+            throw badRequest("Digital signature is not available to the authenticated natural person");
+        }
+        return profile(username);
+    }
+
     public List<ReportStateLegendResponse> legend() {
         return List.of(
                 legend(ReportState.RECEIVED, "Ricevuto", "Il referto è stato acquisito."),

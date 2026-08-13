@@ -27,6 +27,34 @@ public class TechnicalConfigurationService {
     public List<SourceSystemResponse> sourceSystems() { return repository.sourceSystems(); }
     public SourceSystemResponse sourceSystem(UUID id) { return repository.sourceSystem(id).orElseThrow(() -> notFound("Source system")); }
 
+    public List<FseDocumentTypeResponse> fseDocumentTypes() { return repository.fseDocumentTypes(); }
+
+    public List<SourceSystemFseDocumentTypeResponse> sourceSystemFseDocumentTypes(UUID sourceSystemId) {
+        sourceSystem(sourceSystemId);
+        return repository.sourceSystemFseDocumentTypes(sourceSystemId);
+    }
+
+    @Transactional
+    public List<SourceSystemFseDocumentTypeResponse> replaceSourceSystemFseDocumentTypes(UUID sourceSystemId,
+            List<SourceSystemFseDocumentTypeRequest> configurations) {
+        SourceSystemResponse sourceSystem = sourceSystem(sourceSystemId);
+        if (configurations == null) throw badRequest("document type configuration is required");
+        if (configurations.stream().map(SourceSystemFseDocumentTypeRequest::documentTypeCode).distinct().count()
+                != configurations.size()) {
+            throw badRequest("document types cannot be duplicated");
+        }
+        for (SourceSystemFseDocumentTypeRequest configuration : configurations) {
+            if (!repository.fseDocumentTypeExists(configuration.documentTypeCode())) {
+                throw badRequest("unsupported FSE document type: " + configuration.documentTypeCode());
+            }
+            if (configuration.cdaInjectionEnabled() && (!sourceSystem.createCda() || sourceSystem.passthrough())) {
+                throw badRequest("CDA injection requires createCda enabled and passthrough disabled on the source system");
+            }
+        }
+        repository.replaceSourceSystemFseDocumentTypes(sourceSystemId, configurations);
+        return repository.sourceSystemFseDocumentTypes(sourceSystemId);
+    }
+
     @Transactional
     public SourceSystemResponse createSourceSystem(SourceSystemRequest request) {
         validateSourceSystem(request);

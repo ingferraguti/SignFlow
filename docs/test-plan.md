@@ -1,6 +1,33 @@
 # Test Plan
 
-Last updated: 2026-08-11.
+Last updated: 2026-08-13.
+
+## Natural Person, Authentication Profiles, and Digital Signatures
+
+Backend tests (`AdminApplicationUserIntegrationTest`, `SignerReportIntegrationTest`,
+`MockSignatureWorkflowIntegrationTest`, `ReportReviewIntegrationTest`):
+
+- Italian tax code, eIDAS `PersonIdentifier`, and national identifiers are normalized as qualified identifiers;
+- two profiles with the same verified personal identifier resolve to one `NaturalPerson` even when authentication
+  issuer/method differ or different issuers reuse the same subject;
+- changing the natural-person association requires an administrative reason and produces an append-only identity event;
+- direct Report assignment to any profile exposes the Report to every active signer profile of that person and to no
+  other person; group and partition grants do not confer signing visibility;
+- role separation compares natural persons, preventing the same person from approving through another profile;
+- provider sessions, signature batches, idempotency keys, results, and artifacts are authorized by natural person;
+- each application profile can select a preferred digital signature only from the active signatures owned by its
+  natural person; another person's signature is rejected;
+- multiple signers per Report remain explicitly deferred: `assigned_signer_id` is retained as the single assignment.
+
+Frontend and E2E checks:
+
+- administrator forms manage identifier scheme/country/issuer/value, authentication issuer/method, and reasoned
+  identity correction without displaying or storing passwords;
+- technical configuration associates one or more digital-signature entities with a natural person;
+- signer profile shows a masked personal identifier, linked authentication accounts, available signatures, and a
+  changeable preferred signature;
+- desktop and 390 x 844 views have no page overflow, profile controls remain usable, relevant network calls return
+  HTTP 200, and the JavaScript console is empty.
 
 ## Baseline Regression
 

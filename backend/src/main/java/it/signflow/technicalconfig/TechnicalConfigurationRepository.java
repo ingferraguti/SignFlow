@@ -30,6 +30,48 @@ public class TechnicalConfigurationRepository {
                 """).param("id", id).query(this::mapSourceSystem).optional();
     }
 
+    public List<FseDocumentTypeResponse> fseDocumentTypes() {
+        return jdbcClient.sql("select * from fse_document_types order by code")
+                .query((rs, rowNum) -> new FseDocumentTypeResponse(rs.getString("code"),
+                        rs.getString("display_name"), rs.getString("description"), rs.getBoolean("active"))).list();
+    }
+
+    public boolean fseDocumentTypeExists(String code) {
+        return jdbcClient.sql("select count(*) from fse_document_types where code=:code and active=true")
+                .param("code", code).query(Integer.class).single() > 0;
+    }
+
+    public List<SourceSystemFseDocumentTypeResponse> sourceSystemFseDocumentTypes(UUID sourceSystemId) {
+        return jdbcClient.sql("""
+                select c.source_system_id, s.code source_system_code, c.document_type_code,
+                       t.display_name document_type_name, c.cda_injection_enabled
+                from source_system_fse_document_types c
+                join source_systems s on s.id=c.source_system_id
+                join fse_document_types t on t.code=c.document_type_code
+                where c.source_system_id=:sourceSystemId
+                order by c.document_type_code
+                """).param("sourceSystemId", sourceSystemId)
+                .query((rs, rowNum) -> new SourceSystemFseDocumentTypeResponse(
+                        rs.getObject("source_system_id", UUID.class), rs.getString("source_system_code"),
+                        rs.getString("document_type_code"), rs.getString("document_type_name"),
+                        rs.getBoolean("cda_injection_enabled"))).list();
+    }
+
+    public void replaceSourceSystemFseDocumentTypes(UUID sourceSystemId,
+            List<SourceSystemFseDocumentTypeRequest> configurations) {
+        jdbcClient.sql("delete from source_system_fse_document_types where source_system_id=:sourceSystemId")
+                .param("sourceSystemId", sourceSystemId).update();
+        for (SourceSystemFseDocumentTypeRequest configuration : configurations) {
+            jdbcClient.sql("""
+                    insert into source_system_fse_document_types
+                        (source_system_id, document_type_code, cda_injection_enabled)
+                    values (:sourceSystemId, :documentTypeCode, :enabled)
+                    """).param("sourceSystemId", sourceSystemId)
+                    .param("documentTypeCode", configuration.documentTypeCode())
+                    .param("enabled", configuration.cdaInjectionEnabled()).update();
+        }
+    }
+
     public UUID createSourceSystem(SourceSystemRequest request) {
         UUID id = UUID.randomUUID();
         jdbcClient.sql("""
@@ -102,16 +144,24 @@ public class TechnicalConfigurationRepository {
 
     public List<SignatureAccountResponse> signatureAccounts() {
         return jdbcClient.sql("""
-                select a.*, u.username application_username, p.code provider_code from signature_accounts a
-                join application_users u on u.id=a.application_user_id
+                select a.*, coalesce(owner.username, person_user.username) application_username,
+                       coalesce(a.application_user_id, person_user.id) effective_application_user_id,
+                       p.code provider_code from signature_accounts a
+                left join application_users owner on owner.id=a.application_user_id
+                left join lateral (select id,username from application_users x
+                    where x.natural_person_id=a.natural_person_id order by x.created_at limit 1) person_user on true
                 join signature_providers p on p.id=a.signature_provider_id order by a.account_alias
                 """).query(this::mapAccount).list();
     }
 
     public Optional<SignatureAccountResponse> signatureAccount(UUID id) {
         return jdbcClient.sql("""
-                select a.*, u.username application_username, p.code provider_code from signature_accounts a
-                join application_users u on u.id=a.application_user_id
+                select a.*, coalesce(owner.username, person_user.username) application_username,
+                       coalesce(a.application_user_id, person_user.id) effective_application_user_id,
+                       p.code provider_code from signature_accounts a
+                left join application_users owner on owner.id=a.application_user_id
+                left join lateral (select id,username from application_users x
+                    where x.natural_person_id=a.natural_person_id order by x.created_at limit 1) person_user on true
                 join signature_providers p on p.id=a.signature_provider_id where a.id=:id
                 """).param("id", id).query(this::mapAccount).optional();
     }
@@ -119,13 +169,17 @@ public class TechnicalConfigurationRepository {
     public UUID createSignatureAccount(SignatureAccountRequest request) {
         UUID id = UUID.randomUUID();
         jdbcClient.sql("""
-                insert into signature_accounts (id, application_user_id, signature_provider_id, account_alias,
-                    provider_username, certificate_alias, active)
-                values (:id, :applicationUserId, :signatureProviderId, :accountAlias,
-                    :providerUsername, :certificateAlias, :active)
+                insert into signature_accounts (id, application_user_id, natural_person_id,
+                    signature_provider_id, account_alias, provider_username, certificate_alias,
+                    display_name, signature_type, qualified, active)
+                select :id, :applicationUserId, u.natural_person_id, :signatureProviderId, :accountAlias,
+                    :providerUsername, :certificateAlias, :displayName, :signatureType, :qualified, :active
+                from application_users u where u.id=:applicationUserId
                 """).param("id", id).param("applicationUserId", request.applicationUserId())
                 .param("signatureProviderId", request.signatureProviderId()).param("accountAlias", request.accountAlias().trim())
                 .param("providerUsername", value(request.providerUsername())).param("certificateAlias", value(request.certificateAlias()))
+                .param("displayName", displayName(request)).param("signatureType", signatureType(request))
+                .param("qualified", request.qualified())
                 .param("active", request.active()).update();
         return id;
     }
@@ -133,12 +187,16 @@ public class TechnicalConfigurationRepository {
     public int updateSignatureAccount(UUID id, SignatureAccountRequest request) {
         return jdbcClient.sql("""
                 update signature_accounts set application_user_id=:applicationUserId,
+                    natural_person_id=(select natural_person_id from application_users where id=:applicationUserId),
                     signature_provider_id=:signatureProviderId, account_alias=:accountAlias,
                     provider_username=:providerUsername, certificate_alias=:certificateAlias,
+                    display_name=:displayName, signature_type=:signatureType, qualified=:qualified,
                     active=:active, updated_at=now() where id=:id
                 """).param("id", id).param("applicationUserId", request.applicationUserId())
                 .param("signatureProviderId", request.signatureProviderId()).param("accountAlias", request.accountAlias().trim())
                 .param("providerUsername", value(request.providerUsername())).param("certificateAlias", value(request.certificateAlias()))
+                .param("displayName", displayName(request)).param("signatureType", signatureType(request))
+                .param("qualified", request.qualified())
                 .param("active", request.active()).update();
     }
 
@@ -202,10 +260,12 @@ public class TechnicalConfigurationRepository {
     }
 
     private SignatureAccountResponse mapAccount(ResultSet rs, int rowNum) throws SQLException {
-        return new SignatureAccountResponse(rs.getObject("id", UUID.class), rs.getObject("application_user_id", UUID.class),
-                rs.getString("application_username"), rs.getObject("signature_provider_id", UUID.class),
+        return new SignatureAccountResponse(rs.getObject("id", UUID.class), rs.getObject("effective_application_user_id", UUID.class),
+                rs.getString("application_username"), rs.getObject("natural_person_id", UUID.class),
+                rs.getObject("signature_provider_id", UUID.class),
                 rs.getString("provider_code"), rs.getString("account_alias"), rs.getString("provider_username"),
-                rs.getString("certificate_alias"), rs.getBoolean("active"));
+                rs.getString("certificate_alias"), rs.getString("display_name"), rs.getString("signature_type"),
+                rs.getBoolean("qualified"), rs.getBoolean("active"));
     }
 
     private FseFacilityMappingResponse mapFseMapping(ResultSet rs, int rowNum) throws SQLException {
@@ -217,5 +277,16 @@ public class TechnicalConfigurationRepository {
 
     private String value(String text) {
         return text == null ? "" : text.trim();
+    }
+
+    private String displayName(SignatureAccountRequest request) {
+        if (request.displayName() != null && !request.displayName().isBlank()) return request.displayName().trim();
+        if (request.certificateAlias() != null && !request.certificateAlias().isBlank()) return request.certificateAlias().trim();
+        return request.accountAlias().trim();
+    }
+
+    private String signatureType(SignatureAccountRequest request) {
+        return request.signatureType() == null || request.signatureType().isBlank()
+                ? "REMOTE" : request.signatureType().trim().toUpperCase();
     }
 }

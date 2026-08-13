@@ -10,9 +10,15 @@ public record SignerProfileResponse(
         String lastName,
         String email,
         String signerFiscalCode,
+        UUID naturalPersonId,
+        String identifierScheme,
+        String issuingCountry,
+        String maskedPersonalIdentifier,
         String partitionCode,
         String partitionName,
         String companyCode,
         String companyName,
-        List<String> groups) {
+        List<String> groups,
+        List<AuthenticationAccountResponse> authenticationAccounts,
+        List<DigitalSignatureOptionResponse> digitalSignatures) {
 }

@@ -10,6 +10,13 @@ export type ApplicationUser = {
   fiscalCode?: string;
   signerFiscalCode?: string;
   counterSignerFiscalCode?: string;
+  naturalPersonId: string;
+  identifierScheme?: string;
+  issuingCountry?: string;
+  identifierIssuer?: string;
+  personalIdentifier?: string;
+  authenticationIssuer?: string;
+  authenticationMethod?: string;
   active: boolean;
   partition: Option;
   company: Option;
@@ -40,6 +47,13 @@ export type ApplicationUserRequest = {
   fiscalCode: string;
   signerFiscalCode: string;
   counterSignerFiscalCode: string;
+  identifierScheme: string;
+  issuingCountry: string;
+  identifierIssuer: string;
+  personalIdentifier: string;
+  authenticationIssuer: string;
+  authenticationMethod: string;
+  identityCorrectionReason: string;
   active: boolean;
   partitionId: string;
   companyId: string;

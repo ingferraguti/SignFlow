@@ -11,7 +11,11 @@ export type SignerHome = {
 };
 export type SignerProfile = {
   id: string; username: string; firstName: string; lastName: string; email?: string; signerFiscalCode?: string;
+  naturalPersonId: string; identifierScheme: string; issuingCountry: string; maskedPersonalIdentifier: string;
   partitionCode: string; partitionName: string; companyCode: string; companyName: string; groups: string[];
+  authenticationAccounts: { username: string; issuer: string; authenticationMethod: string; current: boolean }[];
+  digitalSignatures: { id: string; displayName: string; providerCode: string; accountAlias: string;
+    certificateAlias?: string; signatureType: string; qualified: boolean; preferred: boolean }[];
 };
 export type StateLegend = { code: ReportState; label: string; description: string };
 export type Preview = { url: string; expiresAt: string; reportState: ReportState; workflowVersion: number; firstPreviewedAt?: string };
@@ -37,6 +41,8 @@ export const emptySignerFilters = (): SignerFilters => ({ query: "", patient: ""
   state: "", producedFrom: "", producedTo: "", signedFrom: "", signedTo: "" });
 export const fetchSignerHome = () => request<SignerHome>("home");
 export const fetchSignerProfile = () => request<SignerProfile>("profile");
+export const setPreferredDigitalSignature = (signatureId: string) => request<SignerProfile>(
+  `profile/preferred-signature/${signatureId}`, { method: "POST" });
 export const fetchStateLegend = () => request<StateLegend[]>("states");
 export const fetchSignerReport = (id: string) => request<ReportDetail>(`reports/${id}`);
 export const fetchSignerDocuments = (id: string) => request<ClinicalDocument[]>(`reports/${id}/documents`);

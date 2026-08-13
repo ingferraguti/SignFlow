@@ -22,9 +22,12 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | Partition | Logical tenant or organizational boundary, for example `SIADOM` or `POLICLINICO`. |
 | Company | Healthcare company or organization, for example AUSL, AOU, or NOS. |
 | User | Application identity with username, domain, fiscal code, email, active state, partition, roles, groups, and optional signer mapping. |
+| NaturalPerson | Canonical physical person with an immutable internal UUID. It can own multiple application profiles, authentication identities, and digital signatures. |
+| PersonIdentifier | Qualified external identifier with scheme, issuing country, issuer, normalized value, and verification state. Italian tax code and eIDAS PersonIdentifier are identifiers, not database primary keys. |
+| AuthenticationIdentity | Issuer-scoped login identity identified by `(issuer, subject)`, with method such as OIDC, LDAP, SPID, CIE, or eIDAS. |
 | Role | Application authorization role. Initial roles: `Administrator` and `Firmatario`. |
 | Group | Functional grouping used to associate users with providers, partitions, rules, or source systems. |
-| SignatureAccount | Provider-specific account or certificate alias associated with a signer. It must not store persistent provider passwords. |
+| SignatureAccount | Digital-signature/provider account owned by a NaturalPerson. A person can own more than one; each application profile can select a preferred one among those available. It must not store persistent provider passwords. |
 
 ## Source and Document Flow
 

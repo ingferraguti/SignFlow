@@ -14,10 +14,13 @@ public class ApplicationUserService {
 
     private final ApplicationUserRepository userRepository;
     private final OrganizationRepository organizationRepository;
+    private final NaturalPersonRepository naturalPersonRepository;
 
-    public ApplicationUserService(ApplicationUserRepository userRepository, OrganizationRepository organizationRepository) {
+    public ApplicationUserService(ApplicationUserRepository userRepository, OrganizationRepository organizationRepository,
+            NaturalPersonRepository naturalPersonRepository) {
         this.userRepository = userRepository;
         this.organizationRepository = organizationRepository;
+        this.naturalPersonRepository = naturalPersonRepository;
     }
 
     public PageResponse<ApplicationUserResponse> search(String query, Boolean active, int page, int size) {
@@ -31,17 +34,32 @@ public class ApplicationUserService {
     }
 
     @Transactional
-    public ApplicationUserResponse create(ApplicationUserRequest request) {
+    public ApplicationUserResponse create(ApplicationUserRequest request, String actor) {
         validateReferences(request);
-        UUID id = userRepository.create(request);
+        UUID personId = resolvePerson(request);
+        UUID id = userRepository.create(request, personId);
+        bindAuthentication(id, personId, request);
+        naturalPersonRepository.recordLink(id, null, personId, null, actor);
         return get(id);
     }
 
     @Transactional
-    public ApplicationUserResponse update(UUID id, ApplicationUserRequest request) {
-        get(id);
+    public ApplicationUserResponse update(UUID id, ApplicationUserRequest request, String actor) {
+        ApplicationUserResponse existing = get(id);
         validateReferences(request);
-        userRepository.update(id, request);
+        UUID personId = resolvePerson(request);
+        if (!existing.naturalPersonId().equals(personId)
+                && (request.identityCorrectionReason() == null
+                || request.identityCorrectionReason().trim().length() < 10)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "identityCorrectionReason of at least 10 characters is required to change natural person");
+        }
+        userRepository.update(id, request, personId);
+        bindAuthentication(id, personId, request);
+        if (!existing.naturalPersonId().equals(personId)) {
+            naturalPersonRepository.recordLink(id, existing.naturalPersonId(), personId,
+                    request.identityCorrectionReason().trim(), actor);
+        }
         return get(id);
     }
 
@@ -75,5 +93,28 @@ public class ApplicationUserService {
         if (!errors.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.join("; ", errors));
         }
+    }
+
+    private UUID resolvePerson(ApplicationUserRequest request) {
+        String scheme = NaturalPersonRepository.normalizeScheme(request.identifierScheme());
+        String sourceIdentifier = request.personalIdentifier();
+        if (sourceIdentifier == null || sourceIdentifier.isBlank()) {
+            sourceIdentifier = request.signerFiscalCode() == null || request.signerFiscalCode().isBlank()
+                    ? request.fiscalCode() : request.signerFiscalCode();
+        }
+        String identifier = NaturalPersonRepository.normalizeIdentifier(sourceIdentifier, scheme);
+        String country = NaturalPersonRepository.normalizeCountry(request.issuingCountry(), scheme);
+        String issuer = NaturalPersonRepository.normalizeIssuer(request.identifierIssuer(), scheme);
+        return naturalPersonRepository.findByIdentifier(scheme, country, issuer, identifier)
+                .orElseGet(() -> naturalPersonRepository.create(request.firstName(), request.lastName(),
+                        scheme, country, issuer, identifier));
+    }
+
+    private void bindAuthentication(UUID userId, UUID personId, ApplicationUserRequest request) {
+        String issuer = request.authenticationIssuer() == null || request.authenticationIssuer().isBlank()
+                ? "legacy://signflow" : request.authenticationIssuer().trim();
+        String method = request.authenticationMethod() == null || request.authenticationMethod().isBlank()
+                ? "OIDC" : request.authenticationMethod().trim().toUpperCase();
+        naturalPersonRepository.bindAuthentication(userId, personId, issuer, request.oidcSubject(), method);
     }
 }

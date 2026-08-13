@@ -98,6 +98,24 @@
       ]
     },
     {
+      "username": "demo.signer.alt",
+      "firstName": "Local Demo",
+      "lastName": "Signer",
+      "email": "demo.signer.alt@signflow.invalid",
+      "emailVerified": true,
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-signer-alt-password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "SIGNER"
+      ]
+    },
+    {
       "username": "demo.approver",
       "firstName": "Demo",
       "lastName": "Approvatore Fittizio",

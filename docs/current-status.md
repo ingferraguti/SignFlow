@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-08-11 Europe/Rome.
+Last verified: 2026-08-13 Europe/Rome.
 
 ## Repository State
 
@@ -18,7 +18,8 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Implemented
 
-- Backend package boundaries: `audit`, `configuration`, `identity`, `reports`, `shared`, `signatures`, `sourcesystems`, `technicalconfig`.
+- Backend package boundaries: `audit`, `configuration`, `fse`, `identity`, `reports`, `shared`, `signatures`,
+  `sourcesystems`, `technicalconfig`.
 - `GET /api/system/info`, returning application name, version, and `UP` status.
 - Global API error response support.
 - Actuator health endpoint.
@@ -29,7 +30,8 @@ The repository currently contains a technical foundation for SignFlow:
 - Active signer portal under `/firma` and active administration pages for `Referti`, `Configurazione`, and append-only audit `Monitoraggio`.
 - Docker Compose services for PostgreSQL, Keycloak, private MinIO object storage, backend, and frontend.
 - Docker Compose service for local Keycloak OIDC.
-- Local Keycloak realm import with `demo.admin`, `demo.signer`, and `demo.approver` users.
+- Local Keycloak realm import with `demo.admin`, `demo.signer`, `demo.signer.alt`, and `demo.approver` users; the two
+  signer profiles represent distinct authentication paths to the same fictional natural person.
 - Backend Spring Security resource-server protection for `/api/**`.
 - Backend role mapping for distinct `ADMINISTRATOR`, `SIGNER`, and `APPROVER` Keycloak realm roles.
 - Backend `/api/auth/me` endpoint for current authenticated user details.
@@ -38,15 +40,27 @@ The repository currently contains a technical foundation for SignFlow:
 - Frontend route protection with redirect to `/login`.
 - E2E authentication test covering protected route, login, current user display, logout, and blocked access after logout.
 - PostgreSQL organizational model for partitions, companies, roles, groups, application users, user-role assignments, and user-group assignments.
-- Demo application users aligned with the local Keycloak identities `demo.admin`, `demo.signer`, and `demo.approver`.
+- Canonical `NaturalPerson`, qualified Italian/eIDAS/national identifiers, issuer-scoped authentication identities,
+  and multiple application profiles per person.
+- Signer Report visibility and signature authorization by natural person: all linked profiles see the same directly
+  assigned Reports, while group/partition grants no longer confer signing rights.
+- Digital-signature entities owned by natural person, with multiple available signatures and a profile-specific
+  preferred signature constrained to those owned by the same person.
+- Identity corrections require an administrative reason and append an immutable person-link event; role separation
+  compares natural persons rather than usernames or profiles.
+- Demo application users aligned with the local Keycloak identities, including the alternate fictional signer profile.
 - Admin APIs for user search, detail, create, update, activation, deactivation, and organization option lists.
 - Admin CRUD-style APIs for creating, editing, activating, and deactivating partitions, companies, and groups.
 - Persisted admin UI-text configuration for menu entries and button translations.
-- Admin frontend page `/configurazione` for user search/editing, role/group/partition/company assignment, organization management, signer fiscal code, prepared counter-signer field, and UI text configuration.
+- Admin frontend page `/configurazione` for user search/editing, qualified natural-person identifiers,
+  authentication issuer/method, reasoned identity correction, role/group/partition/company assignment,
+  organization management, and UI text configuration.
 - PostgreSQL models and complete admin CRUD APIs for source systems, signature providers, signature accounts, and FSE facility mappings.
 - Source-system pipeline flags with explicit rejection of simultaneous CDA creation and passthrough.
 - Non-secret signature-provider authentication configuration and external credential references; provider passwords are not stored.
 - Technical configuration UI with demo data and configurable action/tab texts.
+- Preparatory FSE document-type catalog and source-system mappings, with an explicitly deferred national gateway/CDA
+  builder, decision service, and tested PDFBox injection of an existing fictional CDA XML as a PDF associated file.
 - Practice container, Report aggregate, minimized PatientMetadata, complete report state enum, technical flags, and fictitious demo records.
 - Paginated admin report search/detail APIs with exact-ID precedence and filters for patient, signer, signer fiscal code, state, source system, department, and all report date intervals.
 - Active `/referti` administration page with advanced filters, pagination, detail consultation, and configurable action texts.
@@ -56,7 +70,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Fictitious demo PDF materialized idempotently in MinIO for the local profile.
 - `/referti` document UI for upload, metadata/version consultation, preview, download, temporary URL copying, deleted-document visibility, and logical deletion.
 - Signer-only APIs for home counters, authorized Report search/detail, document list/preview/download, state legend, and profile.
-- Report visibility by direct signer assignment, active group membership, or partition authorization; inaccessible Reports are not disclosed.
+- Report signing visibility by the natural person of the directly assigned signer profile; inaccessible Reports are not disclosed.
 - Signer portal pages for home, simple/advanced search, Report detail, PDF viewer, state legend, information, profile, and logout.
 - Workflow-aware transition from `READY_TO_SIGN` to `PREVIEWED` when the signer successfully opens a PDF.
 - Flyway V17 append-only `audit_events` ledger with database-level mutation guard, correlation IDs, minimal JSON metadata, configurable retention, and fictional future FSE/preservation entries.
@@ -98,6 +112,9 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Not Yet Implemented
 
+- Multiple signers for one Report. The current single `assigned_signer_id` remains intentionally in place; generalized
+  signer assignments, sequencing, thresholds, and per-signer states are deferred.
+
 - Real signature-provider integration, qualified certificates, and legally valid signature execution. The required
   documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
   `docs/provider-adapter-contract.md`.
@@ -119,14 +136,14 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: pass on 2026-08-11.
+Result: pass on 2026-08-13.
 
 Evidence:
 
-- Backend: 65 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 70 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed after the Goal 12 audit implementation; backend and frontend evidence below comes from
-  the same successful `test-all.ps1` run.
+- Final full baseline completed after the natural-person/authentication/signature-account separation; backend and
+  frontend evidence below comes from the same successful `test-all.ps1` run.
 
 ### Backend
 
@@ -141,11 +158,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 65.
+- Tests run: 70.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-11T17:08:34+02:00.
+- Finished at: 2026-08-13 Europe/Rome.
 
 Notes:
 
@@ -176,7 +193,7 @@ Evidence:
 Notes:
 
 - No automated frontend unit tests are currently defined.
-- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-11 during the final full baseline.
+- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-13 during the final full baseline.
 
 ### Docker Compose Authentication Flow
 
@@ -196,10 +213,14 @@ Evidence:
 - Frontend running Next.js 16.3.0 on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 17 migrations; V17 adds the append-only audit ledger, retention policy, privacy-safe demo events, and source-table audit triggers.
+- Flyway validated 20 migrations; V19 separates natural persons, authentication identities, and digital signatures,
+  while V20 scopes authentication subjects by issuer and protects identity-link history from mutation.
 - Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
 - Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
 - Browser-integrated audit checks confirmed administrator navigation, fictional FSE/preservation entries, login/logout and sensitive-search events, filters, CSV download, Report timeline, 1440 x 900 and 390 x 844 containment, and no JavaScript errors after the final session fix.
+- Browser-integrated natural-person checks confirmed the masked identifier, both linked authentication accounts, both
+  available signatures, persistence of a changed preferred signature, 1280 x 720 and 390 x 844 containment, successful
+  API-backed updates, and an empty JavaScript warning/error log in a fresh tab.
 - The local demo PDF metadata hash matches the 613-byte object stored in MinIO; an unsigned direct object request returns 403.
 
 API spot checks:
@@ -238,7 +259,7 @@ Evidence:
 - The signer requested review, the approver recorded document view and approved to `APPROVED`, and the administrator restored the fictitious demo through controlled returns.
 - The signer opened a temporary mock-provider session, executed one approved Report, received HTTP 200 for both network calls, saw the explicit non-legal outcome and responsive final batch summary, and the test runner restored the four signature fixtures afterward.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-08-11 Europe/Rome: 4 passed, 0 failed.
+- Last successful run completed at 2026-08-13 Europe/Rome: 4 passed, 0 failed.
 
 ## Baseline Interpretation
 

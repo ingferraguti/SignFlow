@@ -1,5 +1,7 @@
 export type ClinicalDocument = {
-  id: string; reportId: string; sha256: string; mimeType: string; sizeBytes: number; version: number;
+  id: string; reportId: string; documentTypeCode: string;
+  cdaInjectionStatus: "NOT_REQUESTED" | "PENDING_CDA" | "INJECTED" | "FAILED";
+  sha256: string; mimeType: string; sizeBytes: number; version: number;
   originalFilename: string; objectIdentifier: string; uploadedBy: string; uploadedAt: string;
   status: "ACTIVE" | "DELETED"; deletedAt?: string; deletedBy?: string;
 };

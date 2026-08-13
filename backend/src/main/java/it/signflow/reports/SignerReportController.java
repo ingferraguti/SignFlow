@@ -1,6 +1,7 @@
 package it.signflow.reports;
 
 import it.signflow.identity.PageResponse;
+import it.signflow.identity.AuthenticatedProfileResolver;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -27,10 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SignerReportController {
     private final SignerReportService service;
     private final ReportReviewService reviewService;
+    private final AuthenticatedProfileResolver profileResolver;
 
-    public SignerReportController(SignerReportService service, ReportReviewService reviewService) {
+    public SignerReportController(SignerReportService service, ReportReviewService reviewService,
+            AuthenticatedProfileResolver profileResolver) {
         this.service = service;
         this.reviewService = reviewService;
+        this.profileResolver = profileResolver;
     }
 
     @GetMapping("/home")
@@ -108,7 +112,12 @@ public class SignerReportController {
         return service.profile(username(jwt));
     }
 
+    @PostMapping("/profile/preferred-signature/{signatureId}")
+    SignerProfileResponse preferredSignature(@PathVariable UUID signatureId, @AuthenticationPrincipal Jwt jwt) {
+        return service.setPreferredSignature(username(jwt), signatureId);
+    }
+
     private String username(Jwt jwt) {
-        return jwt == null ? null : jwt.getClaimAsString("preferred_username");
+        return profileResolver.username(jwt);
     }
 }

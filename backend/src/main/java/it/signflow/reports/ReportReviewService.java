@@ -70,7 +70,9 @@ public class ReportReviewService {
     public ReviewOperationResponse requestReview(UUID reportId, ReviewActionRequest request, String actor) {
         requireRole(actor, "SIGNER");
         ReportReviewContext current = context(reportId);
-        if (!Objects.equals(current.signerUsername(), actor)) throw forbidden("Only the assigned signer can request review");
+        if (!repository.actorIsNaturalPerson(actor, current.signerNaturalPersonId())) {
+            throw forbidden("Only the assigned natural person can request review");
+        }
         ReviewOperationResponse replay = replayTransition(reportId, request.operationKey(),
                 ReviewDecisionType.REQUESTED, null);
         if (replay != null) return replay;
@@ -209,7 +211,9 @@ public class ReportReviewService {
     private ReportReviewContext assignedApprover(UUID reportId, String actor) {
         requireRole(actor, "APPROVER");
         ReportReviewContext current = context(reportId);
-        if (!Objects.equals(current.approverUsername(), actor)) throw forbidden("Review is assigned to another approver");
+        if (!repository.actorIsNaturalPerson(actor, current.approverNaturalPersonId())) {
+            throw forbidden("Review is assigned to another natural person");
+        }
         return current;
     }
 
@@ -225,18 +229,21 @@ public class ReportReviewService {
     private void validateSeparation(ReportReviewContext context, String approverUsername, UUID approverId,
                                     boolean required) {
         if (!required || approverId == null) return;
-        if (approverId.equals(context.signerId())) {
-            throw unprocessable("Role separation requires approver and signer to be different users");
+        UUID approverPersonId = repository.naturalPersonForUser(approverId).orElse(null);
+        if (Objects.equals(approverPersonId, context.signerNaturalPersonId())) {
+            throw unprocessable("Role separation requires approver and signer to be different natural persons");
         }
-        if (Objects.equals(approverUsername, context.producedBy())
-                || repository.uploaders(context.reportId()).contains(approverUsername)) {
+        if (repository.sameNaturalPerson(approverUsername, context.producedBy())
+                || repository.uploaders(context.reportId()).stream()
+                    .anyMatch(uploader -> repository.sameNaturalPerson(approverUsername, uploader))) {
             throw unprocessable("The document producer or uploader cannot approve when role separation is required");
         }
     }
 
     private void validateCounterSigner(ReportReviewContext context, UUID counterSignerId) {
         if (counterSignerId == null) return;
-        if (counterSignerId.equals(context.signerId())) {
+        UUID counterPersonId = repository.naturalPersonForUser(counterSignerId).orElse(null);
+        if (Objects.equals(counterPersonId, context.signerNaturalPersonId())) {
             throw unprocessable("The counter-signer must be different from the primary signer");
         }
         if (!repository.activeReviewParticipant(counterSignerId)) {

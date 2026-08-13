@@ -1,5 +1,6 @@
 package it.signflow.signatures;
 
+import it.signflow.identity.AuthenticatedProfileResolver;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -22,9 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/signer/signatures")
 public class SignerSignatureController {
     private final SignatureService service;
+    private final AuthenticatedProfileResolver profileResolver;
 
-    public SignerSignatureController(SignatureService service) {
+    public SignerSignatureController(SignatureService service, AuthenticatedProfileResolver profileResolver) {
         this.service = service;
+        this.profileResolver = profileResolver;
     }
 
     @PostMapping("/provider-sessions")
@@ -96,6 +99,6 @@ public class SignerSignatureController {
     }
 
     private String username(Jwt jwt) {
-        return jwt == null ? null : jwt.getClaimAsString("preferred_username");
+        return profileResolver.username(jwt);
     }
 }

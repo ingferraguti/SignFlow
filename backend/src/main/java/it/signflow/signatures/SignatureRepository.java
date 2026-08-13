@@ -17,19 +17,10 @@ class SignatureRepository {
     private static final String VISIBLE = """
             exists (
                 select 1 from application_users me
-                where me.username=:username and me.active=true and (
-                    r.assigned_signer_id=me.id
-                    or exists (
-                        select 1 from report_authorized_groups rag
-                        join application_user_groups aug on aug.group_id=rag.group_id
-                        join user_groups ug on ug.id=rag.group_id and ug.active=true
-                        where rag.report_id=r.id and aug.user_id=me.id
-                    )
-                    or exists (
-                        select 1 from report_authorized_partitions rap
-                        where rap.report_id=r.id and rap.partition_id=me.partition_id
-                    )
-                )
+                join natural_persons np on np.id=me.natural_person_id and np.active=true
+                join application_users owner on owner.id=r.assigned_signer_id
+                where me.username=:username and me.active=true
+                  and owner.natural_person_id=me.natural_person_id
             )
             """;
     private final JdbcClient jdbc;
@@ -38,15 +29,18 @@ class SignatureRepository {
         this.jdbc = jdbc;
     }
 
-    Optional<SignerAccount> account(String username) {
+    Optional<SignerAccount> account(String username, UUID requestedAccountId) {
         return jdbc.sql("""
                 select sa.id account_id, sa.account_alias, sp.code provider_code, sp.adapter_type
                 from signature_accounts sa
-                join application_users u on u.id=sa.application_user_id
+                join application_users u on u.natural_person_id=sa.natural_person_id
                 join signature_providers sp on sp.id=sa.signature_provider_id
                 where u.username=:username and u.active=true and sa.active=true and sp.active=true
-                order by sp.code limit 1
-                """).param("username", username).query((rs, row) -> new SignerAccount(
+                  and (:requested=false or sa.id=:accountId)
+                order by (sa.id=u.preferred_signature_account_id) desc, sa.display_name limit 1
+                """).param("username", username).param("requested", requestedAccountId != null)
+                .param("accountId", requestedAccountId == null ? new UUID(0, 0) : requestedAccountId)
+                .query((rs, row) -> new SignerAccount(
                 rs.getObject("account_id", UUID.class), rs.getString("account_alias"),
                 rs.getString("provider_code"), rs.getString("adapter_type"))).optional();
     }
@@ -56,10 +50,11 @@ class SignatureRepository {
                                           String correlationId) {
         jdbc.sql("""
                 insert into provider_sessions
-                    (id, signature_account_id, actor_username, provider_code, state, expires_at,
+                    (id, signature_account_id, actor_username, natural_person_id, provider_code, state, expires_at,
                      provider_session_reference, challenge_reference, correlation_id)
-                values (:id, :accountId, :username, :providerCode, 'ACTIVE', :expiresAt,
-                        :providerSessionReference, :challengeReference, :correlationId)
+                select :id, :accountId, :username, u.natural_person_id, :providerCode, 'ACTIVE', :expiresAt,
+                        :providerSessionReference, :challengeReference, :correlationId
+                from application_users u where u.username=:username
                 """).param("id", id).param("accountId", account.id()).param("username", username)
                 .param("providerCode", account.providerCode()).param("expiresAt", expiresAt)
                 .param("providerSessionReference", providerSessionReference)
@@ -76,7 +71,8 @@ class SignatureRepository {
                 from provider_sessions ps
                 join signature_accounts sa on sa.id=ps.signature_account_id
                 join signature_providers sp on sp.id=sa.signature_provider_id
-                where ps.id=:id and ps.actor_username=:username
+                where ps.id=:id and ps.natural_person_id=(
+                    select natural_person_id from application_users where username=:username and active=true)
                 """).param("id", id).param("username", username).query((rs, row) -> new SessionData(
                 rs.getObject("id", UUID.class), rs.getObject("signature_account_id", UUID.class),
                 rs.getString("provider_code"), rs.getString("account_alias"), rs.getString("adapter_type"),
@@ -126,10 +122,11 @@ class SignatureRepository {
                      List<EligibleReport> reports) {
         jdbc.sql("""
                 insert into signature_batches
-                    (id, signer_username, signature_account_id, selection_mode, filter_snapshot, state,
+                    (id, signer_username, signer_natural_person_id, signature_account_id, selection_mode, filter_snapshot, state,
                      create_operation_key, create_fingerprint, total_count)
-                values (:id, :username, :accountId, :mode, :filterSnapshot, 'DRAFT',
-                        :operationKey, :fingerprint, :total)
+                select :id, :username, u.natural_person_id, :accountId, :mode, :filterSnapshot, 'DRAFT',
+                        :operationKey, :fingerprint, :total
+                from application_users u where u.username=:username
                 """).param("id", id).param("username", username).param("accountId", account.id())
                 .param("mode", mode.name()).param("filterSnapshot", filterSnapshot)
                 .param("operationKey", operationKey).param("fingerprint", fingerprint)
@@ -145,8 +142,9 @@ class SignatureRepository {
 
     Optional<StoredCreate> findCreate(String username, String operationKey) {
         return jdbc.sql("""
-                select id, create_fingerprint from signature_batches
-                where signer_username=:username and create_operation_key=:operationKey
+                select b.id, b.create_fingerprint from signature_batches b
+                join application_users u on u.natural_person_id=b.signer_natural_person_id
+                where u.username=:username and u.active=true and b.create_operation_key=:operationKey
                 """).param("username", username).param("operationKey", operationKey)
                 .query((rs, row) -> new StoredCreate(rs.getObject("id", UUID.class),
                         rs.getString("create_fingerprint"))).optional();
@@ -163,7 +161,8 @@ class SignatureRepository {
                 from signature_batches b
                 join signature_accounts sa on sa.id=b.signature_account_id
                 join signature_providers sp on sp.id=sa.signature_provider_id
-                where b.id=:id and b.signer_username=:username
+                where b.id=:id and b.signer_natural_person_id=(
+                    select natural_person_id from application_users where username=:username and active=true)
                 """).param("id", batchId).param("username", username).query(this::mapBatch).optional();
     }
 
@@ -173,7 +172,9 @@ class SignatureRepository {
                 from signature_batches b
                 join signature_accounts sa on sa.id=b.signature_account_id
                 join signature_providers sp on sp.id=sa.signature_provider_id
-                where b.signer_username=:username order by b.created_at desc limit 50
+                where b.signer_natural_person_id=(
+                    select natural_person_id from application_users where username=:username and active=true)
+                order by b.created_at desc limit 50
                 """).param("username", username).query(this::mapBatch).list();
     }
 
@@ -286,7 +287,9 @@ class SignatureRepository {
         return jdbc.sql("""
                 select a.artifact_name, a.artifact_content
                 from signature_attempts a join signature_batches b on b.id=a.batch_id
-                where a.artifact_id=:artifactId and b.signer_username=:username and a.state='SUCCEEDED'
+                where a.artifact_id=:artifactId and a.state='SUCCEEDED'
+                  and b.signer_natural_person_id=(
+                    select natural_person_id from application_users where username=:username and active=true)
                 """).param("artifactId", artifactId).param("username", username)
                 .query((rs, row) -> new SignatureArtifact(rs.getString("artifact_name"),
                         rs.getString("artifact_content"))).optional();

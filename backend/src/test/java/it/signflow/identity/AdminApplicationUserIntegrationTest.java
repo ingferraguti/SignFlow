@@ -22,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -43,6 +45,8 @@ class AdminApplicationUserIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired private ObjectMapper objectMapper;
+    @Autowired private JdbcClient jdbc;
 
     @Test
     void administratorCanSearchDemoUsersAndOrganizationOptions() throws Exception {
@@ -178,6 +182,47 @@ class AdminApplicationUserIntegrationTest {
         mockMvc.perform(post("/api/admin/users/" + id + "/deactivate").with(adminJwt()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active", equalTo(false)));
+    }
+
+    @Test
+    void multipleAuthenticationProfilesLinkToOneEuropeanNaturalPersonAndCorrectionsRequireReason() throws Exception {
+        String template = """
+                {"username":"%s","oidcSubject":"%s","firstName":"Persona","lastName":"Fittizia",
+                 "email":"%s@signflow.invalid","identifierScheme":"EIDAS_PERSON_IDENTIFIER",
+                 "issuingCountry":"DE","identifierIssuer":"DEMO_EIDAS_NODE",
+                 "personalIdentifier":"DE/IT/FICTIONAL-IDENTITY-009",
+                 "authenticationIssuer":"%s","authenticationMethod":"%s","active":true,
+                 "partitionId":"11111111-1111-1111-1111-111111111111",
+                 "companyId":"22222222-2222-2222-2222-222222222221",
+                 "roleIds":["33333333-3333-3333-3333-333333333332"],"groupIds":[]}
+                """;
+        String firstBody = template.formatted("fictional.eu.oidc", "eu-subject-oidc", "eu.oidc",
+                "https://issuer-one.invalid", "OIDC");
+        String secondBody = template.formatted("fictional.eu.ldap", "eu-subject-oidc", "eu.ldap",
+                "ldap://directory-two.invalid", "LDAP");
+        String first = mockMvc.perform(post("/api/admin/users").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON).content(firstBody))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String second = mockMvc.perform(post("/api/admin/users").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON).content(secondBody))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals(objectMapper.readTree(first).path("naturalPersonId").asText(),
+                objectMapper.readTree(second).path("naturalPersonId").asText());
+
+        String secondId = objectMapper.readTree(second).path("id").asText();
+        String correction = secondBody.replace("FICTIONAL-IDENTITY-009", "FICTIONAL-IDENTITY-010");
+        mockMvc.perform(put("/api/admin/users/" + secondId).with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON).content(correction))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(put("/api/admin/users/" + secondId).with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(correction.replace("\"active\":true",
+                                "\"identityCorrectionReason\":\"Rettifica amministrativa fittizia verificata\",\"active\":true")))
+                .andExpect(status().isOk());
+        org.junit.jupiter.api.Assertions.assertEquals(1, jdbc.sql("""
+                select count(*) from natural_person_identity_events
+                where application_user_id=:id and event_type='IDENTITY_CORRECTED'
+                """).param("id", java.util.UUID.fromString(secondId)).query(Integer.class).single());
     }
 
     private static org.springframework.test.web.servlet.request.RequestPostProcessor adminJwt() {

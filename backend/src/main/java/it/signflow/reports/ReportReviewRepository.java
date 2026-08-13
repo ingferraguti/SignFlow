@@ -20,12 +20,14 @@ class ReportReviewRepository {
     Optional<ReportReviewContext> context(UUID reportId) {
         return jdbc.sql("""
                 select r.id, r.state, r.workflow_version, r.assigned_signer_id,
-                       signer.username signer_username, r.assigned_approver_id,
-                       approver.username approver_username, coalesce(approver.active,false) approver_active,
+                        signer.natural_person_id signer_person_id, signer.username signer_username,
+                        r.assigned_approver_id, approver.natural_person_id approver_person_id,
+                        approver.username approver_username, coalesce(approver.active,false) approver_active,
                        exists(select 1 from application_user_roles ur join roles role on role.id=ur.role_id
                               where ur.user_id=approver.id and role.code='APPROVER') approver_role,
                        r.produced_by, r.review_separation_required, r.counter_signature_required,
-                       r.counter_signer_id, counter_signer.username counter_signer_username,
+                        r.counter_signer_id, counter_signer.natural_person_id counter_signer_person_id,
+                        counter_signer.username counter_signer_username,
                        r.counter_signature_prepared_at
                 from reports r
                 left join application_users signer on signer.id=r.assigned_signer_id
@@ -74,6 +76,31 @@ class ReportReviewRepository {
                 """).param("username", username).param("role", role).query(Integer.class).single() > 0;
     }
 
+    boolean sameNaturalPerson(String firstUsername, String secondUsername) {
+        if (firstUsername == null || secondUsername == null) return false;
+        return jdbc.sql("""
+                select count(*) from application_users first_user
+                join application_users second_user
+                  on second_user.natural_person_id=first_user.natural_person_id
+                where first_user.username=:first and second_user.username=:second
+                """).param("first", firstUsername).param("second", secondUsername)
+                .query(Integer.class).single() > 0;
+    }
+
+    boolean actorIsNaturalPerson(String username, UUID personId) {
+        if (username == null || personId == null) return false;
+        return jdbc.sql("""
+                select count(*) from application_users
+                where username=:username and natural_person_id=:personId and active=true
+                """).param("username", username).param("personId", personId)
+                .query(Integer.class).single() > 0;
+    }
+
+    Optional<UUID> naturalPersonForUser(UUID userId) {
+        return jdbc.sql("select natural_person_id from application_users where id=:id and active=true")
+                .param("id", userId).query(UUID.class).optional();
+    }
+
     List<String> uploaders(UUID reportId) {
         return jdbc.sql("""
                 select distinct uploaded_by from clinical_documents
@@ -87,7 +114,8 @@ class ReportReviewRepository {
                        r.document_type, r.department, r.produced_at, r.state, r.workflow_version
                 from reports r join patient_metadata pm on pm.id=r.patient_metadata_id
                 join application_users a on a.id=r.assigned_approver_id
-                where a.username=:username and a.active=true
+                join application_users me on me.username=:username and me.active=true
+                where a.natural_person_id=me.natural_person_id and a.active=true
                   and r.state in ('REVIEW_PENDING','APPROVED')
                 order by case when r.state='REVIEW_PENDING' then 0 else 1 end, r.produced_at desc
                 """).param("username", username).query((rs, row) -> new ApproverQueueItemResponse(
@@ -169,11 +197,12 @@ class ReportReviewRepository {
     private ReportReviewContext mapContext(ResultSet rs, int row) throws SQLException {
         return new ReportReviewContext(rs.getObject("id", UUID.class), ReportState.valueOf(rs.getString("state")),
                 rs.getLong("workflow_version"), rs.getObject("assigned_signer_id", UUID.class),
-                rs.getString("signer_username"), rs.getObject("assigned_approver_id", UUID.class),
+                rs.getObject("signer_person_id", UUID.class), rs.getString("signer_username"),
+                rs.getObject("assigned_approver_id", UUID.class), rs.getObject("approver_person_id", UUID.class),
                 rs.getString("approver_username"), rs.getBoolean("approver_active"), rs.getBoolean("approver_role"),
                 rs.getString("produced_by"), rs.getBoolean("review_separation_required"),
                 rs.getBoolean("counter_signature_required"), rs.getObject("counter_signer_id", UUID.class),
-                rs.getString("counter_signer_username"),
+                rs.getObject("counter_signer_person_id", UUID.class), rs.getString("counter_signer_username"),
                 rs.getObject("counter_signature_prepared_at", OffsetDateTime.class));
     }
 

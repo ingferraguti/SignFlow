@@ -16,9 +16,7 @@ export function ClinicalDocumentsPanel({ reportId }: { reportId: string }) {
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string>();
 
-  async function load(showDeleted = includeDeleted) {
-    setDocuments(await fetchDocuments(reportId, showDeleted));
-  }
+  async function load(showDeleted = includeDeleted) { setDocuments(await fetchDocuments(reportId, showDeleted)); }
 
   useEffect(() => {
     fetchDocuments(reportId, false).then(setDocuments).catch((reason: Error) => setError(reason.message));
@@ -35,22 +33,22 @@ export function ClinicalDocumentsPanel({ reportId }: { reportId: string }) {
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Upload non riuscito"); }
   }
 
-  async function openPreview(document: ClinicalDocument) {
+  async function openPreview(item: ClinicalDocument) {
     setError(undefined);
-    try { const temporary = await temporaryDocumentUrl(reportId, document.id); setPreview({ url: temporary.url, name: document.originalFilename }); }
+    try { const temporary = await temporaryDocumentUrl(reportId, item.id); setPreview({ url: temporary.url, name: item.originalFilename }); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Anteprima non disponibile"); }
   }
 
-  async function copyTemporaryUrl(document: ClinicalDocument) {
+  async function copyTemporaryUrl(item: ClinicalDocument) {
     setError(undefined);
-    try { const temporary = await temporaryDocumentUrl(reportId, document.id); await navigator.clipboard.writeText(temporary.url); setStatus("URL temporaneo copiato"); }
+    try { const temporary = await temporaryDocumentUrl(reportId, item.id); await navigator.clipboard.writeText(temporary.url); setStatus("URL temporaneo copiato"); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "URL non disponibile"); }
   }
 
-  async function remove(document: ClinicalDocument) {
-    if (!window.confirm(`Eliminare logicamente ${document.originalFilename}?`)) return;
+  async function remove(item: ClinicalDocument) {
+    if (!window.confirm(`Eliminare logicamente ${item.originalFilename}?`)) return;
     setError(undefined);
-    try { await deleteDocument(reportId, document.id); setStatus("Documento eliminato logicamente"); setPreview(undefined); await load(); }
+    try { await deleteDocument(reportId, item.id); setStatus("Documento eliminato logicamente"); setPreview(undefined); await load(); }
     catch (reason) { setError(reason instanceof Error ? reason.message : "Eliminazione non riuscita"); }
   }
 
@@ -62,14 +60,14 @@ export function ClinicalDocumentsPanel({ reportId }: { reportId: string }) {
       <label className="inline-check"><input type="checkbox" checked={includeDeleted} onChange={(event) => { setIncludeDeleted(event.target.checked); load(event.target.checked).catch((reason: Error) => setError(reason.message)); }} />Mostra eliminati</label>
     </form>
     {error ? <p className="inline-error" role="alert">{error}</p> : null}
-    <div className="table-wrap"><table className="documents-table"><thead><tr><th>Versione</th><th>File</th><th>Dimensione</th><th>SHA-256</th><th>Upload</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>
-      {documents.map((document) => <tr key={document.id}><td>v{document.version}</td><td>{document.originalFilename}<small>{document.mimeType}</small></td><td>{formatSize(document.sizeBytes)}</td><td><code title={document.sha256}>{document.sha256.slice(0, 12)}…</code></td><td>{document.uploadedBy}<small>{formatDate(document.uploadedAt)}</small></td><td><span className="state-badge">{document.status}</span></td><td><div className="document-actions">
-        <button disabled={document.status !== "ACTIVE"} onClick={() => openPreview(document)}>{text("button.previewDocument")}</button>
-        <button disabled={document.status !== "ACTIVE"} onClick={() => downloadDocument(reportId, document).catch((reason: Error) => setError(reason.message))}>{text("button.downloadDocument")}</button>
-        <button disabled={document.status !== "ACTIVE"} onClick={() => copyTemporaryUrl(document)}>{text("button.temporaryUrl")}</button>
-        <button className="danger" disabled={document.status !== "ACTIVE"} onClick={() => remove(document)}>{text("button.deleteDocument")}</button>
+    <div className="table-wrap"><table className="documents-table"><thead><tr><th>Versione</th><th>File</th><th>Tipo FSE</th><th>Preparazione CDA</th><th>Dimensione</th><th>SHA-256</th><th>Upload</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>
+      {documents.map((item) => <tr key={item.id}><td>v{item.version}</td><td>{item.originalFilename}<small>{item.mimeType}</small></td><td><span className="state-badge">{item.documentTypeCode}</span></td><td>{cdaStatus(item.cdaInjectionStatus)}</td><td>{formatSize(item.sizeBytes)}</td><td><code title={item.sha256}>{item.sha256.slice(0, 12)}…</code></td><td>{item.uploadedBy}<small>{formatDate(item.uploadedAt)}</small></td><td><span className="state-badge">{item.status}</span></td><td><div className="document-actions">
+        <button disabled={item.status !== "ACTIVE"} onClick={() => openPreview(item)}>{text("button.previewDocument")}</button>
+        <button disabled={item.status !== "ACTIVE"} onClick={() => downloadDocument(reportId, item).catch((reason: Error) => setError(reason.message))}>{text("button.downloadDocument")}</button>
+        <button disabled={item.status !== "ACTIVE"} onClick={() => copyTemporaryUrl(item)}>{text("button.temporaryUrl")}</button>
+        <button className="danger" disabled={item.status !== "ACTIVE"} onClick={() => remove(item)}>{text("button.deleteDocument")}</button>
       </div></td></tr>)}
-      {!documents.length ? <tr><td colSpan={7}>Nessun documento associato.</td></tr> : null}
+      {!documents.length ? <tr><td colSpan={9}>Nessun documento associato.</td></tr> : null}
     </tbody></table></div>
     {preview ? <div className="pdf-preview"><div className="section-title"><h4>Anteprima · {preview.name}</h4><button onClick={() => setPreview(undefined)}>{text("button.closePreview")}</button></div><iframe title={`Anteprima ${preview.name}`} src={preview.url} /></div> : null}
   </section>;
@@ -77,3 +75,6 @@ export function ClinicalDocumentsPanel({ reportId }: { reportId: string }) {
 
 function formatSize(bytes: number) { return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`; }
 function formatDate(value: string) { return new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(value)); }
+function cdaStatus(value: ClinicalDocument["cdaInjectionStatus"]) {
+  return ({ NOT_REQUESTED: "Non richiesta", PENDING_CDA: "In attesa del generatore CDA", INJECTED: "CDA iniettato", FAILED: "Errore" })[value];
+}

@@ -25,6 +25,9 @@ function emptyUser(options: OrganizationOptions): ApplicationUserRequest {
     fiscalCode: "",
     signerFiscalCode: "",
     counterSignerFiscalCode: "",
+    identifierScheme: "IT_TAX_CODE", issuingCountry: "IT", identifierIssuer: "AGENZIA_ENTRATE",
+    personalIdentifier: "", authenticationIssuer: "legacy://signflow",
+    authenticationMethod: "OIDC", identityCorrectionReason: "",
     active: true,
     partitionId: options.partitions[0]?.id ?? "",
     companyId: options.companies[0]?.id ?? "",
@@ -43,6 +46,13 @@ function fromUser(user: ApplicationUser): ApplicationUserRequest {
     fiscalCode: user.fiscalCode ?? "",
     signerFiscalCode: user.signerFiscalCode ?? "",
     counterSignerFiscalCode: user.counterSignerFiscalCode ?? "",
+    identifierScheme: user.identifierScheme ?? "IT_TAX_CODE",
+    issuingCountry: user.issuingCountry ?? "IT",
+    identifierIssuer: user.identifierIssuer ?? "AGENZIA_ENTRATE",
+    personalIdentifier: user.personalIdentifier ?? user.signerFiscalCode ?? user.fiscalCode ?? "",
+    authenticationIssuer: user.authenticationIssuer ?? "legacy://signflow",
+    authenticationMethod: user.authenticationMethod ?? "OIDC",
+    identityCorrectionReason: "",
     active: user.active,
     partitionId: user.partition.id,
     companyId: user.company.id,
@@ -147,12 +157,13 @@ export function AdminUsersPanel() {
         {error ? <p className="inline-error" role="alert">{error}</p> : null}
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Azione</th><th>Utente</th><th>Nome</th><th>Partizione</th><th>Azienda</th><th>Ruoli</th><th>Gruppi</th><th>Attivo</th></tr></thead>
+            <thead><tr><th>Azione</th><th>Account</th><th>Persona naturale</th><th>Nome</th><th>Partizione</th><th>Azienda</th><th>Ruoli</th><th>Gruppi</th><th>Attivo</th></tr></thead>
             <tbody>
               {users.map((user) => (
                 <tr key={user.id}>
                   <td><button onClick={() => edit(user)}>{text("button.edit")}</button></td>
                   <td>{user.username}<small>{user.oidcSubject}</small></td>
+                  <td>{user.identifierScheme}<small>{user.issuingCountry} · {user.personalIdentifier}</small><small>{user.naturalPersonId}</small></td>
                   <td>{user.lastName} {user.firstName}<small>{user.email}</small></td>
                   <td>{user.partition.code}</td>
                   <td>{user.company.code}</td>
@@ -170,13 +181,19 @@ export function AdminUsersPanel() {
         <h2>{selectedUser ? "Modifica utente" : "Nuovo utente"}</h2>
         <form className="admin-form" onSubmit={submit}>
           <label>Utente<input required value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} /></label>
-          <label>Identificativo OIDC<input required value={form.oidcSubject} onChange={(event) => setForm({ ...form, oidcSubject: event.target.value })} /></label>
+          <label>Subject autenticazione<input required value={form.oidcSubject} onChange={(event) => setForm({ ...form, oidcSubject: event.target.value })} /></label>
+          <label>Issuer autenticazione<input required value={form.authenticationIssuer} onChange={(event) => setForm({ ...form, authenticationIssuer: event.target.value })} /></label>
+          <label>Metodo autenticazione<select value={form.authenticationMethod} onChange={(event) => setForm({ ...form, authenticationMethod: event.target.value })}><option>OIDC</option><option>LDAP</option><option>SPID</option><option>CIE</option><option>EIDAS</option></select></label>
           <label>Cognome<input required value={form.lastName} onChange={(event) => setForm({ ...form, lastName: event.target.value })} /></label>
           <label>Nome<input required value={form.firstName} onChange={(event) => setForm({ ...form, firstName: event.target.value })} /></label>
           <label>Email<input value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
-          <label>Codice fiscale<input value={form.fiscalCode} onChange={(event) => setForm({ ...form, fiscalCode: event.target.value })} /></label>
-          <label>CF firmatario<input value={form.signerFiscalCode} onChange={(event) => setForm({ ...form, signerFiscalCode: event.target.value })} /></label>
-          <label>CF controfirmatario<input value={form.counterSignerFiscalCode} onChange={(event) => setForm({ ...form, counterSignerFiscalCode: event.target.value })} /></label>
+          <fieldset><legend>Identità della persona naturale</legend>
+            <label>Schema identificativo<select value={form.identifierScheme} onChange={(event) => { const identifierScheme = event.target.value; setForm({ ...form, identifierScheme, issuingCountry: identifierScheme === "IT_TAX_CODE" ? "IT" : form.issuingCountry, identifierIssuer: identifierScheme === "IT_TAX_CODE" ? "AGENZIA_ENTRATE" : form.identifierIssuer }); }}><option>IT_TAX_CODE</option><option>EIDAS_PERSON_IDENTIFIER</option><option>NATIONAL_ID</option></select></label>
+            <label>Paese emittente<input required maxLength={2} pattern="[A-Za-z]{2}" value={form.issuingCountry} onChange={(event) => setForm({ ...form, issuingCountry: event.target.value.toUpperCase() })} /></label>
+            <label>Autorità emittente<input required value={form.identifierIssuer} onChange={(event) => setForm({ ...form, identifierIssuer: event.target.value })} /></label>
+            <label>Identificativo personale<input required value={form.personalIdentifier} onChange={(event) => setForm({ ...form, personalIdentifier: event.target.value })} /></label>
+          </fieldset>
+          {selectedUser ? <label>Motivazione correzione identità<textarea minLength={10} value={form.identityCorrectionReason} onChange={(event) => setForm({ ...form, identityCorrectionReason: event.target.value })} /><small>Obbligatoria solo se l’identificativo collega il profilo a una persona diversa.</small></label> : null}
           <label>Partizione<select required value={form.partitionId} onChange={(event) => setForm({ ...form, partitionId: event.target.value })}>{options.partitions.map(option)}</select></label>
           <label>Azienda<select required value={form.companyId} onChange={(event) => setForm({ ...form, companyId: event.target.value })}>{options.companies.map(option)}</select></label>
           <fieldset><legend>Ruoli</legend>{options.roles.map((role) => checkbox(role, form.roleIds, () => toggleSelection("roleIds", role.id)))}</fieldset>

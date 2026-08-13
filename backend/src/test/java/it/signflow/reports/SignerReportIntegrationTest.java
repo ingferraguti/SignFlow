@@ -105,16 +105,16 @@ class SignerReportIntegrationTest {
     }
 
     @Test
-    void exposesOnlyDirectGroupAndPartitionAuthorizedReports() throws Exception {
+    void exposesOnlyReportsAssignedToTheAuthenticatedNaturalPerson() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?size=20").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)))
                 .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder(
-                        "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004", "RPT-INT-006",
+                        "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
                         "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002")));
         mockMvc.perform(get(ROOT + "/reports/" + GROUP_REPORT).with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.internalIdentifier", equalTo("RPT-INT-003")));
+                .andExpect(status().isNotFound());
         mockMvc.perform(get(ROOT + "/reports/" + PARTITION_REPORT).with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.internalIdentifier", equalTo("RPT-INT-006")));
+                .andExpect(status().isNotFound());
         mockMvc.perform(get(ROOT + "/reports/" + FOREIGN_REPORT).with(signerJwt("demo.signer")))
                 .andExpect(status().isNotFound());
 
@@ -123,20 +123,24 @@ class SignerReportIntegrationTest {
                 .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder("RPT-INT-005", "RPT-INT-006")));
         mockMvc.perform(get(ROOT + "/reports/cccccccc-cccc-cccc-cccc-ccccccccccc1")
                         .with(signerJwt("other.signer"))).andExpect(status().isNotFound());
+
+        mockMvc.perform(get(ROOT + "/reports?size=20").with(signerJwt("demo.signer.alt")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)))
+                .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder(
+                        "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
+                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002")));
     }
 
     @Test
     void supportsSimpleAdvancedDateStateAndPagingSearches() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?query=Bruno").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(4)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(3)));
         mockMvc.perform(get(ROOT + "/reports?patient=Dario&documentType=PDF-REF&department=Diagnostica")
                         .with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(1)))
-                .andExpect(jsonPath("$.items[0].internalIdentifier", equalTo("RPT-INT-006")));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(0)));
         mockMvc.perform(get(ROOT + "/reports?state=MISSING_SIGNER&producedFrom=2026-07-01&producedTo=2026-07-31")
                         .with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.items", hasSize(1)))
-                .andExpect(jsonPath("$.items[0].internalIdentifier", equalTo("RPT-INT-003")));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items", hasSize(0)));
         mockMvc.perform(get(ROOT + "/reports?signedFrom=2026-07-01&signedTo=2026-07-01&page=0&size=1")
                         .with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(1)))
@@ -181,11 +185,13 @@ class SignerReportIntegrationTest {
     @Test
     void exposesHomeProfileLegendAndEnforcesAuthenticationAndRole() throws Exception {
         mockMvc.perform(get(ROOT + "/home").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)));
         mockMvc.perform(get(ROOT + "/profile").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.username", equalTo("demo.signer")))
                 .andExpect(jsonPath("$.partitionCode", equalTo("LOCAL")))
-                .andExpect(jsonPath("$.groups[0]", equalTo("LOCAL-SIGNERS")));
+                .andExpect(jsonPath("$.groups[0]", equalTo("LOCAL-SIGNERS")))
+                .andExpect(jsonPath("$.authenticationAccounts", hasSize(2)))
+                .andExpect(jsonPath("$.digitalSignatures", hasSize(2)));
         mockMvc.perform(get(ROOT + "/states").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(18)))
                 .andExpect(jsonPath("$[17].code", equalTo("CONSERVATION_ACCEPTED")));
@@ -193,6 +199,29 @@ class SignerReportIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$['menu.signerHome']", equalTo("Home firmatario")));
         mockMvc.perform(get(ROOT + "/reports").with(adminJwt())).andExpect(status().isForbidden());
         mockMvc.perform(get(ROOT + "/reports")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void preferredDigitalSignatureIsProfileSpecificAndRestrictedToTheNaturalPerson() throws Exception {
+        String secondary = "88888888-8888-8888-8888-888888888889";
+        String changedProfile = mockMvc.perform(post(ROOT + "/profile/preferred-signature/" + secondary)
+                        .with(signerJwt("demo.signer")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        boolean secondaryPreferred = false;
+        for (var signature : objectMapper.readTree(changedProfile).path("digitalSignatures")) {
+            if (secondary.equals(signature.path("id").asText())) secondaryPreferred = signature.path("preferred").asBoolean();
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(secondaryPreferred);
+        mockMvc.perform(post(ROOT + "/profile/preferred-signature/" + secondary)
+                        .with(signerJwt("other.signer")))
+                .andExpect(status().isBadRequest());
+        String primaryPerson = objectMapper.readTree(mockMvc.perform(get(ROOT + "/profile")
+                        .with(signerJwt("demo.signer"))).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString()).path("naturalPersonId").asText();
+        String alternatePerson = objectMapper.readTree(mockMvc.perform(get(ROOT + "/profile")
+                        .with(signerJwt("demo.signer.alt"))).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString()).path("naturalPersonId").asText();
+        org.junit.jupiter.api.Assertions.assertEquals(primaryPerson, alternatePerson);
     }
 
     private static String minioEndpoint() {

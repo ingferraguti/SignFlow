@@ -22,7 +22,7 @@ class ReportWorkflowRepository {
         return jdbcClient.sql("""
                 select r.id, r.state, r.workflow_version, r.assigned_signer_id, r.first_previewed_at,
                        assigned.username signer_username, coalesce(assigned.active, false) signer_active,
-                       assigned.signer_fiscal_code,
+                        identifier.normalized_value signer_fiscal_code,
                        exists (
                            select 1 from application_user_roles aur
                            join roles role on role.id=aur.role_id
@@ -38,6 +38,9 @@ class ReportWorkflowRepository {
                 join patient_metadata pm on pm.id=r.patient_metadata_id
                 join source_systems ss on ss.id=r.source_system_id
                 left join application_users assigned on assigned.id=r.assigned_signer_id
+                left join lateral (select normalized_value from natural_person_identifiers pi
+                    where pi.natural_person_id=assigned.natural_person_id and pi.active=true
+                    order by pi.verified desc, pi.created_at limit 1) identifier on true
                 where r.id=:reportId
                 """).param("reportId", reportId).query(this::mapSnapshot).optional();
     }
@@ -45,23 +48,31 @@ class ReportWorkflowRepository {
     Optional<WorkflowSignerOptionResponse> findActiveSigner(UUID signerId) {
         return jdbcClient.sql("""
                 select u.id, u.username, trim(u.first_name || ' ' || u.last_name) display_name,
-                       u.signer_fiscal_code
+                        identifier.normalized_value signer_fiscal_code
                 from application_users u
                 join application_user_roles aur on aur.user_id=u.id
                 join roles role on role.id=aur.role_id and role.code='SIGNER'
+                join lateral (select normalized_value from natural_person_identifiers pi
+                    where pi.natural_person_id=u.natural_person_id and pi.active=true
+                    order by pi.verified desc, pi.created_at limit 1) identifier on true
                 where u.id=:signerId and u.active=true
                 """).param("signerId", signerId).query(this::mapSigner).optional();
     }
 
     List<WorkflowSignerOptionResponse> listActiveSigners() {
         return jdbcClient.sql("""
-                select distinct u.id, u.username, trim(u.first_name || ' ' || u.last_name) display_name,
-                       u.signer_fiscal_code
-                from application_users u
-                join application_user_roles aur on aur.user_id=u.id
-                join roles role on role.id=aur.role_id and role.code='SIGNER'
-                where u.active=true
-                order by display_name, u.username
+                select id, username, display_name, signer_fiscal_code from (
+                    select distinct on (u.natural_person_id) u.id, u.username,
+                           trim(u.first_name || ' ' || u.last_name) display_name,
+                           identifier.normalized_value signer_fiscal_code, u.natural_person_id
+                    from application_users u
+                    join application_user_roles aur on aur.user_id=u.id
+                    join roles role on role.id=aur.role_id and role.code='SIGNER'
+                    join natural_person_identifiers identifier
+                      on identifier.natural_person_id=u.natural_person_id and identifier.active=true
+                    where u.active=true
+                    order by u.natural_person_id, identifier.verified desc, u.created_at
+                ) signers order by display_name, username
                 """).query(this::mapSigner).list();
     }
 

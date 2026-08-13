@@ -20,12 +20,15 @@ public class ReportRepository {
             join practices pr on pr.id = r.practice_id
             join patient_metadata pm on pm.id = r.patient_metadata_id
             left join application_users u on u.id = r.assigned_signer_id
+            left join lateral (select normalized_value from natural_person_identifiers pi
+                where pi.natural_person_id=u.natural_person_id and pi.active=true
+                order by pi.verified desc, pi.created_at limit 1) signer_identifier on true
             join source_systems ss on ss.id = r.source_system_id
             """;
     private static final String SUMMARY_SELECT = """
             select r.*, pr.practice_identifier, pm.patient_identifier, pm.first_name patient_first_name,
                    pm.last_name patient_last_name, u.username signer_username,
-                   u.signer_fiscal_code, ss.code source_system_code
+                   signer_identifier.normalized_value signer_fiscal_code, ss.code source_system_code
             """;
 
     private final JdbcClient jdbcClient;
@@ -54,7 +57,8 @@ public class ReportRepository {
                        pr.description practice_description, pm.patient_identifier,
                        pm.first_name patient_first_name, pm.last_name patient_last_name,
                        pm.fiscal_code patient_fiscal_code, pm.birth_date patient_birth_date,
-                       u.username signer_username, u.signer_fiscal_code, ss.code source_system_code
+                       u.username signer_username, signer_identifier.normalized_value signer_fiscal_code,
+                       ss.code source_system_code
                 """ + JOINS + " where r.id = :id")
                 .param("id", id).query(this::mapDetail).optional();
     }
@@ -88,7 +92,7 @@ public class ReportRepository {
                    or lower(coalesce(u.first_name, '') || ' ' || coalesce(u.last_name, '')) like :signer)
                 """);
         if (criteria.signerFiscalCode() != null) {
-            sql.append(" and upper(coalesce(u.signer_fiscal_code, '')) = :signerFiscalCode");
+            sql.append(" and upper(coalesce(signer_identifier.normalized_value, '')) = :signerFiscalCode");
             params.put("signerFiscalCode", criteria.signerFiscalCode().trim().toUpperCase());
         }
         if (criteria.state() != null) {

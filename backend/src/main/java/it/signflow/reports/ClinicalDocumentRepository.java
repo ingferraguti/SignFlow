@@ -44,10 +44,18 @@ public class ClinicalDocumentRepository {
                                             String originalFilename, String objectKey, String uploadedBy) {
         jdbcClient.sql("""
                 insert into clinical_documents
-                    (id, report_id, sha256, mime_type, size_bytes, version, original_filename,
-                     object_key, uploaded_by, status)
-                values (:id, :reportId, :sha256, 'application/pdf', :size, :version, :filename,
-                        :objectKey, :uploadedBy, 'ACTIVE')
+                    (id, report_id, document_type_code, cda_injection_status, sha256, mime_type,
+                     size_bytes, version, original_filename, object_key, uploaded_by, status)
+                select :id, r.id, r.document_type,
+                       case when s.create_cda and not s.passthrough
+                                  and coalesce(c.cda_injection_enabled, false)
+                            then 'PENDING_CDA' else 'NOT_REQUESTED' end,
+                       :sha256, 'application/pdf', :size, :version, :filename,
+                       :objectKey, :uploadedBy, 'ACTIVE'
+                from reports r join source_systems s on s.id=r.source_system_id
+                left join source_system_fse_document_types c
+                  on c.source_system_id=s.id and c.document_type_code=r.document_type
+                where r.id=:reportId
                 """).param("id", id).param("reportId", reportId).param("sha256", sha256)
                 .param("size", size).param("version", version).param("filename", originalFilename)
                 .param("objectKey", objectKey).param("uploadedBy", uploadedBy).update();
@@ -63,7 +71,8 @@ public class ClinicalDocumentRepository {
 
     private ClinicalDocumentResponse map(ResultSet rs, int rowNum) throws SQLException {
         return new ClinicalDocumentResponse(
-                rs.getObject("id", UUID.class), rs.getObject("report_id", UUID.class), rs.getString("sha256"),
+                rs.getObject("id", UUID.class), rs.getObject("report_id", UUID.class),
+                rs.getString("document_type_code"), rs.getString("cda_injection_status"), rs.getString("sha256"),
                 rs.getString("mime_type"), rs.getLong("size_bytes"), rs.getInt("version"),
                 rs.getString("original_filename"), rs.getString("object_key"), rs.getString("uploaded_by"),
                 rs.getObject("uploaded_at", OffsetDateTime.class), ClinicalDocumentStatus.valueOf(rs.getString("status")),

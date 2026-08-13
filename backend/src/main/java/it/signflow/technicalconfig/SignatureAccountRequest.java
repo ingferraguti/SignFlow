@@ -11,5 +11,8 @@ public record SignatureAccountRequest(
         @NotBlank @Size(max = 120) String accountAlias,
         @Size(max = 160) String providerUsername,
         @Size(max = 200) String certificateAlias,
+        @Size(max = 160) String displayName,
+        @Size(max = 40) String signatureType,
+        boolean qualified,
         boolean active) {
 }

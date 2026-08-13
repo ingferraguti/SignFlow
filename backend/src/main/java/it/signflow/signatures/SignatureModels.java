@@ -12,7 +12,7 @@ enum SignatureSelectionMode { SINGLE, MANUAL, FILTERED }
 enum SignatureBatchState { DRAFT, CONFIRMED, RUNNING, COMPLETED, PARTIAL_SUCCESS, FAILED, CANCELLED }
 enum SignatureAttemptState { PENDING, SIGNING, SUCCEEDED, FAILED, CANCELLED }
 
-record ProviderSessionRequest(@NotBlank @Size(max = 40) String authorizationCode) {
+record ProviderSessionRequest(@NotBlank @Size(max = 40) String authorizationCode, UUID signatureAccountId) {
 }
 
 record ProviderSessionResponse(UUID id, String providerCode, String state, OffsetDateTime expiresAt,

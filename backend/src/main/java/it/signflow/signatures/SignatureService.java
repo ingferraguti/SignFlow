@@ -45,7 +45,7 @@ public class SignatureService {
 
     @Transactional
     public ProviderSessionResponse openSession(String username, ProviderSessionRequest request) {
-        SignatureRepository.SignerAccount account = account(username);
+        SignatureRepository.SignerAccount account = account(username, request.signatureAccountId());
         SignatureProviderAdapter adapter = adapter(account.adapterType());
         String correlationId = UUID.randomUUID().toString();
         var providerSession = adapter.openSession(new SignatureProviderAdapter.OpenSessionCommand(
@@ -79,7 +79,7 @@ public class SignatureService {
             if (!repeated.get().fingerprint().equals(fingerprint)) throw conflict("Idempotency key already used");
             return detail(username, repeated.get().batchId());
         }
-        SignatureRepository.SignerAccount account = account(username);
+        SignatureRepository.SignerAccount account = account(username, null);
         List<SignatureRepository.EligibleReport> reports = repository.eligible(username, mode, ids, request.filters());
         if (mode != SignatureSelectionMode.FILTERED && reports.size() != ids.size()) {
             throw unprocessable("Every selected report must be visible, approved and have an active document");
@@ -113,7 +113,7 @@ public class SignatureService {
         if (repeated(batchId, request.operationKey(), fingerprint)) return detail(username, batchId);
         if (batch.state() != SignatureBatchState.DRAFT) throw conflict("Only a draft batch can be confirmed");
         SignatureRepository.SessionData session = activeSession(username, request.providerSessionId());
-        if (!session.accountId().equals(account(username).id())) throw conflict("Provider session uses another account");
+        if (!session.accountId().equals(account(username, session.accountId()).id())) throw conflict("Provider session uses another account");
         for (SignatureRepository.AttemptData attempt : repository.attempts(batchId)) {
             if (!"APPROVED".equals(attempt.reportState())) {
                 throw conflict("Report " + attempt.reportIdentifier() + " is no longer approved");
@@ -194,12 +194,12 @@ public class SignatureService {
     }
 
     public List<SignatureBatchResponse> list(String username) {
-        account(username);
+        account(username, null);
         return repository.batches(username).stream().map(batch -> detail(username, batch.id())).toList();
     }
 
     public SignatureArtifact artifact(String username, UUID artifactId) {
-        account(username);
+        account(username, null);
         return repository.artifact(artifactId, username).orElseThrow(() -> notFound("Mock artifact not found"));
     }
 
@@ -281,9 +281,9 @@ public class SignatureService {
         return true;
     }
 
-    private SignatureRepository.SignerAccount account(String username) {
+    private SignatureRepository.SignerAccount account(String username, UUID requestedAccountId) {
         if (username == null || username.isBlank()) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        return repository.account(username).orElseThrow(() ->
+        return repository.account(username, requestedAccountId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.FORBIDDEN, "Active mock signature account not available"));
     }
 

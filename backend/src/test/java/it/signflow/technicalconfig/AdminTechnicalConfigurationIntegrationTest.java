@@ -59,6 +59,9 @@ class AdminTechnicalConfigurationIntegrationTest {
                 .andExpect(jsonPath("$[*].accountAlias", hasItem("demo-signer")));
         mockMvc.perform(get(ROOT + "/fse-facility-mappings").with(adminJwt())).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].facilityCode", hasItem("PRESIDIO-DEMO")));
+        mockMvc.perform(get(ROOT + "/fse-document-types").with(adminJwt())).andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].code", hasItem("REF")))
+                .andExpect(jsonPath("$[*].code", hasItem("LDO")));
 
         Integer passwordColumns = jdbcClient.sql("""
                 select count(*) from information_schema.columns
@@ -96,6 +99,28 @@ class AdminTechnicalConfigurationIntegrationTest {
                                 .replace("secret://providers/crud", "")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", equalTo("credentialReference is required for API_KEY_REFERENCE; secrets must remain external")));
+    }
+
+    @Test
+    void configuresCdaInjectionOnlyForSelectedFseDocumentTypes() throws Exception {
+        String sourceId = create(ROOT + "/source-systems", sourceSystemBody("CDA-BY-TYPE", true, false));
+        String configuration = """
+                [{"documentTypeCode":"REF","cdaInjectionEnabled":true},
+                 {"documentTypeCode":"LDO","cdaInjectionEnabled":false}]
+                """;
+        mockMvc.perform(put(ROOT + "/source-systems/" + sourceId + "/fse-document-types")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON).content(configuration))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.documentTypeCode == 'REF')].cdaInjectionEnabled", hasItem(true)))
+                .andExpect(jsonPath("$[?(@.documentTypeCode == 'LDO')].cdaInjectionEnabled", hasItem(false)));
+
+        mockMvc.perform(put(ROOT + "/source-systems/" + sourceId + "/fse-document-types")
+                        .with(adminJwt()).contentType(MediaType.APPLICATION_JSON)
+                        .content("[{\"documentTypeCode\":\"XYZ\",\"cdaInjectionEnabled\":true}]"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", equalTo("unsupported FSE document type: XYZ")));
+        mockMvc.perform(delete(ROOT + "/source-systems/" + sourceId).with(adminJwt()))
+                .andExpect(status().isNoContent());
     }
 
     @Test
