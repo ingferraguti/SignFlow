@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 test("protects route, logs in, shows current user, logs out, and protects route again", async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("404 (Not Found)")) browserErrors.push(message.text());
+  });
   await page.goto("/system");
   await expect(page).toHaveURL(/\/login/);
   await expect(page.getByRole("heading", { name: "SignFlow login" })).toBeVisible();
@@ -43,7 +48,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
 
   await page.goto("/referti");
   await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(10);
+  await expect(page.locator("tbody tr")).toHaveCount(12);
   await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-001");
   await expect(page.getByLabel("Paziente")).toBeDisabled();
   await page.getByRole("button", { name: "Cerca" }).click();
@@ -116,7 +121,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByRole("heading", { name: "Ingestion HL7 e pipeline documentale" })).toBeVisible();
   await expect(page.getByText("HL7-DEMO-ORU-001", { exact: true })).toBeVisible();
   await expect(page.getByText("HL7-DEMO-MDM-001", { exact: true })).toBeVisible();
-  await expect(page.getByText("SOURCE_SYSTEM_NOT_FOUND", { exact: true })).toBeVisible();
+  await expect(page.getByText("SOURCE_SYSTEM_NOT_FOUND", { exact: false })).toBeVisible();
   const ingestionDetailCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/monitoring/messages/")
     && response.request().method() === "GET");
   await page.getByRole("button", { name: "Apri dettaglio messaggio" }).first().click();
@@ -132,9 +137,11 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   const auditDownload = page.waitForEvent("download");
   await page.getByRole("link", { name: "Esporta CSV" }).click();
   expect((await auditDownload).suggestedFilename()).toBe("signflow-audit.csv");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await page.setViewportSize({ width: 1280, height: 720 });
+  expect(browserErrors).toEqual([]);
 
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);

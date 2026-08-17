@@ -12,6 +12,7 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   await page.getByRole("button", { name: /sign in/i }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText("Signed in as")).toBeVisible();
+  await page.waitForLoadState("networkidle");
   await page.goto("/firma");
 
   await expect(page.getByRole("heading", { name: "Home firmatario" })).toBeVisible();

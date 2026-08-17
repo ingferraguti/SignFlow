@@ -1,6 +1,6 @@
 # Test Plan
 
-Last updated: 2026-08-13.
+Last updated: 2026-08-17.
 
 ## Natural Person, Authentication Profiles, and Digital Signatures
 
@@ -232,7 +232,7 @@ Frontend, network, and browser checks (`zz-review.spec.ts` plus integrated brows
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 72 backend tests pass;
+- verify all 81 backend tests pass;
 - verify existing administrator and signer E2E flows remain green before the review E2E.
 
 ## Goal 10 - Single and Batch Mock Signature
@@ -264,7 +264,7 @@ Frontend, network, and browser checks (`zzz-signature.spec.ts` plus integrated b
 Non-regression checks:
 
 - run `test-backend.ps1`, `test-frontend.ps1`, and `test-e2e.ps1`;
-- verify all 72 backend tests, frontend lint/build, and all 4 Playwright flows;
+- verify all 81 backend tests, frontend lint/build, and all 4 Playwright flows;
 - verify authentication, admin CRUD, documents, explicit workflow, independent review, signer preview, configurable labels, and responsive navigation.
 
 ## Goal 11 - Digital Signature Engine and Provider Adapters
@@ -296,7 +296,7 @@ Workflow and migration regression:
   scenarios to remain green;
 - validate Flyway V16 on a fresh PostgreSQL 16 container and confirm the session table stores only opaque references;
 - run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
-- require all 72 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
+- require all 81 backend tests, frontend lint/build, and the four existing Playwright flows to pass;
 - scan domain and UI changes to ensure no real provider brand, endpoint, or provider DTO was introduced.
 
 ## Goal 7 / Delivery Objective 12 - Append-only Audit and Monitoring

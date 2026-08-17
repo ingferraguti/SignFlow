@@ -158,14 +158,14 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: pass on 2026-08-13.
+Result: pass on 2026-08-17.
 
 Evidence:
 
-- Backend: 72 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 81 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed after the Objective 12 timeline/privacy hardening; backend and frontend evidence
-  below comes from the same successful `test-all.ps1` run.
+- Final full baseline completed after the Objective 13 ingestion implementation; backend and frontend evidence below
+  comes from the same successful `test-all.ps1` run.
 
 ### Backend
 
@@ -180,11 +180,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 72.
+- Tests run: 81.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-13 Europe/Rome.
+- Finished at: 2026-08-17 Europe/Rome.
 
 Notes:
 
@@ -215,7 +215,7 @@ Evidence:
 Notes:
 
 - No automated frontend unit tests are currently defined.
-- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-13 during the final full baseline.
+- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-17 during the final full baseline.
 
 ### Docker Compose Authentication Flow
 
@@ -235,9 +235,12 @@ Evidence:
 - Frontend running Next.js 16.3.0 on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway validated 21 migrations; V19 separates natural persons, authentication identities, and digital signatures,
-  V20 scopes authentication subjects by issuer and protects identity-link history from mutation, and V21 indexes
-  append-only audit timeline links.
+- Flyway migrated the existing local database from V21 to V22; V22 adds HL7 processing metadata, a fictional
+  passthrough SourceSystem, technical ingestion audit, and administrator-configurable ingestion UI texts.
+- HAPI HL7 v2 2.6.0 initialized successfully; the local MLLP listener is published only as
+  `127.0.0.1:2575->2575/tcp`.
+- Three idempotent fictional demo messages are present: processed ORU to `READY_TO_SIGN`, processed MDM to
+  `MISSING_SIGNER`, and discarded unknown SourceSystem with `SOURCE_SYSTEM_NOT_FOUND`.
 - Browser-integrated checks completed an approved Report through provider session, mock signature, `SIGNED`, batch `COMPLETED`, and attempt `SUCCEEDED`.
 - Browser-integrated layout checks confirmed no horizontal overflow at 1440 x 900 or 390 x 844, four/two-column batch summaries, horizontal mobile navigation, and no JavaScript console errors.
 - Browser-integrated audit checks confirmed administrator navigation, fictional FSE/preservation entries, login/logout and sensitive-search events, filters, CSV download, Report timeline, 1440 x 900 and 390 x 844 containment, and no JavaScript errors after the final session fix.
@@ -274,6 +277,8 @@ Evidence:
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The authenticated admin visited `/monitoraggio`, observed HTTP 200 audit search calls, filtered `DOCUMENT_UPLOADED`, downloaded `signflow-audit.csv`, and verified 390 x 844 page containment.
+- The administrator observed all three fictional HL7 outcomes, opened an HTTP 200 masked message detail, and verified
+  both 1280 x 720 and 390 x 844 containment with an empty JavaScript error list.
 - The final integrated-browser pass filtered the fictional `FSE_OPERATION_RESERVED` event, exported CSV, verified the
   retention controls, found no JavaScript errors, and measured no page-level overflow at 390 x 844.
 - The final Report timeline check found batch creation, attempt creation, provider outcome, FSE, and preservation
@@ -286,7 +291,14 @@ Evidence:
 - The signer requested review, the approver recorded document view and approved to `APPROVED`, and the administrator restored the fictitious demo through controlled returns.
 - The signer opened a temporary mock-provider session, executed one approved Report, received HTTP 200 for both network calls, saw the explicit non-legal outcome and responsive final batch summary, and the test runner restored the four signature fixtures afterward.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-08-13 Europe/Rome: 4 passed, 0 failed.
+- Last successful run completed at 2026-08-17 Europe/Rome: 4 passed, 0 failed.
+
+Notes:
+
+- The in-app browser controller was explicitly attempted repeatedly for the Objective 13 visual pass but its local runtime
+  failed before opening a tab with `failed to write kernel assets: path not found`. The repository Chromium E2E suite
+  therefore performed the required layout, network, JavaScript-console, masking, and interaction checks; no alternate
+  signed-in browser surface was used.
 
 ## Baseline Interpretation
 
