@@ -106,7 +106,8 @@ public class SignerReportService {
                 legend(ReportState.FSE_ACCEPTED, "Accettato da FSE", "FSE ha accettato il documento."),
                 legend(ReportState.FSE_REJECTED, "Rifiutato da FSE", "FSE ha rifiutato il documento."),
                 legend(ReportState.CONSERVATION_SENT, "Inviato in conservazione", "Il documento è stato inviato in conservazione."),
-                legend(ReportState.CONSERVATION_ACCEPTED, "Conservato", "La conservazione ha accettato il documento."));
+                legend(ReportState.CONSERVATION_ACCEPTED, "Conservato", "La conservazione ha accettato il documento."),
+                legend(ReportState.CONSERVATION_REJECTED, "Conservazione rifiutata", "La conservazione ha rifiutato il documento."));
     }
 
     private ReportDetailResponse visible(String username, UUID reportId) {

@@ -2,6 +2,32 @@
 
 Last updated: 2026-08-17.
 
+## Delivery Objective 14 - FSE 2.0 and Conservation Adapters
+
+Backend tests (`ExternalDeliveryWorkflowIntegrationTest`, `ReportWorkflowRulesTest`):
+
+- a locally mock-signed fictional PDF passes the explicit test gate, while EU DSS 6.4 remains the production-facing preliminary PAdES validator;
+- FSE metadata is assembled from the active facility mapping and fails to `FSE_VALIDATION_ERROR` when the mapping or document is missing;
+- submission records `FSE_SENT`, correlation ID, remote reference, attempt and private object-storage receipt;
+- reconciliation records `FSE_ACCEPTED` or `FSE_REJECTED`; a bounded retry resubmits a rejected operation and repeated command keys are idempotent;
+- timeout leaves the Report in its sent state while the operation remains reconcilable, and a later poll can accept it;
+- an FSE-accepted Report traverses conservation sent and accepted/rejected states through `ConservationAdapter`;
+- two concurrent reconciliations with the same Report version produce one decision and one conflict;
+- every Report state change delegates to `ReportWorkflowService`, while attempts and receipts produce append-only audit timeline events;
+- anonymous and non-administrator access is rejected, receipt downloads are attachment-only with `nosniff`, and receipt JSON is explicitly non-legal mock data.
+
+Frontend and E2E checks:
+
+- `/integrazioni` exposes filters, paging, start/retry/reconciliation actions, attempts, errors, metadata and downloadable receipts;
+- administrator-configurable UI texts cover the menu and all primary actions;
+- accepted and rejected fictional outcomes render correctly, relevant API calls return HTTP 200, and no JavaScript errors occur;
+- 1280 x 720 and 390 x 844 views have no page-level horizontal overflow, while the wide result table scrolls inside its container.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
+- verify signature, review, ingestion, audit, document storage, identity, and Report search workflows remain green.
+
 ## Natural Person, Authentication Profiles, and Digital Signatures
 
 Backend tests (`AdminApplicationUserIntegrationTest`, `SignerReportIntegrationTest`,

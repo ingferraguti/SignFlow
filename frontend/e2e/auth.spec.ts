@@ -48,7 +48,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
 
   await page.goto("/referti");
   await expect(page.getByRole("heading", { name: "Pratiche e referti" })).toBeVisible();
-  await expect(page.locator("tbody tr")).toHaveCount(12);
+  await expect(page.locator("tbody tr")).toHaveCount(14);
   await page.getByRole("textbox", { name: "ID interno", exact: true }).fill("RPT-INT-001");
   await expect(page.getByLabel("Paziente")).toBeDisabled();
   await page.getByRole("button", { name: "Cerca" }).click();
@@ -140,6 +140,26 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 720 });
+
+  const deliveryPageCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/external-deliveries?")
+    && response.request().method() === "GET");
+  await page.goto("/integrazioni");
+  expect((await deliveryPageCall).status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "FSE 2.0 e conservazione" })).toBeVisible();
+  await expect(page.getByText("AMBIENTE MOCK")).toBeVisible();
+  await expect(page.getByText("FSE_ACCEPTED", { exact: true })).toBeVisible();
+  await expect(page.getByText("FSE_REJECTED", { exact: true })).toBeVisible();
+  await expect(page.getByText("CONSERVATION_ACCEPTED", { exact: true })).toBeVisible();
+  const detailCall = page.waitForResponse((response) => /\/api\/backend\/admin\/external-deliveries\/[0-9a-f-]+$/.test(response.url()));
+  await page.getByRole("row").filter({ hasText: "CONSERVATION_ACCEPTED" }).getByRole("button", { name: "Dettagli" }).click();
+  expect((await detailCall).status()).toBe(200);
+  await expect(page.getByRole("heading", { name: /CONSERVATION · RPT-FSE-MOCK-OK-001/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Scarica ricevuta/ }).first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => ({ page: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    table: getComputedStyle(document.querySelector(".table-wrap")!).overflowX }))).toEqual({ page: true, table: "auto" });
   await page.setViewportSize({ width: 1280, height: 720 });
   expect(browserErrors).toEqual([]);
 

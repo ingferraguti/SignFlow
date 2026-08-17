@@ -90,7 +90,7 @@ public class SignerReportRepository {
                        count(*) filter (where r.state='REVIEW_PENDING') review,
                        count(*) filter (where r.state in ('INCOMPLETE','MISSING_SIGNER')) incomplete,
                        count(*) filter (where r.state in ('SIGNED','FSE_SENT','FSE_ACCEPTED','FSE_REJECTED',
-                           'CONSERVATION_SENT','CONSERVATION_ACCEPTED')) signed
+                           'CONSERVATION_SENT','CONSERVATION_ACCEPTED','CONSERVATION_REJECTED')) signed
                 """ + JOINS + " where " + VISIBLE)
                 .param("username", username).query((rs, row) -> Map.of(
                         "total", rs.getLong("total"), "ready", rs.getLong("ready"),

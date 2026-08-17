@@ -16,7 +16,8 @@ final class ReportWorkflowRules {
             ReportState.APPROVED, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING,
             ReportState.SIGNED, ReportState.SIGN_ERROR, ReportState.FSE_VALIDATION_ERROR,
             ReportState.FSE_SENT, ReportState.FSE_ACCEPTED, ReportState.FSE_REJECTED,
-            ReportState.CONSERVATION_SENT, ReportState.CONSERVATION_ACCEPTED);
+            ReportState.CONSERVATION_SENT, ReportState.CONSERVATION_ACCEPTED,
+            ReportState.CONSERVATION_REJECTED);
     private static final Set<ReportState> ADMIN_CORRECTABLE = EnumSet.of(
             ReportState.RECEIVED, ReportState.PARSED, ReportState.INCOMPLETE,
             ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN, ReportState.PREVIEWED,
@@ -72,7 +73,9 @@ final class ReportWorkflowRules {
         rules.put(ReportState.FSE_SENT, states(ReportState.FSE_ACCEPTED, ReportState.FSE_REJECTED));
         rules.put(ReportState.FSE_REJECTED, states(ReportState.FSE_SENT));
         rules.put(ReportState.FSE_ACCEPTED, states(ReportState.CONSERVATION_SENT));
-        rules.put(ReportState.CONSERVATION_SENT, states(ReportState.CONSERVATION_ACCEPTED));
+        rules.put(ReportState.CONSERVATION_SENT, states(ReportState.CONSERVATION_ACCEPTED,
+                ReportState.CONSERVATION_REJECTED));
+        rules.put(ReportState.CONSERVATION_REJECTED, states(ReportState.CONSERVATION_SENT));
         rules.put(ReportState.CONSERVATION_ACCEPTED, Set.of());
         return Map.copyOf(rules);
     }

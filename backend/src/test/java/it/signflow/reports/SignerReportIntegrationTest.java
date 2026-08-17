@@ -193,8 +193,8 @@ class SignerReportIntegrationTest {
                 .andExpect(jsonPath("$.authenticationAccounts", hasSize(2)))
                 .andExpect(jsonPath("$.digitalSignatures", hasSize(2)));
         mockMvc.perform(get(ROOT + "/states").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(18)))
-                .andExpect(jsonPath("$[17].code", equalTo("CONSERVATION_ACCEPTED")));
+                .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(19)))
+                .andExpect(jsonPath("$[18].code", equalTo("CONSERVATION_REJECTED")));
         mockMvc.perform(get("/api/ui-texts").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$['menu.signerHome']", equalTo("Home firmatario")));
         mockMvc.perform(get(ROOT + "/reports").with(adminJwt())).andExpect(status().isForbidden());

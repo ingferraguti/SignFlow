@@ -158,7 +158,7 @@ Out of MVP:
 
 ## Goal 8 - FSE 2.0 Preparation
 
-MVP: partial preparation only.
+MVP: local adapter workflow implemented; accredited transport remains deferred.
 
 Purpose:
 
@@ -173,6 +173,7 @@ Acceptance:
 - Existing CDA XML can be injected as `cda.xml`; actual clinical CDA generation remains deferred and is represented as pending.
 - Report states include FSE validation, sent, accepted, and rejected outcomes.
 - Interfaces isolate official validator/gateway integration.
+- Mock gateway submission, private receipts, rejection, timeout, bounded retry, and reconciliation are operational and audited.
 
 Out of MVP:
 
@@ -181,7 +182,7 @@ Out of MVP:
 
 ## Goal 9 - Digital Preservation Preparation
 
-MVP: partial preparation only.
+MVP: local adapter workflow implemented; accredited preservation remains deferred.
 
 Purpose:
 
@@ -192,6 +193,7 @@ Acceptance:
 - Domain model can reference preservation packages and receipts.
 - Report states include conservation sent and accepted outcomes.
 - Interfaces isolate preservation-provider APIs.
+- Mock submission, private receipts, rejection, timeout, bounded retry, and reconciliation are operational and audited.
 
 Out of MVP:
 

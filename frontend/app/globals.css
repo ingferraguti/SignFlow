@@ -161,6 +161,22 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .audit-timeline .decision-timeline { margin-top: 1rem; }
 @media (max-width: 1050px) { .audit-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .audit-retention-card { grid-template-columns: 1fr; } }
 @media (max-width: 650px) { .audit-filter-form { grid-template-columns: 1fr; } .audit-filter-form .form-actions { align-items: stretch; flex-direction: column; } .audit-retention-card form { align-items: stretch; flex-direction: column; } }
+.delivery-layout { display: grid; gap: 1rem; }
+.delivery-intro, .delivery-detail { max-width: none; }
+.mock-warning { align-items: center; background: #fff4cf; border: 1px solid #e6c967; border-radius: .65rem; color: #5d4700; display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; padding: .75rem; }
+.delivery-start-form, .delivery-filters { align-items: end; display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.delivery-start-form label, .delivery-filters label { display: grid; gap: .3rem; font-weight: 700; }
+.delivery-filters .form-actions { grid-column: 1 / -1; }
+.delivery-table { min-width: 72rem; }
+.delivery-state { border-radius: 999px; display: inline-block; font-size: .72rem; font-weight: 800; padding: .3rem .5rem; white-space: nowrap; }
+.delivery-state.accepted { background: #dff7e8; color: #116031; }
+.delivery-state.pending { background: #fff7dd; color: #6d5010; }
+.delivery-state.rejected { background: #ffe4e4; color: #8a1f1f; }
+.delivery-timeline { display: grid; gap: .6rem; padding-left: 1.25rem; }
+.delivery-timeline li { border-left: 3px solid #bfd1e5; display: grid; gap: .2rem; padding-left: .75rem; }
+.receipt-list { display: flex; flex-wrap: wrap; gap: .6rem; }
+@media (max-width: 900px) { .delivery-start-form, .delivery-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .delivery-start-form, .delivery-filters { grid-template-columns: 1fr; } .delivery-filters .form-actions { align-items: stretch; flex-direction: column; } }
 .workflow-panel { background: #f8fafc; border: 1px solid var(--border); border-radius: .7rem; margin-top: 1.5rem; padding: 1.1rem; }
 .workflow-panel h3, .workflow-panel h4 { margin-top: 0; }
 .workflow-summary { align-items: center; display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }

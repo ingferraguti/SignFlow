@@ -54,6 +54,10 @@ signflow:
     mllp-bind-address: ${SIGNFLOW_MLLP_BIND_ADDRESS:127.0.0.1}
     mllp-port: ${SIGNFLOW_MLLP_PORT:2575}
     demo-enabled: ${SIGNFLOW_INGESTION_DEMO_ENABLED:false}
+  external-delivery:
+    allow-mock-signatures: ${SIGNFLOW_EXTERNAL_ALLOW_MOCK_SIGNATURES:false}
+    max-retries: ${SIGNFLOW_EXTERNAL_MAX_RETRIES:2}
+    demo-enabled: ${SIGNFLOW_EXTERNAL_DEMO_ENABLED:false}
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

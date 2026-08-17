@@ -201,6 +201,27 @@ public class ReportWorkflowService {
                 normalizedReference, markMockSigned);
     }
 
+    @Transactional
+    public ReportWorkflowOperationResponse transitionForExternalDelivery(UUID reportId, long expectedVersion,
+            String operationKey, ReportWorkflowOperation operation, ReportState target,
+            String actor, String correlationId) {
+        if (!Set.of(ReportWorkflowOperation.VALIDATE_FSE, ReportWorkflowOperation.SEND_FSE,
+                ReportWorkflowOperation.RECONCILE_FSE, ReportWorkflowOperation.RETRY_FSE,
+                ReportWorkflowOperation.SEND_CONSERVATION, ReportWorkflowOperation.RECONCILE_CONSERVATION,
+                ReportWorkflowOperation.RETRY_CONSERVATION).contains(operation)) {
+            throw new IllegalArgumentException("Unsupported external delivery workflow operation");
+        }
+        String key = operationKey(operationKey);
+        String reference = requiredText(correlationId, "Correlation ID is required");
+        String requestFingerprint = fingerprint(operation, null, target, reference);
+        ReportWorkflowOperationResponse repeated = repeated(reportId, key, requestFingerprint);
+        if (repeated != null) return repeated;
+        ReportWorkflowSnapshot current = snapshot(reportId);
+        requireVersion(current, expectedVersion);
+        ensureTransition(current.state(), target);
+        return applySignature(current, key, operation, requestFingerprint, target, actor(actor), reference, false);
+    }
+
     private ReportWorkflowOperationResponse applySignature(ReportWorkflowSnapshot current, String operationKey,
                                                             ReportWorkflowOperation operation, String fingerprint,
                                                             ReportState target, String actor, String reference,

@@ -30,7 +30,9 @@ class ReportWorkflowRulesTest {
                 Map.entry(ReportState.FSE_SENT, Set.of(ReportState.FSE_ACCEPTED, ReportState.FSE_REJECTED)),
                 Map.entry(ReportState.FSE_ACCEPTED, Set.of(ReportState.CONSERVATION_SENT)),
                 Map.entry(ReportState.FSE_REJECTED, Set.of(ReportState.FSE_SENT)),
-                Map.entry(ReportState.CONSERVATION_SENT, Set.of(ReportState.CONSERVATION_ACCEPTED)),
+                Map.entry(ReportState.CONSERVATION_SENT, Set.of(ReportState.CONSERVATION_ACCEPTED,
+                        ReportState.CONSERVATION_REJECTED)),
+                Map.entry(ReportState.CONSERVATION_REJECTED, Set.of(ReportState.CONSERVATION_SENT)),
                 Map.entry(ReportState.CONSERVATION_ACCEPTED, Set.of()));
 
         assertThat(expected).hasSize(ReportState.values().length);

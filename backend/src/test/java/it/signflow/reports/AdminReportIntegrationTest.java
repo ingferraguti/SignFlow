@@ -110,7 +110,8 @@ class AdminReportIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(states).contains(
                 "RECEIVED", "PARSED", "INCOMPLETE", "MISSING_SIGNER", "READY_TO_SIGN", "PREVIEWED",
                 "REVIEW_PENDING", "APPROVED", "SIGNING", "SIGNED", "SIGN_ERROR", "FSE_SENT",
-                "FSE_ACCEPTED", "FSE_REJECTED", "CONSERVATION_SENT", "CONSERVATION_ACCEPTED");
+                "FSE_ACCEPTED", "FSE_REJECTED", "CONSERVATION_SENT", "CONSERVATION_ACCEPTED",
+                "CONSERVATION_REJECTED");
 
         mockMvc.perform(get(ROOT).with(signerJwt())).andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status", equalTo(403)));

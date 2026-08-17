@@ -9,6 +9,7 @@ const adminNavigation = [
   { href: "/system", key: "menu.system", enabled: true },
   { href: "/referti", key: "menu.reports", enabled: true },
   { href: "/monitoraggio", key: "menu.monitoring", enabled: true },
+  { href: "/integrazioni", key: "menu.externalDelivery", enabled: true },
   { href: "/configurazione", key: "menu.configuration", enabled: true },
 ];
 

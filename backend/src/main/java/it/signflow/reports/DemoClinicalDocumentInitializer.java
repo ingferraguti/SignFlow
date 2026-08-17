@@ -9,8 +9,10 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 
 @Component
+@Order(10)
 @ConditionalOnProperty(prefix = "signflow.documents", name = "demo-enabled", havingValue = "true")
 public class DemoClinicalDocumentInitializer implements ApplicationRunner {
     private static final UUID DEMO_REPORT_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-ccccccccccc1");
@@ -20,6 +22,9 @@ public class DemoClinicalDocumentInitializer implements ApplicationRunner {
             UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee2"),
             UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee3"),
             UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeee4"));
+    private static final List<UUID> EXTERNAL_DELIVERY_REPORTS = List.of(
+            UUID.fromString("ffffffff-ffff-ffff-ffff-fffffffffff1"),
+            UUID.fromString("ffffffff-ffff-ffff-ffff-fffffffffff2"));
     private final ClinicalDocumentRepository repository;
     private final ClinicalDocumentService service;
 
@@ -41,9 +46,14 @@ public class DemoClinicalDocumentInitializer implements ApplicationRunner {
                 service.upload(reportId, "referto-firma-mock-totalmente-fittizio.pdf", demoPdf(), "demo.producer");
             }
         }
+        for (UUID reportId : EXTERNAL_DELIVERY_REPORTS) {
+            if (repository.list(reportId, true).isEmpty()) {
+                service.upload(reportId, "referto-fse-conservazione-mock-fittizio.pdf", demoPdf(), "demo.producer");
+            }
+        }
     }
 
-    static byte[] demoPdf() {
+    public static byte[] demoPdf() {
         String content = "BT /F1 18 Tf 72 760 Td (SignFlow - referto totalmente fittizio) Tj ET\n";
         List<String> objects = List.of(
                 "<< /Type /Catalog /Pages 2 0 R >>",

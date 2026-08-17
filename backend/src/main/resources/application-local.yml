@@ -5,3 +5,6 @@ spring:
 signflow:
   documents:
     demo-enabled: true
+  external-delivery:
+    allow-mock-signatures: true
+    demo-enabled: true

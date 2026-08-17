@@ -16,8 +16,13 @@ Implemented in this phase:
 Implemented for local/MVP testing: REST and local MLLP HL7 v2 intake, HAPI parsing for fictional ORU/MDM messages,
 private raw-message storage, SourceSystem-driven mock document processing, and administrator monitoring.
 
+Also implemented for local testing: provider-neutral FSE 2.0 and conservation adapters, EU DSS preliminary validation,
+mock submission/reconciliation, bounded retry, private mock receipts, complete audit history, and the administrator
+page at `/integrazioni`. No healthcare or preservation endpoint is contacted.
+
 Not yet implemented: production HL7 routing, CDA2 clinical generation, certified PDF/A-3 conversion, real
-signature-provider execution, FSE 2.0 submission, digital preservation, Kafka, ClickHouse, OpenSearch, and separated microservices.
+signature-provider execution, accredited FSE 2.0 transport, accredited digital preservation, Kafka, ClickHouse,
+OpenSearch, and separated microservices.
 
 ## Prerequisites
 
