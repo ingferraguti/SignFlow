@@ -47,6 +47,13 @@ signflow:
     max-size-bytes: ${SIGNFLOW_DOCUMENT_MAX_SIZE_BYTES:10485760}
     temporary-url-seconds: ${SIGNFLOW_DOCUMENT_URL_TTL_SECONDS:300}
     demo-enabled: ${SIGNFLOW_DOCUMENT_DEMO_ENABLED:false}
+  ingestion:
+    max-message-bytes: ${SIGNFLOW_HL7_MAX_MESSAGE_BYTES:5242880}
+    raw-retention-days: ${SIGNFLOW_HL7_RAW_RETENTION_DAYS:30}
+    mllp-enabled: ${SIGNFLOW_MLLP_ENABLED:false}
+    mllp-bind-address: ${SIGNFLOW_MLLP_BIND_ADDRESS:127.0.0.1}
+    mllp-port: ${SIGNFLOW_MLLP_PORT:2575}
+    demo-enabled: ${SIGNFLOW_INGESTION_DEMO_ENABLED:false}
 springdoc:
   swagger-ui:
     path: /swagger-ui.html

@@ -332,3 +332,35 @@ Non-regression checks:
 - verify workflow, review, signature, document, identity, organization, technical configuration, authorization, and PAdES/adapter suites remain green;
 - verify every workflow/review/signature test fixture can be reset without mutating existing audit rows;
 - verify the Docker Compose stack migrates from V16 to V17 and all five services reach healthy/running state.
+
+## Goal 5 / Goal 6 / Delivery Objective 13 - API/HL7 Ingestion and Document Pipeline
+
+Focused backend tests (`Hl7V2ParserTest`, `Hl7IngestionIntegrationTest`, `LocalMllpListenerTest`):
+
+- parse and initially validate completely fictional HL7 v2.5 ORU^R01 and MDM^T02 messages through HAPI HL7;
+- extract minimized patient, episode, Report, signer, SourceSystem, and embedded ED/Base64 PDF data;
+- reject malformed and unsupported messages without returning or logging their sensitive content;
+- accept protected REST ingestion only for `INGESTION` or `ADMINISTRATOR` and return the correlation ID;
+- accept a real local MLLP frame and return `MSA|AA`/`MSA|AE` without reflecting patient content;
+- save the raw HL7 object in private MinIO and only payload hash, object key, retention, and processing metadata in PostgreSQL;
+- verify `createCda`, normalization, mock PDF/A-3 conversion, and passthrough behavior from SourceSystem configuration;
+- produce `READY_TO_SIGN`, `MISSING_SIGNER`, or `INCOMPLETE` only through `ReportWorkflowService`;
+- return the original result for an identical retry, discard a changed payload reusing the control ID, and create exactly
+  one Report under two concurrent identical submissions;
+- expose filtered/paginated processed and discarded messages, a masked raw preview, safe error codes, and the missing-signer queue;
+- reconstruct receipt, workflow transitions, document association, and processing outcome in the append-only Report timeline.
+
+Frontend, network, and integrated-browser checks:
+
+- `/monitoraggio` displays the three fictional demo outcomes, filters, pagination, pipeline detail, and missing-signer queue;
+- opening a detail performs an HTTP 200 request and shows segment names with masked content, never fiscal/patient/Base64 data;
+- ingestion title and action-button texts are editable in `Profilo admin - Testi e traduzioni`;
+- 1280 x 720 and 390 x 844 layouts have no page-level horizontal overflow; only the table/raw containers may scroll;
+- the browser console contains no JavaScript errors and REST calls for message list/detail/missing-signer queue complete successfully.
+
+Non-regression checks:
+
+- run `test-backend.ps1`, `test-frontend.ps1`, `test-e2e.ps1`, and finally `test-all.ps1`;
+- require all prior authentication, identity, configuration, documents, workflow, review, mock signature, PAdES adapter,
+  audit, export, retention, and responsive-layout scenarios to remain green;
+- rebuild the Docker Compose stack, require Flyway V22 and all services healthy, and verify MLLP is published on loopback only.

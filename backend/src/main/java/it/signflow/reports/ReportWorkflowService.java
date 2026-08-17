@@ -38,6 +38,28 @@ public class ReportWorkflowService {
     }
 
     @Transactional
+    public ReportWorkflowOperationResponse transitionForIngestion(UUID reportId, long expectedVersion,
+                                                                  String operationKey, ReportState target,
+                                                                  String actor, List<String> missingFields) {
+        if (!Set.of(ReportState.PARSED, ReportState.INCOMPLETE, ReportState.MISSING_SIGNER,
+                ReportState.READY_TO_SIGN).contains(target)) {
+            throw new IllegalArgumentException("Unsupported ingestion workflow target");
+        }
+        ReportWorkflowOperation operation = target == ReportState.PARSED
+                ? ReportWorkflowOperation.PARSE_INGESTION : ReportWorkflowOperation.COMPLETE_INGESTION;
+        String key = operationKey(operationKey);
+        List<String> normalizedMissing = missingFields == null ? List.of() : List.copyOf(missingFields);
+        String requestFingerprint = fingerprint(operation, null, target, String.join("|", normalizedMissing));
+        ReportWorkflowOperationResponse repeated = repeated(reportId, key, requestFingerprint);
+        if (repeated != null) return repeated;
+        ReportWorkflowSnapshot current = snapshot(reportId);
+        requireVersion(current, expectedVersion);
+        ensureTransition(current.state(), target);
+        return apply(current, key, operation, requestFingerprint, target, current.assignedSignerId(),
+                actor(actor), null, normalizedMissing, false);
+    }
+
+    @Transactional
     public ReportWorkflowOperationResponse assignSigner(UUID reportId, AssignSignerRequest request, String actor) {
         String key = operationKey(request.operationKey());
         String fingerprint = fingerprint(ReportWorkflowOperation.ASSIGN_SIGNER, request.signerId(), null, null);

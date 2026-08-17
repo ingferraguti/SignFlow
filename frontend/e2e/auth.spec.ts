@@ -107,9 +107,23 @@ test("protects route, logs in, shows current user, logs out, and protects route 
 
   const auditPageCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/audit/events?")
     && response.request().method() === "GET");
+  const ingestionPageCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/monitoring/messages?")
+    && response.request().method() === "GET");
   await page.goto("/monitoraggio");
   expect((await auditPageCall).status()).toBe(200);
+  expect((await ingestionPageCall).status()).toBe(200);
   await expect(page.getByRole("heading", { name: "Audit e monitoraggio" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ingestion HL7 e pipeline documentale" })).toBeVisible();
+  await expect(page.getByText("HL7-DEMO-ORU-001", { exact: true })).toBeVisible();
+  await expect(page.getByText("HL7-DEMO-MDM-001", { exact: true })).toBeVisible();
+  await expect(page.getByText("SOURCE_SYSTEM_NOT_FOUND", { exact: true })).toBeVisible();
+  const ingestionDetailCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/monitoring/messages/")
+    && response.request().method() === "GET");
+  await page.getByRole("button", { name: "Apri dettaglio messaggio" }).first().click();
+  expect((await ingestionDetailCall).status()).toBe(200);
+  await expect(page.getByRole("heading", { name: /Dettaglio (ORU|MDM)/ })).toBeVisible();
+  await expect(page.getByText("CONTENUTO MASCHERATO", { exact: false }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Chiudi dettaglio messaggio" }).click();
   await page.getByLabel("Tipo evento").fill("DOCUMENT_UPLOADED");
   const auditFilterCall = page.waitForResponse((response) => response.url().includes("eventType=DOCUMENT_UPLOADED"));
   await page.getByRole("button", { name: "Cerca eventi" }).click();

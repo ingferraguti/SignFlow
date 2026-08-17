@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>3.5.3</version><relativePath/></parent>
   <groupId>it.signflow</groupId><artifactId>signflow-backend</artifactId><version>0.1.0-SNAPSHOT</version><name>SignFlow Backend</name>
-  <properties><java.version>21</java.version><springdoc.version>2.8.9</springdoc.version><testcontainers.version>1.21.4</testcontainers.version><dss.version>6.4</dss.version></properties>
+  <properties><java.version>21</java.version><springdoc.version>2.8.9</springdoc.version><testcontainers.version>1.21.4</testcontainers.version><dss.version>6.4</dss.version><hapi-hl7v2.version>2.6.0</hapi-hl7v2.version></properties>
   <dependencies>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
@@ -15,6 +15,8 @@
     <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
     <dependency><groupId>io.minio</groupId><artifactId>minio</artifactId><version>9.0.1</version></dependency>
     <dependency><groupId>com.squareup.okhttp3</groupId><artifactId>okhttp-jvm</artifactId><version>5.3.2</version></dependency>
+    <dependency><groupId>ca.uhn.hapi</groupId><artifactId>hapi-base</artifactId><version>${hapi-hl7v2.version}</version></dependency>
+    <dependency><groupId>ca.uhn.hapi</groupId><artifactId>hapi-structures-v25</artifactId><version>${hapi-hl7v2.version}</version></dependency>
     <dependency>
       <groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-pades-pdfbox</artifactId><version>${dss.version}</version>
       <exclusions><exclusion><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId></exclusion></exclusions>

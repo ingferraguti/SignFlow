@@ -33,7 +33,8 @@ export type ReportDetail = {
 };
 export type ReportPage = { items: ReportSummary[]; page: number; size: number; total: number };
 export type SourceSystemOption = { id: string; code: string; description: string };
-export type WorkflowOperation = "ASSIGN_SIGNER" | "EVALUATE_READINESS" | "FIRST_PREVIEW" | "ADMIN_CORRECTION"
+export type WorkflowOperation = "PARSE_INGESTION" | "COMPLETE_INGESTION"
+  | "ASSIGN_SIGNER" | "EVALUATE_READINESS" | "FIRST_PREVIEW" | "ADMIN_CORRECTION"
   | "REQUEST_REVIEW" | "VIEW_REVIEW_DOCUMENT" | "APPROVE_REVIEW" | "REJECT_REVIEW"
   | "RETURN_REVIEW" | "PREPARE_COUNTER_SIGNATURE";
 export type WorkflowEvent = {

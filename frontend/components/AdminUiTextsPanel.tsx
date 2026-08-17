@@ -59,6 +59,10 @@ const textLabels: Record<string, string> = {
   "button.openTimeline": "Bottone audit: apri timeline",
   "label.auditTitle": "Titolo: audit e monitoraggio",
   "label.reportTimeline": "Titolo: timeline della pratica",
+  "label.ingestionMonitoringTitle": "Titolo: monitoraggio ingestion HL7",
+  "button.searchIngestion": "Bottone ingestion: cerca messaggi",
+  "button.openIngestionMessage": "Bottone ingestion: apri dettaglio",
+  "button.closeIngestionMessage": "Bottone ingestion: chiudi dettaglio",
 };
 
 export function AdminUiTextsPanel() {

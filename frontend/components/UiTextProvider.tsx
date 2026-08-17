@@ -43,6 +43,9 @@ const defaults: UiTexts = {
   "button.saveRetention": "Salva retention", "button.applyRetention": "Applica retention",
   "button.openTimeline": "Apri timeline", "label.auditTitle": "Audit e monitoraggio",
   "label.reportTimeline": "Timeline della pratica",
+  "label.ingestionMonitoringTitle": "Ingestion HL7 e pipeline documentale",
+  "button.searchIngestion": "Cerca messaggi", "button.openIngestionMessage": "Apri dettaglio messaggio",
+  "button.closeIngestionMessage": "Chiudi dettaglio messaggio",
 };
 
 type UiTextContextValue = { texts: UiTexts; setTexts: (texts: UiTexts) => void; text: (key: string) => string };

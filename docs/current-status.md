@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-08-13 Europe/Rome.
+Last verified: 2026-08-17 Europe/Rome.
 
 ## Repository State
 
@@ -18,8 +18,8 @@ The repository currently contains a technical foundation for SignFlow:
 
 ## Implemented
 
-- Backend package boundaries: `audit`, `configuration`, `fse`, `identity`, `reports`, `shared`, `signatures`,
-  `sourcesystems`, `technicalconfig`.
+- Backend package boundaries: `audit`, `configuration`, `fse`, `identity`, `ingestion`, `reports`, `shared`,
+  `signatures`, `sourcesystems`, `technicalconfig`.
 - `GET /api/system/info`, returning application name, version, and `UP` status.
 - Global API error response support.
 - Actuator health endpoint.
@@ -87,6 +87,18 @@ The repository currently contains a technical foundation for SignFlow:
 - Audit metadata validation rejects sensitive key families and complete Italian tax-code patterns even when supplied
   under an otherwise generic metadata key.
 - Audit UI labels and actions persisted in the administrator text/translation profile.
+- HAPI HL7 v2 2.6.0 parsing and initial validation for fictional ORU/MDM messages received through a protected REST
+  endpoint or a configurable local MLLP listener bound to loopback by default.
+- PostgreSQL `hl7_messages` processing metadata with correlation IDs, payload hashes, configurable raw retention,
+  processed/discarded outcomes, duplicate links, pipeline-step evidence, and raw HL7 stored only in private MinIO.
+- SourceSystem-driven ingestion pipeline that calls explicit mock/deferred `CdaBuilder`, `DocumentNormalizer`, and
+  `PdfA3Converter` ports, honors passthrough, associates PDFs, and delegates all Report transitions to the workflow service.
+- Idempotency by source/control ID, changed-payload conflict detection, concurrent duplicate protection, and workflow
+  outcomes `INCOMPLETE`, `MISSING_SIGNER`, and `READY_TO_SIGN`.
+- Administrator ingestion monitoring UI with filters, pagination, processed/discarded errors, privacy-masked raw
+  preview, pipeline details, and the operational queue of Reports without a signer; labels/actions remain configurable.
+- Append-only technical audit events for HL7 receipt/outcome linked into the Report timeline without patient, fiscal,
+  document, or raw-message content.
 - Explicit `Report` state machine with a dedicated application workflow service and no generic state-update API.
 - Signer assignment/removal, missing-signer and incomplete-precondition detection, and controlled promotion to `READY_TO_SIGN`.
 - Optimistic `workflow_version`, idempotency keys, append-only workflow history, and first-preview timestamp.
@@ -127,7 +139,8 @@ The repository currently contains a technical foundation for SignFlow:
 - Real signature-provider integration, qualified certificates, and legally valid signature execution. The required
   documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
   `docs/provider-adapter-contract.md`.
-- HL7 ingestion, parsing, monitoring, and raw payload storage.
+- Production-grade MLLP routing (mTLS/VPN, durable listener supervision and multi-endpoint routing); the current listener
+  is deliberately local and the published Compose port is loopback-only.
 - Analytics event persistence and publication interfaces.
 - FSE 2.0 CDA clinical generation, official validation, JWT transport, accreditation, and real submission.
 - Digital preservation packaging/submission.

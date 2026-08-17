@@ -1,6 +1,8 @@
 package it.signflow.reports;
 
 public enum ReportWorkflowOperation {
+    PARSE_INGESTION,
+    COMPLETE_INGESTION,
     ASSIGN_SIGNER,
     EVALUATE_READINESS,
     FIRST_PREVIEW,

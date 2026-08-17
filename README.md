@@ -13,7 +13,11 @@ Implemented in this phase:
 - Docker Compose for PostgreSQL, Keycloak, MinIO, backend, and frontend.
 - Administrative Practice/Report search plus PDF upload, preview, download, hashing, versioning, and logical deletion.
 
-Not yet implemented: HL7 intake, CDA2 generation, real signature-provider execution, FSE 2.0 submission, digital preservation, Kafka, ClickHouse, OpenSearch, and separated microservices.
+Implemented for local/MVP testing: REST and local MLLP HL7 v2 intake, HAPI parsing for fictional ORU/MDM messages,
+private raw-message storage, SourceSystem-driven mock document processing, and administrator monitoring.
+
+Not yet implemented: production HL7 routing, CDA2 clinical generation, certified PDF/A-3 conversion, real
+signature-provider execution, FSE 2.0 submission, digital preservation, Kafka, ClickHouse, OpenSearch, and separated microservices.
 
 ## Prerequisites
 

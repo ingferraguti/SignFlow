@@ -139,11 +139,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .pdf-preview iframe { min-height: 440px; }
 }
 .audit-layout { display: grid; gap: 1rem; }
+.ingestion-layout { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
 .audit-filter-card, .audit-results-card, .audit-retention-card { max-width: none; }
 .audit-filter-form { display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 1rem; }
 .audit-filter-form label, .audit-retention-card label { display: grid; gap: .3rem; font-weight: 700; }
 .audit-filter-form .form-actions { grid-column: 1 / -1; }
 .audit-table { min-width: 78rem; }
+.ingestion-table { min-width: 86rem; }
+.ingestion-table code { font-size: .75rem; overflow-wrap: anywhere; }
+.ingestion-detail { max-width: none; }
+.masked-hl7 { background: #111827; border-radius: .6rem; color: #d1fae5; max-height: 24rem; overflow: auto; padding: 1rem; white-space: pre-wrap; word-break: break-word; }
 .audit-table code { font-size: .75rem; overflow-wrap: anywhere; }
 .audit-outcome { background: #eef4fb; border-radius: 999px; color: #284e78; display: inline-block; font-size: .72rem; font-weight: 800; padding: .3rem .5rem; white-space: nowrap; }
 .audit-outcome.success { background: #dff7e8; color: #116031; }
