@@ -148,9 +148,10 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   expect((await deliveryPageCall).status()).toBe(200);
   await expect(page.getByRole("heading", { name: "FSE 2.0 e conservazione" })).toBeVisible();
   await expect(page.getByText("AMBIENTE MOCK")).toBeVisible();
-  await expect(page.getByText("FSE_ACCEPTED", { exact: true })).toBeVisible();
-  await expect(page.getByText("FSE_REJECTED", { exact: true })).toBeVisible();
-  await expect(page.getByText("CONSERVATION_ACCEPTED", { exact: true })).toBeVisible();
+  const deliveryTable = page.getByRole("table");
+  await expect(deliveryTable.getByText("FSE_ACCEPTED", { exact: true })).toBeVisible();
+  await expect(deliveryTable.getByText("FSE_REJECTED", { exact: true })).toBeVisible();
+  await expect(deliveryTable.getByText("CONSERVATION_ACCEPTED", { exact: true })).toBeVisible();
   const detailCall = page.waitForResponse((response) => /\/api\/backend\/admin\/external-deliveries\/[0-9a-f-]+$/.test(response.url()));
   await page.getByRole("row").filter({ hasText: "CONSERVATION_ACCEPTED" }).getByRole("button", { name: "Dettagli" }).click();
   expect((await detailCall).status()).toBe(200);

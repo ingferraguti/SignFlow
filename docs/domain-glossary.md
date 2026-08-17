@@ -36,6 +36,11 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | FseFacilityMapping | Mapping between facility, company, operating unit, department, and source system for FSE metadata normalization. |
 | FseDocumentType | Controlled high-level FSE 2.0 document nature (`REF`, `LDO`, `VRB`, and the other admitted class codes). Every Report and ClinicalDocument must reference one; it is distinct from a CDA implementation-guide/profile identifier. |
 | SourceSystemFseDocumentType | Per-source-system allow-list that selects the FSE document types for which CDA preparation and PDF injection are enabled. Both the source-system pipeline and the type mapping must enable the behavior. |
+| ExternalDeliveryOperation | Versioned application operation that tracks one Report delivery to FSE or digital preservation, including correlation, state, adapter reference, retry count, and mapped facility metadata. |
+| ExternalDeliveryAttempt | Append-only validation, submission, retry, or reconciliation decision belonging to an ExternalDeliveryOperation. |
+| ExternalDeliveryReceipt | Provider receipt stored as an object-storage artifact; PostgreSQL retains only its reference, hash, type, MIME type, size, and links. |
+| FseGatewayAdapter | Provider-neutral port for preliminary Gateway validation, submission, and reconciliation. No real endpoint is part of the domain contract. |
+| ConservationAdapter | Provider-neutral port for preservation submission and reconciliation. It does not make SignFlow an accredited conservator. |
 | PatientMetadata | Minimal patient data needed to correlate and display a report. Must be minimized and protected. |
 | Hl7Message | Input or output HL7 message metadata and processing state. Raw payload belongs in object storage and must be masked in UI/logs. |
 | CdaBuilder | Interface responsible for building CDA2 when `SourceSystem.createCda` requires it. |

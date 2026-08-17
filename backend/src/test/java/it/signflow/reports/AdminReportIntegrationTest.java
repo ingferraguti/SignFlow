@@ -57,16 +57,20 @@ class AdminReportIntegrationTest {
 
     @Test
     void supportsPatientSignerStateSourceSystemAndDepartmentFilters() throws Exception {
-        expectIdentifiers("?patient=Bruno", "RPT-INT-003", "RPT-INT-004", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002");
+        expectIdentifiers("?patient=Bruno", "RPT-INT-003", "RPT-INT-004", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001");
         expectIdentifiers("?patient=PAT-DEMO-001", "RPT-INT-001", "RPT-INT-002", "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001");
         expectIdentifiers("?signer=demo.signer", "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
-                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002");
+                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001");
         expectIdentifiers("?signerFiscalCode=DMSLGN80A01H501U", "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
-                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002");
+                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001");
         expectOnly("?state=MISSING_SIGNER", "RPT-INT-003");
         expectIdentifiers("?sourceSystemId=66666666-6666-6666-6666-666666666661",
                 "RPT-INT-001", "RPT-INT-002", "RPT-INT-003", "RPT-INT-004", "RPT-INT-005", "RPT-INT-006",
-                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002");
+                "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001");
         expectIdentifiers("?department=Cardiologia", "RPT-INT-001", "RPT-INT-002");
     }
 
@@ -80,9 +84,9 @@ class AdminReportIntegrationTest {
     @Test
     void returnsPaginatedSearchAndCompleteReportDetail() throws Exception {
         mockMvc.perform(get(ROOT + "?page=0&size=2&sortBy=internalIdentifier&direction=asc").with(adminJwt()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(10)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(12)))
                 .andExpect(jsonPath("$.items", hasSize(2)))
-                .andExpect(jsonPath("$.items[0].internalIdentifier", equalTo("RPT-INT-001")));
+                .andExpect(jsonPath("$.items[0].internalIdentifier", equalTo("RPT-FSE-MOCK-OK-001")));
 
         mockMvc.perform(get(ROOT + "/cccccccc-cccc-cccc-cccc-ccccccccccc1").with(adminJwt()))
                 .andExpect(status().isOk())

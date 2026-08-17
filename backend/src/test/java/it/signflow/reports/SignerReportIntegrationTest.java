@@ -107,10 +107,11 @@ class SignerReportIntegrationTest {
     @Test
     void exposesOnlyReportsAssignedToTheAuthenticatedNaturalPerson() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?size=20").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)))
                 .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder(
                         "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
-                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002")));
+                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                        "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001")));
         mockMvc.perform(get(ROOT + "/reports/" + GROUP_REPORT).with(signerJwt("demo.signer")))
                 .andExpect(status().isNotFound());
         mockMvc.perform(get(ROOT + "/reports/" + PARTITION_REPORT).with(signerJwt("demo.signer")))
@@ -125,16 +126,17 @@ class SignerReportIntegrationTest {
                         .with(signerJwt("other.signer"))).andExpect(status().isNotFound());
 
         mockMvc.perform(get(ROOT + "/reports?size=20").with(signerJwt("demo.signer.alt")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)))
                 .andExpect(jsonPath("$.items[*].internalIdentifier", containsInAnyOrder(
                         "RPT-INT-001", "RPT-INT-002", "RPT-INT-004",
-                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002")));
+                        "RPT-MOCK-OK-001", "RPT-MOCK-RETRY-001", "RPT-MOCK-FAIL-001", "RPT-MOCK-OK-002",
+                        "RPT-FSE-MOCK-OK-001", "RPT-FSE-MOCK-RETRY-001")));
     }
 
     @Test
     void supportsSimpleAdvancedDateStateAndPagingSearches() throws Exception {
         mockMvc.perform(get(ROOT + "/reports?query=Bruno").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(3)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(5)));
         mockMvc.perform(get(ROOT + "/reports?patient=Dario&documentType=PDF-REF&department=Diagnostica")
                         .with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(0)));
@@ -185,7 +187,7 @@ class SignerReportIntegrationTest {
     @Test
     void exposesHomeProfileLegendAndEnforcesAuthenticationAndRole() throws Exception {
         mockMvc.perform(get(ROOT + "/home").with(signerJwt("demo.signer")))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(7)));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total", equalTo(9)));
         mockMvc.perform(get(ROOT + "/profile").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.username", equalTo("demo.signer")))
                 .andExpect(jsonPath("$.partitionCode", equalTo("LOCAL")))

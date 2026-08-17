@@ -126,6 +126,20 @@ The repository currently contains a technical foundation for SignFlow:
   application context; its fictional self-signed certificate and PKCS#12 are generated in memory by tests only.
 - Provider session persistence now retains opaque provider/challenge references and correlation ID while continuing
   to exclude OTPs, passwords, private keys, and document payloads.
+- Provider-neutral `FseGatewayAdapter` and `ConservationAdapter` contracts with local mock implementations only;
+  no healthcare or preservation endpoint, vendor, credential, or protocol detail leaks into the domain or UI.
+- Preliminary PDF/PAdES verification through the EU DSS signature engine, with an explicit local-only gate for the
+  non-legal `MOCK` signature fixtures and fail-closed production defaults.
+- Versioned external-delivery operations, append-only attempts, idempotent commands, correlation IDs, timeouts,
+  bounded retry, reconciliation, optimistic locking, and the complete FSE/conservation Report state progression.
+- Facility-mapping metadata construction and private MinIO receipt storage; PostgreSQL retains only opaque object
+  references, hashes, media type, size, and minimum operational metadata.
+- Database-triggered append-only audit coverage links every reservation, attempt, provider outcome, receipt,
+  acceptance, rejection, retry, reconciliation, and Report transition into the existing Report timeline.
+- Administrator `/integrazioni` page with channel/state filters, pagination, attempts, errors, receipts, retry and
+  reconciliation controls, responsive layout, configurable menu/action texts, and clearly identified mock-only data.
+- Two fully fictional signed Reports exercise FSE acceptance followed by preservation acceptance and an FSE rejection
+  recoverable by retry; demo receipt content is explicitly marked `mockOnly` and `legalValue: false`.
 - Explicit UI states for loading, empty results, API failure, expired session, unavailable document, and incomplete Report.
 - Role-aware navigation and authenticated read-only access to administrator-configured labels/translations.
 - Responsive signer layout with page-width containment and horizontally scrollable Report table on narrow screens.
@@ -142,8 +156,10 @@ The repository currently contains a technical foundation for SignFlow:
 - Production-grade MLLP routing (mTLS/VPN, durable listener supervision and multi-endpoint routing); the current listener
   is deliberately local and the published Compose port is loopback-only.
 - Analytics event persistence and publication interfaces.
-- FSE 2.0 CDA clinical generation, official validation, JWT transport, accreditation, and real submission.
-- Digital preservation packaging/submission.
+- Real/accredited FSE 2.0 clinical CDA generation, official national-profile validation, JWT transport, accreditation,
+  and Gateway submission. The provider-neutral local mock workflow is implemented.
+- Real preservation package generation, accredited-provider submission, and regulatory interoperability. The
+  provider-neutral local mock workflow is implemented.
 - ClickHouse, OpenSearch, Kafka/RabbitMQ, Superset, or Knowage.
 - Production identity-provider hardening and real organization user provisioning.
 - Production signature-provider authentication and credential-vault integration.
@@ -162,9 +178,9 @@ Result: pass on 2026-08-17.
 
 Evidence:
 
-- Backend: 81 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 85 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed after the Objective 13 ingestion implementation; backend and frontend evidence below
+- Final full baseline completed after the Objective 14 FSE/conservation implementation; backend and frontend evidence below
   comes from the same successful `test-all.ps1` run.
 
 ### Backend
@@ -180,7 +196,7 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 81.
+- Tests run: 85.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
@@ -235,8 +251,9 @@ Evidence:
 - Frontend running Next.js 16.3.0 on `127.0.0.1:3000`.
 - MinIO API and console healthy on `127.0.0.1:9000` and `127.0.0.1:9001` with a private clinical-document bucket.
 - Keycloak log confirms realm `signflow` imported.
-- Flyway migrated the existing local database from V21 to V22; V22 adds HL7 processing metadata, a fictional
-  passthrough SourceSystem, technical ingestion audit, and administrator-configurable ingestion UI texts.
+- Flyway migrated the existing local database from V22 to V23; V23 adds versioned FSE/conservation operations,
+  append-only attempts, receipt references, idempotent commands, mock scenarios, audit triggers, fictional signed
+  Reports, and administrator-configurable integration UI texts.
 - HAPI HL7 v2 2.6.0 initialized successfully; the local MLLP listener is published only as
   `127.0.0.1:2575->2575/tcp`.
 - Three idempotent fictional demo messages are present: processed ORU to `READY_TO_SIGN`, processed MDM to
@@ -279,6 +296,9 @@ Evidence:
 - The authenticated admin visited `/monitoraggio`, observed HTTP 200 audit search calls, filtered `DOCUMENT_UPLOADED`, downloaded `signflow-audit.csv`, and verified 390 x 844 page containment.
 - The administrator observed all three fictional HL7 outcomes, opened an HTTP 200 masked message detail, and verified
   both 1280 x 720 and 390 x 844 containment with an empty JavaScript error list.
+- The administrator opened `/integrazioni`, observed HTTP 200 list/detail calls, FSE accepted/rejected and preservation
+  accepted outcomes, inspected attempts and downloadable receipt references, and verified 1280 x 720 and 390 x 844
+  containment with no page overflow or JavaScript console errors.
 - The final integrated-browser pass filtered the fictional `FSE_OPERATION_RESERVED` event, exported CSV, verified the
   retention controls, found no JavaScript errors, and measured no page-level overflow at 390 x 844.
 - The final Report timeline check found batch creation, attempt creation, provider outcome, FSE, and preservation
@@ -295,11 +315,11 @@ Evidence:
 
 Notes:
 
-- The in-app browser controller was explicitly attempted repeatedly for the Objective 13 visual pass but its local runtime
+- The in-app browser controller was explicitly attempted for the Objective 14 visual pass but its local runtime
   failed before opening a tab with `failed to write kernel assets: path not found`. The repository Chromium E2E suite
   therefore performed the required layout, network, JavaScript-console, masking, and interaction checks; no alternate
   signed-in browser surface was used.
 
 ## Baseline Interpretation
 
-The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature change passes through the versioned, idempotent workflow service with test-verifiable history. Relevant activity is reconstructable through the privacy-minimized append-only audit timeline and administrator monitoring UI. Mock single and batch signatures are operational; a local fictional PAdES Baseline B is created and validated for technical testing; legally valid signature execution and real provider integrations remain pending.
+The build/test baseline proves that the current foundation is runnable, authentication works locally through Keycloak/OIDC, protected APIs reject unauthorized requests, and every implemented Report state/signer/signature/external-delivery change passes through versioned, idempotent application services with test-verifiable history. Relevant activity is reconstructable through the privacy-minimized append-only audit timeline and administrator monitoring UI. Mock single and batch signatures and the complete local FSE/preservation adapter workflow are operational; a local fictional PAdES Baseline B is created and validated for technical testing; legally valid signature execution, accredited FSE submission, and real preservation-provider integrations remain pending.
