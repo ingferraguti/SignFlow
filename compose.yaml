@@ -17,14 +17,17 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.8
-    command: ["start-dev", "--import-realm", "--hostname=http://localhost:8081", "--hostname-backchannel-dynamic=true", "--hostname-strict=false"]
+    command: ["start-dev", "--import-realm", "--hostname=http://localhost:${KEYCLOAK_PORT:-8081}", "--hostname-backchannel-dynamic=true", "--hostname-strict=false"]
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-local-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-admin-password}
     ports:
       - "127.0.0.1:${KEYCLOAK_PORT:-8081}:8080"
     volumes:
-      - ./infra/keycloak/signflow-realm.json:/opt/keycloak/data/import/signflow-realm.json:ro
+      - type: bind
+        source: ${KEYCLOAK_REALM_IMPORT:-./infra/keycloak/signflow-realm.json}
+        target: /opt/keycloak/data/import/signflow-realm.json
+        read_only: true
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
@@ -67,6 +70,7 @@ services:
       SIGNFLOW_MLLP_PORT: 2575
       SIGNFLOW_HL7_RAW_RETENTION_DAYS: ${SIGNFLOW_HL7_RAW_RETENTION_DAYS:-30}
       SIGNFLOW_INGESTION_DEMO_ENABLED: ${SIGNFLOW_INGESTION_DEMO_ENABLED:-true}
+      SIGNFLOW_VERSION: ${SIGNFLOW_VERSION:-0.1.0}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
       - "127.0.0.1:${MLLP_PORT:-2575}:2575"
@@ -89,6 +93,7 @@ services:
       args:
         NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
     environment:
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_BACKEND_URL: ${NEXT_PUBLIC_BACKEND_URL:-http://localhost:8080}
       BACKEND_INTERNAL_URL: ${BACKEND_INTERNAL_URL:-http://backend:8080}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
@@ -105,6 +110,11 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/login >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
 volumes:
   postgres-data:

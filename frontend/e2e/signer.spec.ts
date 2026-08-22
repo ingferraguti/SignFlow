@@ -74,7 +74,7 @@ test("signer searches only authorized reports, opens PDF and uses portal pages",
   expect(browserErrors).toEqual([]);
 
   await page.getByRole("button", { name: "Logout" }).click();
-  await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
-  if (page.url().includes("localhost:8081")) await page.getByRole("button", { name: "Logout" }).click();
+  await page.waitForURL(/\/login|\/realms\/signflow\/protocol\/openid-connect\/logout/);
+  if (page.url().includes("/realms/signflow/protocol/openid-connect/logout")) await page.getByRole("button", { name: "Logout" }).click();
   await expect(page).toHaveURL(/\/login/);
 });

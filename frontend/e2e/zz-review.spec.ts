@@ -14,8 +14,8 @@ async function login(page: Page, username: string, password: string, target: str
 
 async function logout(page: Page) {
   await page.getByRole("button", { name: "Logout" }).click();
-  await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
-  if (page.url().includes("localhost:8081")) await page.getByRole("button", { name: "Logout" }).click();
+  await page.waitForURL(/\/login|\/realms\/signflow\/protocol\/openid-connect\/logout/);
+  if (page.url().includes("/realms/signflow/protocol/openid-connect/logout")) await page.getByRole("button", { name: "Logout" }).click();
   await expect(page).toHaveURL(/\/login/);
 }
 

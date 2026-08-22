@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { SessionProvider, useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 
-export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <SessionProvider><SessionAuditTracker />{children}</SessionProvider>;
+export function AuthProvider({ children, session }: Readonly<{ children: React.ReactNode; session: Session | null }>) {
+  return <SessionProvider session={session}><SessionAuditTracker />{children}</SessionProvider>;
 }
 
 function SessionAuditTracker() {

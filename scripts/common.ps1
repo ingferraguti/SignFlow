@@ -13,7 +13,14 @@ function Get-DockerExecutable {
 }
 
 function Get-ComposeArguments {
-    $arguments = @('compose', '-f', 'compose.yaml')
+    $arguments = @('compose')
+    if ($env:COMPOSE_PROJECT_NAME) {
+        if ($env:COMPOSE_PROJECT_NAME -notmatch '^[a-z0-9][a-z0-9_-]{2,62}$') {
+            throw 'COMPOSE_PROJECT_NAME contains unsupported characters.'
+        }
+        $arguments += @('--project-name', $env:COMPOSE_PROJECT_NAME)
+    }
+    $arguments += @('-f', 'compose.yaml')
     if (Test-Path -LiteralPath '.local\compose.tls.yaml') {
         $arguments += @('-f', '.local\compose.tls.yaml')
     }
@@ -26,6 +33,14 @@ function Invoke-Compose {
     $composeArguments = Get-ComposeArguments
     & $docker @composeArguments @Arguments
     if ($LASTEXITCODE -ne 0) { throw "Docker Compose failed with exit code $LASTEXITCODE." }
+}
+
+function Initialize-MinioClientAlias {
+    param([string]$ClientAlias = 'signflow-local')
+    $accessKey = if ($env:MINIO_ROOT_USER) { $env:MINIO_ROOT_USER } else { 'signflow-local' }
+    $secretKey = if ($env:MINIO_ROOT_PASSWORD) { $env:MINIO_ROOT_PASSWORD } else { 'signflow-local-secret' }
+    Invoke-Compose exec -T minio mc alias set $ClientAlias 'http://127.0.0.1:9000' $accessKey $secretKey | Out-Null
+    return $ClientAlias
 }
 
 function Initialize-JavaEnvironment {
@@ -59,4 +74,3 @@ function Get-NpmExecutable {
     }
     throw 'Node.js and npm are required.'
 }
-

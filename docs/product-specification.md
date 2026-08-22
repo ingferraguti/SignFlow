@@ -6,7 +6,10 @@ SignFlow, also referred to in the source material as H-Sign or Clinical Signing 
 
 The product receives clinical reports and related artifacts from smaller clinical applications, specialist records, legacy systems, APIs, or HL7 flows; normalizes metadata; presents the work queue to signers; coordinates single and batch signing through external providers; records each relevant transition; and prepares future integrations with FSE 2.0 and digital preservation.
 
-The current repository implements administrative identity, organization, technical pipeline configuration, Practice/Report consultation, and private PDF document management. Signer workflows and document-processing transformations remain future work.
+Release `0.1.0` implements the complete local MVP demonstration: administrative identity and configuration,
+Practice/Report consultation, private PDF management, HL7 ingestion, explicit workflow, independent review, mock
+signature, append-only audit and provider-neutral mock FSE/conservation delivery. Real clinical and accredited
+integrations remain future work.
 
 ## Scope Principles
 
@@ -29,13 +32,20 @@ Implemented today:
 - Exact report-identifier precedence plus descriptive and date-range filters.
 - Private MinIO storage with PDF upload/download/preview, SHA-256, versioning, logical deletion, and expiring URLs.
 - Docker Compose services for PostgreSQL, Keycloak, MinIO, backend, and frontend.
+- Signer visibility linked to the natural person across multiple authentication profiles and preferred signature choice.
+- HAPI HL7 REST/local MLLP intake with idempotency, private raw storage and SourceSystem-driven mock normalization.
+- Explicit versioned Report workflow, review/approval, mock single and batch signature, and complete audit timelines.
+- EU DSS local PAdES test engine with in-memory test certificates and provider-neutral adapter contract tests.
+- Mock FSE 2.0 and conservation submission, retry, reconciliation and private receipts.
+- Repeatable release qualification with migration, authorization, dependency/privacy, E2E and backup/restore checks.
 
 Not implemented today:
 
-- Signature batches, HL7 messages, audit, and analytics entities.
-- Business REST APIs for signer workflows.
-- Real or mock signature workflow.
-- HL7 intake, CDA2 generation, PDF/A conversion, FSE, preservation, analytics, or audit persistence.
+- Multiple signers on the same Report.
+- Qualified/legal remote signature-provider execution.
+- Production-grade HL7 routing, clinical CDA2 generation and certified PDF/A-3 conversion.
+- Accredited FSE transport and accredited preservation-provider integration.
+- Production analytics/BI/search infrastructure and the advanced privacy/repository scope of Goal 10.
 
 ## Domain Model
 

@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-08-17 Europe/Rome.
+Last verified: 2026-08-22 Europe/Rome.
 
 ## Repository State
 
@@ -174,14 +174,14 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: pass on 2026-08-17.
+Result: pass on 2026-08-22.
 
 Evidence:
 
-- Backend: 85 tests, 0 failures, 0 errors, 0 skipped.
-- Frontend: `npm ci`, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed after the Objective 14 FSE/conservation implementation; backend and frontend evidence below
-  comes from the same successful `test-all.ps1` run.
+- Backend: 87 tests, 0 failures, 0 errors, 0 skipped.
+- Frontend: 3 Vitest tests, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
+- Final full baseline completed through `verify-mvp-release.ps1`; migration, dependency, Compose, E2E and
+  backup/restore evidence comes from the same successful isolated release gate.
 
 ### Backend
 
@@ -196,11 +196,11 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 85.
+- Tests run: 87.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-17 Europe/Rome.
+- Finished at: 2026-08-22 Europe/Rome.
 
 Notes:
 
@@ -230,8 +230,8 @@ Evidence:
 
 Notes:
 
-- No automated frontend unit tests are currently defined.
-- Last successful clean install, audit, lint, type-check, and build run completed on 2026-08-17 during the final full baseline.
+- Vitest covers API request serialization and safe frontend error handling; Playwright covers the complete UI workflow.
+- The release verifier runs a clean install, audit, unit tests, lint, explicit typecheck, and production build.
 
 ### Docker Compose Authentication Flow
 
@@ -290,7 +290,7 @@ Result: pass.
 
 Evidence:
 
-- Playwright ran 4 Chromium tests sequentially against the shared demo database.
+- Playwright ran 5 Chromium tests sequentially against an isolated fictional demo database.
 - The authenticated admin visited `/configurazione` and saw users, organizational management, all four technical configuration areas, validation feedback, and the UI-text profile.
 - The authenticated admin visited `/referti`, saw the fictitious records, performed an exact internal-ID lookup, verified descriptive-filter disabling, and opened the Practice/Report detail.
 - The authenticated admin visited `/monitoraggio`, observed HTTP 200 audit search calls, filtered `DOCUMENT_UPLOADED`, downloaded `signflow-audit.csv`, and verified 390 x 844 page containment.
@@ -311,14 +311,33 @@ Evidence:
 - The signer requested review, the approver recorded document view and approved to `APPROVED`, and the administrator restored the fictitious demo through controlled returns.
 - The signer opened a temporary mock-provider session, executed one approved Report, received HTTP 200 for both network calls, saw the explicit non-legal outcome and responsive final batch summary, and the test runner restored the four signature fixtures afterward.
 - The test verifies protected route redirect, Keycloak login, current user display, system page access with session, logout, and protected route redirect after logout.
-- Last successful run completed at 2026-08-17 Europe/Rome: 4 passed, 0 failed.
+- The release suite contains 5 Chromium scenarios, including one complete 16-step MVP flow.
 
 Notes:
 
-- The in-app browser controller was explicitly attempted for the Objective 14 visual pass but its local runtime
-  failed before opening a tab with `failed to write kernel assets: path not found`. The repository Chromium E2E suite
-  therefore performed the required layout, network, JavaScript-console, masking, and interaction checks; no alternate
-  signed-in browser surface was used.
+- The in-app browser controller was used successfully on 2026-08-22 to inspect the production Compose UI, session
+  behavior, responsive containment and browser warning/error output in addition to the Playwright assertions.
+
+## Objective 15 Release Qualification
+
+- `FlywayMigrationIntegrationTest` migrates an empty PostgreSQL schema through V23 and upgrades an independently
+  seeded V22 schema without losing its marker record.
+- `zzzz-mvp-release.spec.ts` performs administrator ingestion/assignment, signer preview/review request, independent
+  approver approval, mock signature, FSE acceptance, conservation acceptance, complete timeline verification and logout.
+- Negative authorization requests verify signer/admin and approver/signer separation without generating false
+  JavaScript console errors.
+- Docker frontend health binds Next.js to `0.0.0.0` and probes `127.0.0.1`; the health script resolves actual published
+  Compose ports rather than assuming local defaults.
+- Local backup/restore covers PostgreSQL plus the private MinIO bucket, validates a SHA-256 manifest and proves that a
+  post-backup database probe disappears after restore.
+- `scan-repository.ps1` rejects tracked key material, common token shapes, non-allowlisted fiscal-code-shaped fixtures
+  and non-demo email domains; `scan-dependencies.ps1` runs npm audit and a pinned Trivy filesystem vulnerability scan.
+- The repeatable release gate is `scripts/verify-mvp-release.ps1`; machine-readable evidence is written only under the
+  ignored `.local/release-evidence` directory.
+- The final successful qualification wrote `.local/release-evidence/0.1.0-20260822-171219.json` with
+  `verified=true`; the ephemeral database, object storage and network were removed afterward.
+- Spring Boot 3.5.14 plus the patched Spring Framework/Data, Jackson, Micrometer, Tomcat and PostgreSQL JDBC
+  maintenance versions pass all 87 tests; npm audit and Trivy both report zero HIGH/CRITICAL findings.
 
 ## Baseline Interpretation
 

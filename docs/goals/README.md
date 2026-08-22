@@ -22,9 +22,10 @@ This directory tracks implementation goals derived from `documento di progetto.m
 | Goal 5 | Configurable Ingestion Pipeline | Yes | `docs/roadmap.md` |
 | Goal 6 | Monitoring and Operational Queues | Yes | `docs/roadmap.md` |
 | Goal 7 | Audit and Analytics Event Foundation | Yes | `docs/roadmap.md` |
-| Goal 8 | FSE 2.0 Preparation and Mock Delivery | Partial | `docs/roadmap.md`, `docs/goals/goal-8-9-fse-conservation-adapters.md` |
-| Goal 9 | Digital Preservation Mock Delivery | Partial | `docs/roadmap.md`, `docs/goals/goal-8-9-fse-conservation-adapters.md` |
+| Goal 8 | FSE 2.0 Preparation and Mock Delivery | Yes, local mock | `docs/roadmap.md`, `docs/goals/goal-8-9-fse-conservation-adapters.md` |
+| Goal 9 | Digital Preservation Mock Delivery | Yes, local mock | `docs/roadmap.md`, `docs/goals/goal-8-9-fse-conservation-adapters.md` |
 | Goal 10 | Advanced Repository, Privacy, and BI | No | `docs/roadmap.md` |
+| Delivery objective 15 | MVP Release Qualification | Yes | `docs/mvp-release-runbook.md`, `docs/releases/0.1.0.md` |
 
 ## Suggested Next Goal File Pattern
 

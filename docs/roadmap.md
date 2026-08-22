@@ -4,7 +4,7 @@ The roadmap converts the source document into non-overlapping development goals.
 
 ## Goal 0 - Technical Foundation
 
-Status: partially implemented.
+Status: implemented for the local MVP.
 
 Purpose:
 
@@ -215,3 +215,20 @@ Acceptance:
 Out of MVP:
 
 - Entire goal.
+
+## Delivery Objective 15 - MVP Release Qualification
+
+Status: implemented for release `0.1.0`.
+
+Acceptance:
+
+- One Playwright scenario executes ingestion, assignment, preview, independent review, approval, mock signature,
+  FSE mock delivery, conservation mock delivery, history consultation and logout.
+- Empty-database and V22-to-V23 upgrade migrations are tested with PostgreSQL 16.
+- Unit, authorization, backend, frontend, lint, typecheck, production build, E2E, health, privacy/secret scan,
+  dependency audit and local backup/restore checks pass through `scripts/verify-mvp-release.ps1`.
+- The dataset is explicitly fictional and the operational procedure is documented in `docs/mvp-release-runbook.md`.
+
+Out of MVP:
+
+- Any claim of fitness for clinical production or legal validity of mock signatures.

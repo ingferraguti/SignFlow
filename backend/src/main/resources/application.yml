@@ -36,7 +36,7 @@ signflow:
   api:
     cors-allowed-origins: ${SIGNFLOW_CORS_ALLOWED_ORIGINS:http://localhost:3000}
   system:
-    version: ${SIGNFLOW_VERSION:0.1.0-SNAPSHOT}
+    version: ${SIGNFLOW_VERSION:0.1.0}
   documents:
     endpoint: ${SIGNFLOW_OBJECT_STORAGE_ENDPOINT:http://localhost:9000}
     public-endpoint: ${SIGNFLOW_OBJECT_STORAGE_PUBLIC_ENDPOINT:http://localhost:9000}

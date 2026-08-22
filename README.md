@@ -90,6 +90,13 @@ Docker Desktop with the WSL2 backend is the recommended Windows setup. PowerShel
 
 Additional commands include `migrate.ps1`, `test-backend.ps1`, `test-frontend.ps1`, `load-demo.ps1`, `clean.ps1`, and `reset-database.ps1`. Database reset is destructive and therefore requires typing `RESET`. If port 8080 is occupied, set `BACKEND_PORT=18080`, `NEXT_PUBLIC_BACKEND_URL=http://localhost:18080`, and keep `BACKEND_INTERNAL_URL=http://backend:8080` in the ignored local `.env` before building the frontend.
 
+For the repeatable MVP release qualification, backup/restore procedure and mock-integration limitations, see
+[`docs/mvp-release-runbook.md`](docs/mvp-release-runbook.md). The full gate is:
+
+```powershell
+.\scripts\verify-mvp-release.ps1
+```
+
 ## Environment variables
 
 See `.env.example`. Local credentials are placeholders and must be changed for non-local use. Do not commit real secrets.

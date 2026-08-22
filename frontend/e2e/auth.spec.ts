@@ -121,7 +121,7 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   await expect(page.getByRole("heading", { name: "Ingestion HL7 e pipeline documentale" })).toBeVisible();
   await expect(page.getByText("HL7-DEMO-ORU-001", { exact: true })).toBeVisible();
   await expect(page.getByText("HL7-DEMO-MDM-001", { exact: true })).toBeVisible();
-  await expect(page.getByText("SOURCE_SYSTEM_NOT_FOUND", { exact: false })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /SOURCE_SYSTEM_NOT_FOUND/ })).toBeVisible();
   const ingestionDetailCall = page.waitForResponse((response) => response.url().includes("/api/backend/admin/monitoring/messages/")
     && response.request().method() === "GET");
   await page.getByRole("button", { name: "Apri dettaglio messaggio" }).first().click();
@@ -165,8 +165,8 @@ test("protects route, logs in, shows current user, logs out, and protects route 
   expect(browserErrors).toEqual([]);
 
   await page.getByRole("button", { name: "Logout" }).click();
-  await page.waitForURL(/\/login|localhost:8081\/realms\/signflow\/protocol\/openid-connect\/logout/);
-  if (page.url().includes("localhost:8081")) {
+  await page.waitForURL(/\/login|\/realms\/signflow\/protocol\/openid-connect\/logout/);
+  if (page.url().includes("/realms/signflow/protocol/openid-connect/logout")) {
     await expect(page.getByRole("heading", { name: "Logging out" })).toBeVisible();
     await page.getByRole("button", { name: "Logout" }).click();
   }

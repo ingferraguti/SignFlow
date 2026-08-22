@@ -17,11 +17,7 @@ export function UserMenu() {
     if (auditResponse && !auditResponse.ok) console.warn("Session audit logout could not be recorded", auditResponse.status);
     Object.keys(sessionStorage).filter((key) => key.startsWith("signflow-login-audited:")).forEach((key) => sessionStorage.removeItem(key));
     await signOut({ redirect: false });
-    const issuer = process.env.NEXT_PUBLIC_KEYCLOAK_EXTERNAL_ISSUER ?? "http://localhost:8081/realms/signflow";
-    const logoutUrl = new URL(`${issuer}/protocol/openid-connect/logout`);
-    logoutUrl.searchParams.set("client_id", "signflow-frontend");
-    logoutUrl.searchParams.set("post_logout_redirect_uri", `${window.location.origin}/login`);
-    window.location.replace(logoutUrl);
+    window.location.replace("/api/auth/keycloak-logout");
   }
 
   return (

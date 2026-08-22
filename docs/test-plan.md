@@ -1,6 +1,6 @@
 # Test Plan
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-22.
 
 ## Delivery Objective 14 - FSE 2.0 and Conservation Adapters
 
@@ -390,3 +390,26 @@ Non-regression checks:
 - require all prior authentication, identity, configuration, documents, workflow, review, mock signature, PAdES adapter,
   audit, export, retention, and responsive-layout scenarios to remain green;
 - rebuild the Docker Compose stack, require Flyway V22 and all services healthy, and verify MLLP is published on loopback only.
+
+## Delivery Objective 15 - MVP End-to-End and Release Gate
+
+Automated release command:
+
+```powershell
+.\scripts\verify-mvp-release.ps1
+```
+
+Required checks:
+
+- repository privacy/secret scan and allowlisted fictional fixture scan;
+- Flyway empty-database migration through V23 and V22-to-V23 upgrade with data-preservation marker;
+- all backend tests, frontend Vitest tests, ESLint, typecheck, npm audit and Next.js production build;
+- Trivy filesystem dependency scan with build failure for HIGH or CRITICAL findings;
+- isolated Docker Compose build on non-default loopback ports and health checks for all five services;
+- five sequential Chromium E2E scenarios, including authorization boundaries and the complete 16-step MVP workflow;
+- 390 x 844 containment, network response assertions and empty JavaScript error collection;
+- PostgreSQL/MinIO backup, post-backup mutation, destructive local restore and proof that the mutation disappears;
+- final health checks after restore and machine-readable evidence with `verified=true`.
+
+Release rule: do not create or move tag `v0.1.0` unless the command completes successfully and every MVP row in
+`docs/acceptance-matrix.md` is `Implemented` or explicitly marked as an implemented event foundation/local mock.
