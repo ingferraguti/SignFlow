@@ -9,6 +9,7 @@ import java.time.Instant;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -33,6 +34,14 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/adapters/signature-requests/*/signable-document")
+                            .hasAnyRole("SIGNATURE_ADAPTER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/adapters/signature-requests/*/signed-document")
+                            .hasAnyRole("SIGNATURE_ADAPTER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/adapters/signature-requests/*/conservation-status")
+                            .hasAnyRole("CONSERVATION_ADAPTER", "ADMINISTRATOR")
+                        .requestMatchers("/api/adapters/**").denyAll()
+                        .requestMatchers("/api/integration/**").hasAnyRole("INGESTION", "ADMINISTRATOR")
                         .requestMatchers("/api/ingestion/**").hasAnyRole("INGESTION", "ADMINISTRATOR")
                         .requestMatchers("/api/admin/**").hasRole("ADMINISTRATOR")
                         .requestMatchers("/api/signer/**").hasRole("SIGNER")

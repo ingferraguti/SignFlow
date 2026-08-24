@@ -21,6 +21,18 @@
       {
         "name": "APPROVER",
         "description": "Local fictional approver role for SignFlow"
+      },
+      {
+        "name": "INGESTION",
+        "description": "Machine role for source-system intake APIs"
+      },
+      {
+        "name": "SIGNATURE_ADAPTER",
+        "description": "Machine role for provider-neutral signature callbacks"
+      },
+      {
+        "name": "CONSERVATION_ADAPTER",
+        "description": "Machine role for provider-neutral preservation callbacks"
       }
     ]
   },

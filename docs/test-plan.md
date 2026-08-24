@@ -391,6 +391,38 @@ Non-regression checks:
   audit, export, retention, and responsive-layout scenarios to remain green;
 - rebuild the Docker Compose stack, require Flyway V22 and all services healthy, and verify MLLP is published on loopback only.
 
+## Goal 5 Extension - Calling-application Signature Request API
+
+Focused backend tests (`ServiceSignatureRequestIntegrationTest`, `FlywayMigrationIntegrationTest`):
+
+- migrate a clean PostgreSQL schema through V24 and upgrade V23 to V24 without losing a marker row;
+- expose both `HEALTHCARE` and `ADMINISTRATIVE` catalogs with subtype provenance;
+- allow only `INGESTION` or `ADMINISTRATOR` identities to use the integration boundary;
+- accept PDF 1.x/2.0 aliases, PNG and UTF-8 text with SourceSystem, external request id, admitted type/subtype and
+  qualified signer; unit coverage also validates JPEG/TIFF through the same ImageIO path;
+- render every accepted source to an immutable PDF/A-3B with XMP identification and sRGB output intent, then require
+  veraPDF 1.30.2 compliance before storing the normalized artifact;
+- resolve the signer through active `NaturalPerson` identifiers and an active `SIGNER` application profile;
+- return HTTP 200 and the original receipt for an exact idempotent retry, and HTTP 409 for changed reuse;
+- reject a subtype/type mismatch, unknown signer, fake/malformed/encrypted/already-signed PDF, unsafe filename,
+  declared-content mismatch, unsupported media and oversize source/result;
+- scope request lookup to the declared SourceSystem;
+- keep original/normalized/signed bytes out of PostgreSQL, store opaque keys in private MinIO, and append receipt,
+  signature and preservation events/audits without signer identifiers or document content;
+- allow only `SIGNATURE_ADAPTER`/admin to fetch the normalized artifact and register a signed result; reject unsigned,
+  invalid or technically valid PAdES that does not cover byte-for-byte the normalized artifact;
+- expose `signed=false` plus a 409 download before completion, then `signed=true`, SHA-256 and an exact signed-PDF
+  download after verified callback; exact callback retries are idempotent;
+- allow only `CONSERVATION_ADAPTER`/admin transitions through pending, sent and terminal preservation states, expose
+  `sent` from durable `sentAt`, and reject invalid/terminal transitions.
+
+Non-regression checks:
+
+- run `test-backend.ps1` and require all existing identity, Report, workflow, review, signature, audit, HL7, FSE and
+  conservation tests to remain green;
+- keep the generic request separate from `Report`; do not invent patient/episode metadata or imply a live/accredited
+  signature or preservation provider from the provider-neutral callback contract.
+
 ## Delivery Objective 15 - MVP End-to-End and Release Gate
 
 Automated release command:

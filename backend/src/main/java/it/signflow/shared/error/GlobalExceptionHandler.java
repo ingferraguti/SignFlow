@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -45,6 +46,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<ApiErrorResponse> handleMaxUpload(MaxUploadSizeExceededException exception, HttpServletRequest request) {
         return build(HttpStatus.PAYLOAD_TOO_LARGE, "Upload exceeds the configured size limit", request.getRequestURI());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<ApiErrorResponse> handleMissingPart(MissingServletRequestPartException exception,
+                                                       HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, "Missing multipart part: " + exception.getRequestPartName(),
+                request.getRequestURI());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

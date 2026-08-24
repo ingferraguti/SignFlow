@@ -13,8 +13,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
 class FlywayMigrationIntegrationTest {
-    private static final MigrationVersion PREVIOUS_RELEASE = MigrationVersion.fromVersion("22");
-    private static final MigrationVersion MVP_RELEASE = MigrationVersion.fromVersion("23");
+    private static final MigrationVersion PREVIOUS_RELEASE = MigrationVersion.fromVersion("23");
+    private static final MigrationVersion MVP_RELEASE = MigrationVersion.fromVersion("24");
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -26,10 +26,10 @@ class FlywayMigrationIntegrationTest {
         var result = flyway.migrate();
 
         assertThat(result.targetSchemaVersion).isEqualTo(MVP_RELEASE.toString());
-        assertThat(result.migrationsExecuted).isEqualTo(23);
+        assertThat(result.migrationsExecuted).isEqualTo(24);
         try (Connection connection = connection("mvp_clean")) {
             assertThat(count(connection, "select count(*) from flyway_schema_history where success and version is not null"))
-                    .isEqualTo(23);
+                    .isEqualTo(24);
             assertThat(count(connection, "select count(*) from external_delivery_operations"))
                     .isZero();
             assertThat(count(connection, "select count(*) from reports"))
@@ -38,7 +38,7 @@ class FlywayMigrationIntegrationTest {
     }
 
     @Test
-    void upgradesVersion22WithoutLosingExistingData() throws Exception {
+    void upgradesVersion23WithoutLosingExistingData() throws Exception {
         Flyway previous = flyway("mvp_upgrade", PREVIOUS_RELEASE);
         var previousResult = previous.migrate();
         assertThat(previousResult.targetSchemaVersion).isEqualTo(PREVIOUS_RELEASE.toString());
@@ -61,9 +61,12 @@ class FlywayMigrationIntegrationTest {
                     where property_key='mvp.upgrade.marker'
                     """)).isEqualTo("preserved");
             assertThat(count(connection, "select count(*) from flyway_schema_history where success and version is not null"))
-                    .isEqualTo(23);
+                    .isEqualTo(24);
             assertThat(count(connection, "select count(*) from information_schema.tables "
                     + "where table_schema='mvp_upgrade' and table_name='external_delivery_receipts'"))
+                    .isEqualTo(1);
+            assertThat(count(connection, "select count(*) from information_schema.tables "
+                    + "where table_schema='mvp_upgrade' and table_name='service_signature_requests'"))
                     .isEqualTo(1);
         }
     }

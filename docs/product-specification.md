@@ -34,6 +34,10 @@ Implemented today:
 - Docker Compose services for PostgreSQL, Keycloak, MinIO, backend, and frontend.
 - Signer visibility linked to the natural person across multiple authentication profiles and preferred signature choice.
 - HAPI HL7 REST/local MLLP intake with idempotency, private raw storage and SourceSystem-driven mock normalization.
+- Provider-neutral service intake for PDF variants, PNG, JPEG, TIFF and UTF-8 text with required SourceSystem,
+  healthcare/administrative type, controlled subtype, qualified signer resolution and idempotency. Accepted sources
+  become veraPDF-validated PDF/A-3B; PAdES callbacks are matched cryptographically to that artifact, the signed PDF is
+  downloadable, preservation state is queryable, and every outcome is privately stored and append-only audited.
 - Explicit versioned Report workflow, review/approval, mock single and batch signature, and complete audit timelines.
 - EU DSS local PAdES test engine with in-memory test certificates and provider-neutral adapter contract tests.
 - Mock FSE 2.0 and conservation submission, retry, reconciliation and private receipts.
@@ -171,6 +175,19 @@ Authorization rule: admins can only access records allowed by their partition an
 
 ## API Surface
 
+Calling-application integration APIs:
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/integration/signature-requests/document-types` | Discover healthcare/administrative subtypes and provenance. |
+| `POST` | `/api/integration/signature-requests` | Submit a supported source, type/subtype and qualified signer; receive validated PDF/A-3B metadata. |
+| `GET` | `/api/integration/signature-requests/{id}` | Read signature/download availability and preservation status in SourceSystem scope. |
+| `GET` | `/api/integration/signature-requests/{id}/signed-document` | Download the PAdES accepted for this exact normalized artifact. |
+
+`PENDING_SIGNATURE` confirms PDF/A-3B validation and durable receipt; `SIGNED` is reached only through the
+role-separated adapter boundary after EU DSS verifies technical integrity and exact source-revision matching.
+Provider authentication remains outside the intake API. Automatic healthcare-to-Report mapping is a separate step.
+
 Signer APIs to implement:
 
 | Method | Endpoint | Purpose |
@@ -220,6 +237,7 @@ PostgreSQL stores transactional metadata and current state:
 - Reports and patient metadata references.
 - Signature providers, accounts, batches, attempts.
 - HL7 message metadata.
+- Calling-application signature request and document metadata; PDF binaries remain in private object storage.
 - Audit events and initial analytics events.
 
 Object storage stores heavy payloads:

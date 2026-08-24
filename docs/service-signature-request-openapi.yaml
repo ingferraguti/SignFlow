@@ -1,0 +1,364 @@
+openapi: 3.1.0
+info:
+  title: SignFlow Service Signature Request API
+  version: 1.0.0
+  description: >-
+    Provider-neutral intake, PDF/A-3B normalization, status, signed-document download,
+    and preservation-status contract. Human semantics and operational rules are in
+    docs/service-signature-request-api.md.
+servers:
+  - url: http://localhost:8080
+security:
+  - bearerAuth: []
+tags:
+  - name: Calling systems
+  - name: Adapters
+paths:
+  /api/integration/signature-requests/document-types:
+    get:
+      tags: [Calling systems]
+      operationId: listSignatureRequestDocumentTypes
+      summary: Discover the active type/subtype catalog
+      responses:
+        '200':
+          description: Active catalog with provenance per subtype.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/DocumentTypeCatalog'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /api/integration/signature-requests:
+    post:
+      tags: [Calling systems]
+      operationId: createSignatureRequest
+      summary: Submit and normalize a source document to validated PDF/A-3B
+      parameters:
+        - {$ref: '#/components/parameters/SourceSystem'}
+        - {$ref: '#/components/parameters/OptionalIdempotencyKey'}
+        - {$ref: '#/components/parameters/CorrelationId'}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [request, file]
+              properties:
+                request: {$ref: '#/components/schemas/SignatureRequestInput'}
+                file:
+                  type: string
+                  contentMediaType: application/octet-stream
+                  contentEncoding: binary
+            encoding:
+              request: {contentType: application/json}
+      responses:
+        '201':
+          description: Created and durably normalized.
+          headers:
+            Location: {schema: {type: string}}
+            X-Correlation-ID: {schema: {type: string}}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SignatureRequestResponse'}
+        '200':
+          description: Exact idempotent replay; returns the original request.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SignatureRequestResponse'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '413': {$ref: '#/components/responses/PayloadTooLarge'}
+        '415': {$ref: '#/components/responses/UnsupportedMediaType'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/integration/signature-requests/{requestId}:
+    get:
+      tags: [Calling systems]
+      operationId: getSignatureRequest
+      summary: Read signature and preservation status
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+        - {$ref: '#/components/parameters/SourceSystem'}
+      responses:
+        '200':
+          description: Current state.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SignatureRequestResponse'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /api/integration/signature-requests/{requestId}/signed-document:
+    get:
+      tags: [Calling systems]
+      operationId: downloadSignedDocument
+      summary: Download the cryptographically verified signed PDF
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+        - {$ref: '#/components/parameters/SourceSystem'}
+      responses:
+        '200':
+          description: Signed PDF. X-Document-SHA256 is lowercase hexadecimal SHA-256.
+          headers:
+            X-Document-SHA256:
+              schema: {$ref: '#/components/schemas/Sha256'}
+            Content-Disposition: {schema: {type: string}}
+            Cache-Control: {schema: {type: string, const: no-store}}
+          content:
+            application/pdf:
+              schema: {type: string, contentEncoding: binary}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /api/adapters/signature-requests/{requestId}/signable-document:
+    get:
+      tags: [Adapters]
+      operationId: downloadSignablePdfA3
+      summary: Download the exact normalized revision that must be signed
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+      responses:
+        '200':
+          description: Validated PDF/A-3B.
+          headers:
+            X-Document-SHA256:
+              schema: {$ref: '#/components/schemas/Sha256'}
+          content:
+            application/pdf:
+              schema: {type: string, contentEncoding: binary}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/adapters/signature-requests/{requestId}/signed-document:
+    post:
+      tags: [Adapters]
+      operationId: registerSignedDocument
+      summary: Register a PAdES that covers the exact normalized PDF/A-3B
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+        - {$ref: '#/components/parameters/RequiredIdempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: {type: string, contentMediaType: application/pdf, contentEncoding: binary}
+      responses:
+        '200':
+          description: Accepted or exact idempotent replay.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SignatureRequestResponse'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /api/adapters/signature-requests/{requestId}/conservation-status:
+    post:
+      tags: [Adapters]
+      operationId: registerPreservationStatus
+      summary: Append one allowed preservation status transition
+      parameters:
+        - {$ref: '#/components/parameters/RequestId'}
+        - {$ref: '#/components/parameters/RequiredIdempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ConservationStatusInput'}
+      responses:
+        '200':
+          description: Transition accepted or exact idempotent replay.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SignatureRequestResponse'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    RequestId:
+      name: requestId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    SourceSystem:
+      name: X-Source-System
+      in: header
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 80}
+    OptionalIdempotencyKey:
+      name: X-Idempotency-Key
+      in: header
+      required: false
+      description: Defaults to externalRequestId. Exact retries are safe.
+      schema: {type: string, minLength: 1, maxLength: 160}
+    RequiredIdempotencyKey:
+      name: X-Idempotency-Key
+      in: header
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 160}
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema: {type: string, pattern: '^[A-Za-z0-9._:-]{1,160}$'}
+  schemas:
+    Sha256: {type: string, pattern: '^[0-9a-f]{64}$'}
+    DocumentType:
+      type: string
+      enum: [HEALTHCARE, ADMINISTRATIVE]
+    IdentifierScheme:
+      type: string
+      enum: [IT_TAX_CODE, EIDAS_PERSON_IDENTIFIER, NATIONAL_ID]
+    RequestStatus:
+      type: string
+      enum: [PENDING_SIGNATURE, SIGNING, SIGNED, REJECTED, FAILED]
+    ConservationStatus:
+      type: string
+      enum: [NOT_REQUESTED, PENDING, SENT, ACCEPTED, REJECTED, FAILED]
+    SignerIdentifier:
+      type: object
+      additionalProperties: false
+      required: [scheme, issuingCountry, issuer, value]
+      properties:
+        scheme: {$ref: '#/components/schemas/IdentifierScheme'}
+        issuingCountry: {type: string, pattern: '^[A-Za-z]{2}$'}
+        issuer: {type: string, minLength: 1, maxLength: 120}
+        value: {type: string, minLength: 1, maxLength: 240}
+    SignatureRequestInput:
+      type: object
+      additionalProperties: false
+      required: [externalRequestId, documentType, documentSubtype, signer]
+      properties:
+        externalRequestId: {type: string, minLength: 1, maxLength: 120}
+        documentType: {$ref: '#/components/schemas/DocumentType'}
+        documentSubtype: {type: string, pattern: '^[A-Z][A-Z0-9_]{1,79}$'}
+        signer: {$ref: '#/components/schemas/SignerIdentifier'}
+    DocumentTypeCatalog:
+      type: object
+      required: [documentType, displayName, subtypes]
+      properties:
+        documentType: {$ref: '#/components/schemas/DocumentType'}
+        displayName: {type: string}
+        subtypes:
+          type: array
+          items:
+            type: object
+            required: [code, displayName, sourceReference]
+            properties:
+              code: {type: string}
+              displayName: {type: string}
+              sourceReference: {type: string, format: uri}
+    SignatureRequestResponse:
+      type: object
+      required: [requestId, externalRequestId, sourceSystemCode, documentType, documentSubtype,
+        documentSubtypeDisplayName, status, signer, sourceDocument, normalizedDocument, signature,
+        conservation, correlationId, submittedAt, idempotent]
+      properties:
+        requestId: {type: string, format: uuid}
+        externalRequestId: {type: string}
+        sourceSystemCode: {type: string}
+        documentType: {$ref: '#/components/schemas/DocumentType'}
+        documentSubtype: {type: string}
+        documentSubtypeDisplayName: {type: string}
+        status: {$ref: '#/components/schemas/RequestStatus'}
+        signer:
+          type: object
+          required: [naturalPersonId, displayName]
+          properties:
+            naturalPersonId: {type: string, format: uuid}
+            displayName: {type: string}
+        sourceDocument:
+          type: object
+          required: [originalFilename, contentType, sizeBytes, sha256]
+          properties:
+            originalFilename: {type: string}
+            contentType: {type: string, enum: [application/pdf, image/png, image/jpeg, image/tiff, text/plain]}
+            sizeBytes: {type: integer, format: int64, minimum: 1}
+            sha256: {$ref: '#/components/schemas/Sha256'}
+        normalizedDocument:
+          type: object
+          required: [documentId, filename, contentType, sizeBytes, sha256, profile, pdfaPart,
+            pdfaConformance, validator, pageCount]
+          properties:
+            documentId: {type: string, format: uuid}
+            filename: {type: string}
+            contentType: {type: string, const: application/pdf}
+            sizeBytes: {type: integer, format: int64, minimum: 1}
+            sha256: {$ref: '#/components/schemas/Sha256'}
+            profile: {type: string, const: PDF/A-3B}
+            pdfaPart: {type: string, const: '3'}
+            pdfaConformance: {type: string, const: B}
+            validator: {type: string, const: veraPDF 1.30.2}
+            pageCount: {type: integer, minimum: 1}
+        signature:
+          type: object
+          required: [signed, signedDocumentAvailable]
+          properties:
+            signed: {type: boolean}
+            signedAt: {type: [string, 'null'], format: date-time}
+            signatureCount: {type: [integer, 'null'], minimum: 1}
+            validation: {type: [string, 'null'], enum: [TRUSTED_VALID, TECHNICALLY_VALID, null]}
+            signedDocumentAvailable: {type: boolean}
+            signedDocumentSha256:
+              anyOf: [{$ref: '#/components/schemas/Sha256'}, {type: 'null'}]
+            downloadPath: {type: [string, 'null']}
+        conservation:
+          type: object
+          required: [status, sent]
+          properties:
+            status: {$ref: '#/components/schemas/ConservationStatus'}
+            sent: {type: boolean}
+            sentAt: {type: [string, 'null'], format: date-time}
+            completedAt: {type: [string, 'null'], format: date-time}
+            remoteReference: {type: [string, 'null']}
+            errorCode: {type: [string, 'null']}
+        correlationId: {type: string}
+        submittedAt: {type: string, format: date-time}
+        idempotent: {type: boolean}
+    ConservationStatusInput:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [PENDING, SENT, ACCEPTED, REJECTED, FAILED]
+        remoteReference: {type: [string, 'null'], maxLength: 240}
+        errorCode: {type: [string, 'null'], maxLength: 120}
+        occurredAt: {type: [string, 'null'], format: date-time}
+    ApiError:
+      type: object
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer}
+        error: {type: string}
+        message: {type: string}
+        path: {type: string}
+  responses:
+    BadRequest: {description: Invalid request, headers: {}, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    Unauthorized: {description: Authentication required, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    Forbidden: {description: Access denied, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    NotFound: {description: Not found or outside SourceSystem scope, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    Conflict: {description: Idempotency or state conflict, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    PayloadTooLarge: {description: Source or normalized output exceeds the configured limit, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    UnsupportedMediaType: {description: Unsupported source format, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    Unprocessable: {description: Semantic validation, conversion, or cryptographic verification failed, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    Unavailable: {description: Object storage unavailable, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}

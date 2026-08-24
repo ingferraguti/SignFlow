@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-08-22 Europe/Rome.
+Last verified: 2026-08-24 Europe/Rome.
 
 ## Repository State
 
@@ -33,7 +33,8 @@ The repository currently contains a technical foundation for SignFlow:
 - Local Keycloak realm import with `demo.admin`, `demo.signer`, `demo.signer.alt`, and `demo.approver` users; the two
   signer profiles represent distinct authentication paths to the same fictional natural person.
 - Backend Spring Security resource-server protection for `/api/**`.
-- Backend role mapping for distinct `ADMINISTRATOR`, `SIGNER`, and `APPROVER` Keycloak realm roles.
+- Backend role mapping for distinct `ADMINISTRATOR`, `SIGNER`, `APPROVER`, `INGESTION`, `SIGNATURE_ADAPTER`, and
+  `CONSERVATION_ADAPTER` Keycloak realm roles.
 - Backend `/api/auth/me` endpoint for current authenticated user details.
 - JSON 401 and 403 API error responses.
 - Frontend NextAuth OIDC login/logout through Keycloak.
@@ -99,6 +100,25 @@ The repository currently contains a technical foundation for SignFlow:
   preview, pipeline details, and the operational queue of Reports without a signer; labels/actions remain configurable.
 - Append-only technical audit events for HL7 receipt/outcome linked into the Report timeline without patient, fiscal,
   document, or raw-message content.
+- Protected service integration APIs under `/api/integration/signature-requests` for catalog discovery; multipart
+  submission of valid unsigned PDF 1.x/2.0 variants, PNG, JPEG, TIFF and UTF-8 text; SourceSystem-scoped status lookup;
+  and verified signed-PDF download. Healthcare/administrative type, controlled subtype and a qualified active signer
+  are mandatory; idempotent retries return the original receipt and changed reuse conflicts.
+- Every accepted service-intake source is transformed into PDF/A-3B with XMP identification and an sRGB output intent,
+  then independently checked with veraPDF 1.30.2 before private storage. Encrypted, already-signed and malformed PDFs,
+  content-type mismatches, unsafe names, unsupported media and configured resource-limit violations fail closed.
+- Provider-neutral adapter APIs expose the immutable normalized artifact and accept a signed result only when EU DSS
+  verifies a technically valid PAdES whose recovered original bytes exactly equal that artifact. The caller can poll
+  durable signature metadata and download the signed bytes by request id after completion.
+- A separate conservation-adapter API records idempotent, transition-checked `PENDING`, `SENT`, `ACCEPTED`, `REJECTED`
+  and `FAILED` outcomes. Public status distinguishes a requested workflow from evidence that it was actually sent.
+- AgendaDigitale-grounded healthcare subtype catalog and an explicitly extensible administrative catalog with source
+  provenance per entry; callers discover active values through the API rather than relying on private hard-coded lists.
+- Generic service requests remain separate from `Report`/`Referto`, preventing fabricated patient/episode metadata for
+  administrative documents. Original, normalized and signed artifacts stay in private MinIO; PostgreSQL contains
+  metadata, hashes and opaque keys only.
+- Append-only service-request receipt, signature and conservation histories plus privacy-minimized global audit events
+  omit signer identifiers and document content.
 - Explicit `Report` state machine with a dedicated application workflow service and no generic state-update API.
 - Signer assignment/removal, missing-signer and incomplete-precondition detection, and controlled promotion to `READY_TO_SIGN`.
 - Optimistic `workflow_version`, idempotency keys, append-only workflow history, and first-preview timestamp.
@@ -149,6 +169,8 @@ The repository currently contains a technical foundation for SignFlow:
 
 - Multiple signers for one Report. The current single `assigned_signer_id` remains intentionally in place; generalized
   signer assignments, sequencing, thresholds, and per-signer states are deferred.
+- Automatic mapping of healthcare service intake to `Report`. Generic requests deliberately retain their independent
+  provider-neutral lifecycle because the public contract does not supply patient/episode data required by a Referto.
 
 - Real signature-provider integration, qualified certificates, and legally valid signature execution. The required
   documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
@@ -159,7 +181,7 @@ The repository currently contains a technical foundation for SignFlow:
 - Real/accredited FSE 2.0 clinical CDA generation, official national-profile validation, JWT transport, accreditation,
   and Gateway submission. The provider-neutral local mock workflow is implemented.
 - Real preservation package generation, accredited-provider submission, and regulatory interoperability. The
-  provider-neutral local mock workflow is implemented.
+  provider-neutral status callback and local mock workflow are implemented.
 - ClickHouse, OpenSearch, Kafka/RabbitMQ, Superset, or Knowage.
 - Production identity-provider hardening and real organization user provisioning.
 - Production signature-provider authentication and credential-vault integration.
@@ -174,14 +196,14 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: pass on 2026-08-22.
+Result: pass on 2026-08-24.
 
 Evidence:
 
-- Backend: 87 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 98 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: 3 Vitest tests, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
-- Final full baseline completed through `verify-mvp-release.ps1`; migration, dependency, Compose, E2E and
-  backup/restore evidence comes from the same successful isolated release gate.
+- The focused `test-all.ps1` gate covers the backend and frontend baselines. The broader migration, dependency,
+  Compose, E2E and backup/restore evidence below remains from the last successful isolated release gate.
 
 ### Backend
 
@@ -196,16 +218,22 @@ Result: pass.
 Evidence:
 
 - Maven build success.
-- Tests run: 87.
+- Tests run: 98 in the full regression suite.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-22 Europe/Rome.
+- Finished at: 2026-08-24 Europe/Rome.
 
 Notes:
 
 - Testcontainers started PostgreSQL 16-alpine successfully through Docker Desktop.
 - Java emitted Mockito dynamic-agent warnings; these are warnings, not test failures.
+- `ServiceSignatureRequestIntegrationTest` covers healthcare and administrative receipt, controlled taxonomy,
+  signer resolution, exact and concurrent idempotency, authorization, SourceSystem scope, source normalization,
+  private MinIO persistence, PAdES callback/download, conservation transitions and append-only audit.
+  `ServicePdfA3NormalizerTest` covers PDF 2.0, PNG, JPEG, TIFF, UTF-8 text and encrypted/already-signed PDF rejection;
+  every successful case is checked as PDF/A-3B by veraPDF. `FlywayMigrationIntegrationTest` covers clean V24 and
+  V23-to-V24 upgrade.
 
 ### Frontend
 
@@ -320,8 +348,8 @@ Notes:
 
 ## Objective 15 Release Qualification
 
-- `FlywayMigrationIntegrationTest` migrates an empty PostgreSQL schema through V23 and upgrades an independently
-  seeded V22 schema without losing its marker record.
+- `FlywayMigrationIntegrationTest` migrates an empty PostgreSQL schema through V24 and upgrades an independently
+  seeded V23 schema without losing its marker record.
 - `zzzz-mvp-release.spec.ts` performs administrator ingestion/assignment, signer preview/review request, independent
   approver approval, mock signature, FSE acceptance, conservation acceptance, complete timeline verification and logout.
 - Negative authorization requests verify signer/admin and approver/signer separation without generating false
@@ -336,8 +364,9 @@ Notes:
   ignored `.local/release-evidence` directory.
 - The final successful qualification wrote `.local/release-evidence/0.1.0-20260822-171219.json` with
   `verified=true`; the ephemeral database, object storage and network were removed afterward.
-- Spring Boot 3.5.14 plus the patched Spring Framework/Data, Jackson, Micrometer, Tomcat and PostgreSQL JDBC
-  maintenance versions pass all 87 tests; npm audit and Trivy both report zero HIGH/CRITICAL findings.
+- Spring Boot 3.5.14 plus the patched Spring Framework/Data, Jackson, Micrometer, Tomcat, PostgreSQL JDBC and
+  veraPDF 1.30.2 versions pass all 98 tests; the 2026-08-24 npm audit and Trivy rerun report zero
+  HIGH/CRITICAL findings for both Maven and npm manifests.
 
 ## Baseline Interpretation
 

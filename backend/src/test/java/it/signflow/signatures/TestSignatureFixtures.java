@@ -24,13 +24,13 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-final class TestSignatureFixtures {
-    static final char[] PASSWORD = "signflow-test-only".toCharArray();
+public final class TestSignatureFixtures {
+    public static final char[] PASSWORD = "signflow-test-only".toCharArray();
 
     private TestSignatureFixtures() {
     }
 
-    static TestKeyMaterial testKeyMaterial() {
+    public static TestKeyMaterial testKeyMaterial() {
         try {
             if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
                 Security.addProvider(new BouncyCastleProvider());
@@ -60,7 +60,7 @@ final class TestSignatureFixtures {
         }
     }
 
-    static byte[] fictionalPdf() {
+    public static byte[] fictionalPdf() {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();
             document.addPage(page);
@@ -79,6 +79,6 @@ final class TestSignatureFixtures {
         }
     }
 
-    record TestKeyMaterial(byte[] pkcs12, byte[] certificate) {
+    public record TestKeyMaterial(byte[] pkcs12, byte[] certificate) {
     }
 }

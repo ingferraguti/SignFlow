@@ -105,6 +105,9 @@ MVP: yes, with mock intake.
 Purpose:
 
 - Implement a mockable `ReportIngestionService` driven by `SourceSystem` configuration.
+- Accept provider-neutral PDF/image/text signature requests from calling applications, normalize them to validated
+  PDF/A-3B, and expose verified signed-document/preservation outcomes without forcing administrative documents into
+  the clinical Report aggregate.
 
 Acceptance:
 
@@ -112,11 +115,16 @@ Acceptance:
 - Missing signer leads to `MISSING_SIGNER`.
 - Missing mandatory metadata leads to `INCOMPLETE`.
 - Valid reports become `READY_TO_SIGN`.
+- An authenticated calling application can submit a supported source with SourceSystem, healthcare/administrative
+  type, admitted subtype and required qualified signer; receipt is idempotent, PDF/A-3B validated, private and
+  append-only audited. A role-separated adapter can register only a PAdES covering the exact normalized revision;
+  callers can poll, download the firmato and distinguish queued/sent/terminal preservation status.
 
 Out of MVP:
 
 - Production HL7 MLLP connectivity.
-- Complete CDA2 compliance and real PDF/A3 conversion.
+- Complete CDA2 compliance and certified/accredited PDF/A3 conversion for the Report/HL7 pipeline.
+- Live vendor service-request execution and automatic healthcare-to-Report mapping without complete clinical metadata.
 
 ## Goal 6 - Monitoring and Operational Queues
 

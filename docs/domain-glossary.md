@@ -12,6 +12,7 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | Signer | Firmatario | Clinical professional enabled to sign reports. | Can map to application users, domain accounts, and one or more signature-provider accounts. |
 | Approver | Approvatore | Person who validates, counter-signs, delegates, or participates in a multi-signature approval workflow. | Not a first-class MVP role unless required by counter-signature rules; source material starts with a counter-signer fiscal-code field. |
 | SourceSystem | Sistema erogante | Upstream clinical or legacy system that produces reports, HL7 messages, CDA, PDFs, or metadata. | Owns pipeline behavior through configuration flags. |
+| ServiceSignatureRequest | Richiesta di firma da servizio | Provider-neutral intake envelope submitted by a calling application with one PDF, controlled document type/subtype, SourceSystem, and required Signer. It is not a Report until clinical metadata is available and mapped explicitly. | Resolves one NaturalPerson signer, stores one private PDF artifact, and starts in `PENDING_SIGNATURE`. |
 | SignatureProvider | Provider di firma | External remote-signature provider such as Aruba, Namirial, InfoCert, Intesi, or another provider. | Accessed through adapters. Provider-specific details stay outside the core domain and UI. |
 | SignatureBatch | Batch di firma | Batch operation created for mass signature. It has a global state and a per-document outcome. | Contains many SignatureAttempts; it is not atomic. |
 
@@ -47,6 +48,9 @@ This glossary is the naming baseline for SignFlow. Use Italian business terms in
 | PdfCdaInjector | Interface responsible for embedding an already generated CDA R2 as the case-insensitive `cda.xml` PDF associated file expected by the national FSE Gateway. It does not generate or clinically validate CDA content. |
 | NationalFseGatewayConnector | Outbound port for future Gateway validation and publication. Application authentication, Gateway JWT construction, accreditation assets, and provider transport remain outside the core domain. |
 | PdfA3Converter | Interface responsible for PDF/A3 conversion when configured by the source system. |
+| ServiceDocumentType | High-level intake classification: `HEALTHCARE`/sanitario or `ADMINISTRATIVE`/amministrativo. | Every ServiceSignatureRequest has one controlled subtype admitted for its type. |
+| ServiceSignatureRequest | Provider-neutral request submitted by a SourceSystem with document classification and one required signer. | Keeps immutable original/PDF-A-3/signed artifacts, signature state, preservation state, idempotency, correlation and append-only events; it is not automatically a clinical Report. |
+| ServiceConservationStatus | Preservation progress for a ServiceSignatureRequest: `NOT_REQUESTED`, `PENDING`, `SENT`, `ACCEPTED`, `REJECTED`, or `FAILED`. | `sentAt` is the evidence used by the calling contract for `conservation.sent`; terminal outcomes never imply that SignFlow is itself an accredited preservation service. |
 
 ## Signature Flow
 

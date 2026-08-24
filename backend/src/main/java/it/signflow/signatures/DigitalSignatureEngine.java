@@ -9,6 +9,9 @@ public interface DigitalSignatureEngine {
 
     VerificationResult verifyPdf(byte[] document, List<byte[]> trustedCertificates);
 
+    VerificationResult verifyPdfAgainst(byte[] document, byte[] expectedUnsignedDocument,
+                                        List<byte[]> trustedCertificates);
+
     record PadesRequest(byte[] pdf, byte[] testPkcs12, char[] password, String documentName,
                         String reason, String location, String correlationId) {
     }
@@ -16,7 +19,8 @@ public interface DigitalSignatureEngine {
     record PadesResult(byte[] signedPdf, VerificationResult verification, String correlationId) {
     }
 
-    record VerificationResult(boolean pdf, boolean signed, boolean valid, int signatureCount,
+    record VerificationResult(boolean pdf, boolean signed, boolean technicallyValid, boolean valid,
+                              boolean originalDocumentMatches, int signatureCount,
                               List<SignatureInformation> signatures) {
     }
 

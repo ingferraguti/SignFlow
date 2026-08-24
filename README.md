@@ -16,11 +16,18 @@ Implemented in this phase:
 Implemented for local/MVP testing: REST and local MLLP HL7 v2 intake, HAPI parsing for fictional ORU/MDM messages,
 private raw-message storage, SourceSystem-driven mock document processing, and administrator monitoring.
 
+Also available is a protected calling-application API that accepts validated PDF variants, PNG, JPEG, TIFF and UTF-8
+text with required healthcare/administrative type, controlled subtype and signer reference; every accepted source is
+normalized to veraPDF-validated PDF/A-3B. Status polling, verified signed-PDF download and preservation status are
+part of the contract. See
+[`docs/service-signature-request-api.md`](docs/service-signature-request-api.md) for the multipart contract and catalog.
+
 Also implemented for local testing: provider-neutral FSE 2.0 and conservation adapters, EU DSS preliminary validation,
 mock submission/reconciliation, bounded retry, private mock receipts, complete audit history, and the administrator
 page at `/integrazioni`. No healthcare or preservation endpoint is contacted.
 
-Not yet implemented: production HL7 routing, CDA2 clinical generation, certified PDF/A-3 conversion, real
+Not yet implemented: production HL7 routing, CDA2 clinical generation, accredited/certified PDF/A-3 conversion for
+the separate Report/HL7 pipeline, real
 signature-provider execution, accredited FSE 2.0 transport, accredited digital preservation, Kafka, ClickHouse,
 OpenSearch, and separated microservices.
 

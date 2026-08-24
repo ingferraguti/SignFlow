@@ -74,6 +74,12 @@ public class DssPadesSignatureEngine implements DigitalSignatureEngine {
 
     @Override
     public VerificationResult verifyPdf(byte[] document, List<byte[]> trustedCertificates) {
+        return verifyPdfAgainst(document, null, trustedCertificates);
+    }
+
+    @Override
+    public VerificationResult verifyPdfAgainst(byte[] document, byte[] expectedUnsignedDocument,
+                                               List<byte[]> trustedCertificates) {
         requirePdf(document);
         try {
             DSSDocument pdf = new InMemoryDocument(document, "documento-da-verificare.pdf", MimeTypeEnum.PDF);
@@ -90,8 +96,15 @@ public class DssPadesSignatureEngine implements DigitalSignatureEngine {
             DiagnosticData diagnostic = reports.getDiagnosticData();
             List<SignatureInformation> information = simple.getSignatureIdList().stream()
                     .map(id -> signatureInformation(id, simple, diagnostic)).toList();
+            boolean technicallyValid = !information.isEmpty() && simple.getSignatureIdList().stream()
+                    .allMatch(diagnostic::isBLevelTechnicallyValid);
             boolean valid = !information.isEmpty() && simple.getSignatureIdList().stream().allMatch(simple::isValid);
-            return new VerificationResult(true, !information.isEmpty(), valid, information.size(), information);
+            boolean originalMatches = expectedUnsignedDocument == null || simple.getSignatureIdList().stream()
+                    .flatMap(id -> validator.getOriginalDocuments(id).stream())
+                    .map(DSSUtils::toByteArray)
+                    .anyMatch(original -> java.util.Arrays.equals(original, expectedUnsignedDocument));
+            return new VerificationResult(true, !information.isEmpty(), technicallyValid, valid, originalMatches,
+                    information.size(), information);
         } catch (RuntimeException exception) {
             throw new IllegalArgumentException("Unable to verify the PDF with DSS", exception);
         }

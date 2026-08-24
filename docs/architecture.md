@@ -6,9 +6,17 @@ The frontend and backend are separated. The frontend is a Next.js administrative
 
 PostgreSQL is the primary transactional database and Flyway owns schema evolution. Clinical-document rows contain metadata and opaque object identifiers only; no binary document content is stored in PostgreSQL.
 
-MinIO provides the local S3-compatible object store. The clinical-document bucket is private: authorized APIs mediate uploads and downloads, while PDF previews may use short-lived presigned URLs. Internal object keys are generated independently from the original filename.
+The inbound `ingestion` boundary supports both HL7 Report creation and a generic service-signature-request envelope.
+The latter is not forced into `Report`: administrative documents have no patient/encounter semantics, while a
+healthcare request can be mapped explicitly once the clinical metadata required by the Report workflow exists. Its
+storage model keeps immutable `ORIGINAL`, `NORMALIZED_PDFA3`, and optional `SIGNED` artifacts. The normalized artifact
+is produced by a raster-safe PDFBox pipeline and must pass the veraPDF PDF/A-3B profile before receipt succeeds.
 
-Future signature providers should be integrated through adapter modules so provider-specific authentication and APIs do not leak into core workflow code.
+MinIO provides the local S3-compatible object store. The document bucket is private: authorized APIs mediate uploads and downloads, while PDF previews may use short-lived presigned URLs. Internal object keys are generated independently from the original filename. Service-intake PDF rows, like ClinicalDocument rows, contain metadata and opaque object identifiers only.
+
+Signature and preservation outcomes enter through role-separated adapter endpoints. A returned PAdES is accepted only
+when EU DSS verifies its technical integrity and proves it covers the exact normalized artifact. Future provider APIs
+remain behind adapters so provider-specific authentication and transport do not leak into core workflow code.
 
 Future audit and analytics events should be produced from state transitions. This foundation does not include Kafka, ClickHouse, OpenSearch, or other event infrastructure.
 
