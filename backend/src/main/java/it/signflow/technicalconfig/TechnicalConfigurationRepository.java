@@ -33,7 +33,16 @@ public class TechnicalConfigurationRepository {
     public List<FseDocumentTypeResponse> fseDocumentTypes() {
         return jdbcClient.sql("select * from fse_document_types order by code")
                 .query((rs, rowNum) -> new FseDocumentTypeResponse(rs.getString("code"),
-                        rs.getString("display_name"), rs.getString("description"), rs.getBoolean("active"))).list();
+                        rs.getString("display_name"), rs.getString("description"), rs.getBoolean("active"),
+                        rs.getBoolean("approval_required"), rs.getBoolean("preview_required"))).list();
+    }
+
+    public int updateFseDocumentTypeSignaturePolicy(String code, FseDocumentTypeSignaturePolicyRequest request) {
+        return jdbcClient.sql("""
+                update fse_document_types set approval_required=:approvalRequired, preview_required=:previewRequired,
+                    updated_at=now() where code=:code
+                """).param("code", code).param("approvalRequired", request.approvalRequired())
+                .param("previewRequired", request.previewRequired()).update();
     }
 
     public boolean fseDocumentTypeExists(String code) {

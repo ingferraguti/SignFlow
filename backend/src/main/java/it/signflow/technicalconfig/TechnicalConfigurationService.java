@@ -29,6 +29,16 @@ public class TechnicalConfigurationService {
 
     public List<FseDocumentTypeResponse> fseDocumentTypes() { return repository.fseDocumentTypes(); }
 
+    @Transactional
+    public FseDocumentTypeResponse updateFseDocumentTypeSignaturePolicy(String code,
+            FseDocumentTypeSignaturePolicyRequest request) {
+        String normalizedCode = code.trim().toUpperCase();
+        if (!repository.fseDocumentTypeExists(normalizedCode)) throw notFound("FSE document type");
+        repository.updateFseDocumentTypeSignaturePolicy(normalizedCode, request);
+        return repository.fseDocumentTypes().stream().filter(item -> item.code().equals(normalizedCode)).findFirst()
+                .orElseThrow(() -> notFound("FSE document type"));
+    }
+
     public List<SourceSystemFseDocumentTypeResponse> sourceSystemFseDocumentTypes(UUID sourceSystemId) {
         sourceSystem(sourceSystemId);
         return repository.sourceSystemFseDocumentTypes(sourceSystemId);

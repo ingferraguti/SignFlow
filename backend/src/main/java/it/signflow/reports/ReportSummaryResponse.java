@@ -21,5 +21,6 @@ public record ReportSummaryResponse(
         OffsetDateTime producedAt,
         OffsetDateTime modifiedAt,
         OffsetDateTime signedAt,
-        ReportState state) {
+        ReportState state,
+        boolean signatureEligible) {
 }

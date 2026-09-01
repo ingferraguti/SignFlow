@@ -18,7 +18,7 @@ export type ReportSummary = {
   practiceIdentifier: string; patientIdentifier: string; patientDisplayName: string;
   assignedSignerId?: string; signerUsername?: string; signerFiscalCode?: string;
   sourceSystemId: string; sourceSystemCode: string; documentType: string; department: string;
-  producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState;
+  producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState; signatureEligible: boolean;
 };
 export type ReportDetail = {
   id: string; internalIdentifier: string; externalIdentifier?: string; fseIdentifier?: string;
@@ -26,7 +26,7 @@ export type ReportDetail = {
   patient: { id: string; patientIdentifier: string; firstName: string; lastName: string; fiscalCode?: string; birthDate?: string };
   assignedSignerId?: string; signerUsername?: string; signerFiscalCode?: string;
   sourceSystemId: string; sourceSystemCode: string; documentType: string; department: string;
-  producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState;
+  producedAt: string; modifiedAt: string; signedAt?: string; state: ReportState; signatureEligible: boolean;
   pdfA3Conversion: boolean; visibleSignature: boolean; multipleSignature: boolean;
   sendUnsigned: boolean; createCda: boolean; passthrough: boolean;
   workflowVersion: number; firstPreviewedAt?: string; signatureKind?: string; signatureArtifactNotice?: string;

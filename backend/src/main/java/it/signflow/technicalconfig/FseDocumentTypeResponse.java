@@ -4,5 +4,7 @@ public record FseDocumentTypeResponse(
         String code,
         String displayName,
         String description,
-        boolean active) {
+        boolean active,
+        boolean approvalRequired,
+        boolean previewRequired) {
 }

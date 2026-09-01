@@ -28,7 +28,7 @@ public class ReportRepository {
     private static final String SUMMARY_SELECT = """
             select r.*, pr.practice_identifier, pm.patient_identifier, pm.first_name patient_first_name,
                    pm.last_name patient_last_name, u.username signer_username,
-                   signer_identifier.normalized_value signer_fiscal_code, ss.code source_system_code
+                   signer_identifier.normalized_value signer_fiscal_code, ss.code source_system_code, false signature_eligible
             """;
 
     private final JdbcClient jdbcClient;
@@ -58,7 +58,7 @@ public class ReportRepository {
                        pm.first_name patient_first_name, pm.last_name patient_last_name,
                        pm.fiscal_code patient_fiscal_code, pm.birth_date patient_birth_date,
                        u.username signer_username, signer_identifier.normalized_value signer_fiscal_code,
-                       ss.code source_system_code
+                       ss.code source_system_code, false signature_eligible
                 """ + JOINS + " where r.id = :id")
                 .param("id", id).query(this::mapDetail).optional();
     }
@@ -148,7 +148,7 @@ public class ReportRepository {
                 rs.getString("signer_fiscal_code"), rs.getObject("source_system_id", UUID.class),
                 rs.getString("source_system_code"), rs.getString("document_type"), rs.getString("department"),
                 rs.getObject("produced_at", OffsetDateTime.class), rs.getObject("modified_at", OffsetDateTime.class),
-                rs.getObject("signed_at", OffsetDateTime.class), ReportState.valueOf(rs.getString("state")));
+                rs.getObject("signed_at", OffsetDateTime.class), ReportState.valueOf(rs.getString("state")), false);
     }
 
     private ReportDetailResponse mapDetail(ResultSet rs, int rowNum) throws SQLException {
@@ -169,7 +169,7 @@ public class ReportRepository {
                 rs.getBoolean("send_unsigned"), rs.getBoolean("create_cda"), rs.getBoolean("passthrough"),
                 rs.getLong("workflow_version"), rs.getObject("first_previewed_at", OffsetDateTime.class),
                 rs.getString("signature_kind"), rs.getString("signature_artifact_notice"),
-                ReportState.valueOf(rs.getString("state")));
+                ReportState.valueOf(rs.getString("state")), false);
     }
 
     private record Filter(String sql, Map<String, Object> params) {

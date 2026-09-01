@@ -29,7 +29,7 @@ export type FseFacilityMapping = {
 };
 export type FseFacilityMappingRequest = Omit<FseFacilityMapping, "id" | "companyCode" | "sourceSystemCode">;
 
-export type FseDocumentType = { code: string; displayName: string; description: string; active: boolean };
+export type FseDocumentType = { code: string; displayName: string; description: string; active: boolean; approvalRequired: boolean; previewRequired: boolean };
 export type SourceSystemFseDocumentType = {
   sourceSystemId: string; sourceSystemCode: string; documentTypeCode: string;
   documentTypeName: string; cdaInjectionEnabled: boolean;
@@ -86,5 +86,9 @@ export const saveSourceSystemFseDocumentTypes = (sourceSystemId: string, documen
   request<SourceSystemFseDocumentType[]>(`technical-config/source-systems/${sourceSystemId}/fse-document-types`, {
     method: "PUT",
     body: JSON.stringify(documentTypeCodes.map((documentTypeCode) => ({ documentTypeCode, cdaInjectionEnabled: true }))),
+  });
+export const saveFseDocumentTypeSignaturePolicy = (code: string, approvalRequired: boolean, previewRequired: boolean) =>
+  request<FseDocumentType>(`technical-config/fse-document-types/${code}/signature-policy`, {
+    method: "PUT", body: JSON.stringify({ approvalRequired, previewRequired }),
   });
 export const deleteTechnicalConfiguration = (resource: string, id: string) => request<void>(`technical-config/${resource}/${id}`, { method: "DELETE" });

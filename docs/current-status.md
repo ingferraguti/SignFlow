@@ -134,6 +134,7 @@ The repository currently contains a technical foundation for SignFlow:
   challenge; the submitted mock authorization code is validated in memory and never persisted.
 - `SignatureBatch` and `SignatureAttempt` persistence with manual, filtered “firma tutti”, and single selection modes; draft confirmation, pre-start cancellation, non-atomic execution, per-document outcomes, partial success, bounded retry, and idempotent operations.
 - All Report signature state changes delegate to `ReportWorkflowService`; optimistic Report versions and locked/idempotent batch operations protect repeated or concurrent submission.
+- Signature eligibility is configured by the administrator for each FSE document type: approval and preview are independently required or optional. With approval disabled, signing can start from `PREVIEWED` when preview is required, or from error-free `RECEIVED`/`PARSED` (and an optional preview) when it is not.
 - Successful outcomes create only a plain-text `MOCK ONLY` attestation and mark the Report signature kind as `MOCK`; no certificate, cryptographic signature, or legally valid signed document is produced.
 - Signer UI under `/firma/batch` plus single-signature controls in Report detail, graphical temporary-session form, batch controls, attempt errors/retry, final summary, downloadable mock attestation, responsive layout, and administrator-configurable labels.
 - Four additional completely fictitious approved Reports exercise success, planned failure, success-after-one-retry, and multi-document success.
@@ -221,13 +222,13 @@ Result: pass on 2026-08-31.
 Evidence:
 
 - Maven build success.
-- Tests run: 99 in the full regression suite.
+- Tests run: 100 in the full regression suite.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-31 Europe/Rome.
+- Finished at: 2026-09-01 Europe/Rome.
 
-The full suite includes `ArubaArssSignatureProviderTest`, `SignatureProviderAdapterContractTest`, the Flyway V25
+The full suite includes `ArubaArssSignatureProviderTest`, `SignatureProviderAdapterContractTest`, the Flyway V26
 migration checks and the signer-profile account-count regression.
 
 Notes:

@@ -30,5 +30,6 @@ public record ReportDetailResponse(
         OffsetDateTime firstPreviewedAt,
         String signatureKind,
         String signatureArtifactNotice,
-        ReportState state) {
+        ReportState state,
+        boolean signatureEligible) {
 }

@@ -3,7 +3,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   deleteTechnicalConfiguration, fetchTechnicalConfiguration, saveFseFacilityMapping, saveSignatureAccount,
-  saveSignatureProvider, saveSourceSystem, saveSourceSystemFseDocumentTypes,
+  saveSignatureProvider, saveSourceSystem, saveSourceSystemFseDocumentTypes, saveFseDocumentTypeSignaturePolicy,
   type FseFacilityMapping, type FseFacilityMappingRequest,
   type SignatureAccount, type SignatureAccountRequest, type SignatureAuthenticationMode,
   type SignatureProvider, type SignatureProviderRequest, type SourceSystem, type SourceSystemRequest,
@@ -80,9 +80,9 @@ function FseDocumentTypesSection({ data, execute }: SectionProps) {
   return <div className="technical-grid">
     <div>
       <h3>Catalogo nazionale FSE 2.0</h3>
-      <p className="form-hint">Ogni documento usa una natura codificata. Il catalogo è controllato e non accetta valori liberi.</p>
-      <div className="table-wrap"><table className="compact-table"><thead><tr><th>Codice</th><th>Tipologia</th><th>Descrizione</th></tr></thead><tbody>
-        {data.fseDocumentTypes.map((item) => <tr key={item.code}><td><strong>{item.code}</strong></td><td>{item.displayName}</td><td>{item.description}</td></tr>)}
+      <p className="form-hint">L’admin configura per ogni tipologia se sono obbligatorie anteprima e approvazione prima della firma.</p>
+      <div className="table-wrap"><table className="compact-table"><thead><tr><th>Codice</th><th>Tipologia</th><th>Approvazione</th><th>Anteprima</th><th></th></tr></thead><tbody>
+        {data.fseDocumentTypes.map((item) => <DocumentTypePolicyRow key={item.code} item={item} execute={execute} />)}
       </tbody></table></div>
     </div>
     <form className="admin-form" onSubmit={(event) => { event.preventDefault(); execute(() => saveSourceSystemFseDocumentTypes(sourceSystemId, selected)); }}>
@@ -94,6 +94,15 @@ function FseDocumentTypesSection({ data, execute }: SectionProps) {
       <button className="primary" disabled={!sourceSystemId || !source?.createCda || source?.passthrough} type="submit">Salva tipologie abilitate</button>
     </form>
   </div>;
+}
+
+function DocumentTypePolicyRow({ item, execute }: { item: TechnicalConfigurationData["fseDocumentTypes"][number]; execute: SectionProps["execute"] }) {
+  const [approvalRequired, setApprovalRequired] = useState(item.approvalRequired);
+  const [previewRequired, setPreviewRequired] = useState(item.previewRequired);
+  return <tr><td><strong>{item.code}</strong></td><td>{item.displayName}</td>
+    <td><input aria-label={`Approvazione obbligatoria ${item.code}`} type="checkbox" checked={approvalRequired} onChange={(event) => setApprovalRequired(event.target.checked)} /></td>
+    <td><input aria-label={`Anteprima obbligatoria ${item.code}`} type="checkbox" checked={previewRequired} onChange={(event) => setPreviewRequired(event.target.checked)} /></td>
+    <td><button type="button" onClick={() => execute(() => saveFseDocumentTypeSignaturePolicy(item.code, approvalRequired, previewRequired))}>Salva</button></td></tr>;
 }
 
 function SourceSystemsSection({ data, execute }: SectionProps) {

@@ -14,7 +14,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class FlywayMigrationIntegrationTest {
     private static final MigrationVersion PREVIOUS_RELEASE = MigrationVersion.fromVersion("23");
-    private static final MigrationVersion MVP_RELEASE = MigrationVersion.fromVersion("25");
+    private static final MigrationVersion MVP_RELEASE = MigrationVersion.fromVersion("26");
 
     @Container
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
@@ -26,10 +26,10 @@ class FlywayMigrationIntegrationTest {
         var result = flyway.migrate();
 
         assertThat(result.targetSchemaVersion).isEqualTo(MVP_RELEASE.toString());
-        assertThat(result.migrationsExecuted).isEqualTo(25);
+        assertThat(result.migrationsExecuted).isEqualTo(26);
         try (Connection connection = connection("mvp_clean")) {
             assertThat(count(connection, "select count(*) from flyway_schema_history where success and version is not null"))
-                    .isEqualTo(25);
+                    .isEqualTo(26);
             assertThat(count(connection, "select count(*) from external_delivery_operations"))
                     .isZero();
             assertThat(count(connection, "select count(*) from reports"))
@@ -54,14 +54,14 @@ class FlywayMigrationIntegrationTest {
         var upgrade = current.migrate();
 
         assertThat(upgrade.targetSchemaVersion).isEqualTo(MVP_RELEASE.toString());
-        assertThat(upgrade.migrationsExecuted).isEqualTo(2);
+        assertThat(upgrade.migrationsExecuted).isEqualTo(3);
         try (Connection connection = connection("mvp_upgrade")) {
             assertThat(text(connection, """
                     select property_value from application_metadata
                     where property_key='mvp.upgrade.marker'
                     """)).isEqualTo("preserved");
             assertThat(count(connection, "select count(*) from flyway_schema_history where success and version is not null"))
-                    .isEqualTo(25);
+                    .isEqualTo(26);
             assertThat(count(connection, "select count(*) from information_schema.tables "
                     + "where table_schema='mvp_upgrade' and table_name='external_delivery_receipts'"))
                     .isEqualTo(1);

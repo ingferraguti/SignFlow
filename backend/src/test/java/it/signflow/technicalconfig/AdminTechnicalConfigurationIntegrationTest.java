@@ -61,7 +61,9 @@ class AdminTechnicalConfigurationIntegrationTest {
                 .andExpect(jsonPath("$[*].facilityCode", hasItem("PRESIDIO-DEMO")));
         mockMvc.perform(get(ROOT + "/fse-document-types").with(adminJwt())).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].code", hasItem("REF")))
-                .andExpect(jsonPath("$[*].code", hasItem("LDO")));
+                .andExpect(jsonPath("$[*].code", hasItem("LDO")))
+                .andExpect(jsonPath("$[?(@.code == 'REF')].approvalRequired", hasItem(true)))
+                .andExpect(jsonPath("$[?(@.code == 'REF')].previewRequired", hasItem(true)));
 
         Integer passwordColumns = jdbcClient.sql("""
                 select count(*) from information_schema.columns
@@ -121,6 +123,21 @@ class AdminTechnicalConfigurationIntegrationTest {
                 .andExpect(jsonPath("$.message", equalTo("unsupported FSE document type: XYZ")));
         mockMvc.perform(delete(ROOT + "/source-systems/" + sourceId).with(adminJwt()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void configuresSignaturePolicyForAnFseDocumentType() throws Exception {
+        mockMvc.perform(put(ROOT + "/fse-document-types/REF/signature-policy").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"approvalRequired\":false,\"previewRequired\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code", equalTo("REF")))
+                .andExpect(jsonPath("$.approvalRequired", equalTo(false)))
+                .andExpect(jsonPath("$.previewRequired", equalTo(false)));
+        mockMvc.perform(put(ROOT + "/fse-document-types/XYZ/signature-policy").with(adminJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"approvalRequired\":false,\"previewRequired\":false}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

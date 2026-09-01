@@ -12,7 +12,7 @@ final class ReportWorkflowRules {
             ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN);
     private static final Set<ReportState> READINESS_CHECKABLE = EnumSet.copyOf(ASSIGNABLE);
     private static final Set<ReportState> PREVIEWABLE = EnumSet.of(
-            ReportState.READY_TO_SIGN, ReportState.PREVIEWED, ReportState.REVIEW_PENDING,
+            ReportState.RECEIVED, ReportState.PARSED, ReportState.READY_TO_SIGN, ReportState.PREVIEWED, ReportState.REVIEW_PENDING,
             ReportState.APPROVED, ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING,
             ReportState.SIGNED, ReportState.SIGN_ERROR, ReportState.FSE_VALIDATION_ERROR,
             ReportState.FSE_SENT, ReportState.FSE_ACCEPTED, ReportState.FSE_REJECTED,
@@ -54,8 +54,10 @@ final class ReportWorkflowRules {
 
     private static Map<ReportState, Set<ReportState>> transitions() {
         Map<ReportState, Set<ReportState>> rules = new EnumMap<>(ReportState.class);
-        rules.put(ReportState.RECEIVED, states(ReportState.PARSED, ReportState.INCOMPLETE, ReportState.MISSING_SIGNER));
-        rules.put(ReportState.PARSED, states(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN));
+        rules.put(ReportState.RECEIVED, states(ReportState.PARSED, ReportState.INCOMPLETE, ReportState.MISSING_SIGNER,
+                ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING));
+        rules.put(ReportState.PARSED, states(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN,
+                ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING));
         rules.put(ReportState.INCOMPLETE, states(ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN));
         rules.put(ReportState.MISSING_SIGNER, states(ReportState.INCOMPLETE, ReportState.READY_TO_SIGN));
         rules.put(ReportState.READY_TO_SIGN, states(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER,

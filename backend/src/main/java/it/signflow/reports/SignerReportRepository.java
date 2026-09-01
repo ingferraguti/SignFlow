@@ -24,6 +24,7 @@ public class SignerReportRepository {
                 where pi.natural_person_id=assigned.natural_person_id and pi.active=true
                 order by pi.verified desc, pi.created_at limit 1) signer_identifier on true
             join source_systems ss on ss.id=r.source_system_id
+            join fse_document_types dt on dt.code=r.document_type
             """;
     private static final String VISIBLE = """
             exists (
@@ -39,7 +40,11 @@ public class SignerReportRepository {
     private static final String SUMMARY = """
             select r.*, pr.practice_identifier, pm.patient_identifier, pm.first_name patient_first_name,
                    pm.last_name patient_last_name, assigned.username signer_username,
-                   signer_identifier.normalized_value signer_fiscal_code, ss.code source_system_code
+                   signer_identifier.normalized_value signer_fiscal_code, ss.code source_system_code,
+                   (dt.active and exists (select 1 from clinical_documents cd where cd.report_id=r.id and cd.status='ACTIVE')
+                    and ((dt.approval_required and r.state='APPROVED')
+                      or (not dt.approval_required and dt.preview_required and r.state='PREVIEWED')
+                      or (not dt.approval_required and not dt.preview_required and r.state in ('RECEIVED','PARSED','PREVIEWED')))) signature_eligible
             """;
 
     private final JdbcClient jdbcClient;
@@ -78,7 +83,11 @@ public class SignerReportRepository {
                        pm.first_name patient_first_name, pm.last_name patient_last_name,
                        pm.fiscal_code patient_fiscal_code, pm.birth_date patient_birth_date,
                        assigned.username signer_username, signer_identifier.normalized_value signer_fiscal_code,
-                       ss.code source_system_code
+                       ss.code source_system_code,
+                       (dt.active and exists (select 1 from clinical_documents cd where cd.report_id=r.id and cd.status='ACTIVE')
+                        and ((dt.approval_required and r.state='APPROVED')
+                          or (not dt.approval_required and dt.preview_required and r.state='PREVIEWED')
+                          or (not dt.approval_required and not dt.preview_required and r.state in ('RECEIVED','PARSED','PREVIEWED')))) signature_eligible
                 """ + JOINS + " where r.id=:reportId and " + VISIBLE)
                 .param("reportId", reportId).param("username", username).query(this::mapDetail).optional();
     }
@@ -241,7 +250,8 @@ public class SignerReportRepository {
                 rs.getString("signer_fiscal_code"), rs.getObject("source_system_id", UUID.class),
                 rs.getString("source_system_code"), rs.getString("document_type"), rs.getString("department"),
                 rs.getObject("produced_at", OffsetDateTime.class), rs.getObject("modified_at", OffsetDateTime.class),
-                rs.getObject("signed_at", OffsetDateTime.class), ReportState.valueOf(rs.getString("state")));
+                rs.getObject("signed_at", OffsetDateTime.class), ReportState.valueOf(rs.getString("state")),
+                rs.getBoolean("signature_eligible"));
     }
 
     private ReportDetailResponse mapDetail(ResultSet rs, int rowNum) throws SQLException {
@@ -260,7 +270,7 @@ public class SignerReportRepository {
                 rs.getBoolean("send_unsigned"), rs.getBoolean("create_cda"), rs.getBoolean("passthrough"),
                 rs.getLong("workflow_version"), rs.getObject("first_previewed_at", OffsetDateTime.class),
                 rs.getString("signature_kind"), rs.getString("signature_artifact_notice"),
-                ReportState.valueOf(rs.getString("state")));
+                ReportState.valueOf(rs.getString("state")), rs.getBoolean("signature_eligible"));
     }
 
     public record SignerCriteria(String query, String patient, String documentType, String department,

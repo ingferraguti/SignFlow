@@ -83,8 +83,11 @@ class SignatureRepository {
 
     List<EligibleReport> eligible(String username, SignatureSelectionMode mode, List<UUID> reportIds,
                                   SignatureSelectionFilter filters) {
-        StringBuilder where = new StringBuilder(" where r.state='APPROVED' and ").append(VISIBLE)
-                .append(" and exists (select 1 from clinical_documents cd where cd.report_id=r.id and cd.status='ACTIVE')");
+        StringBuilder where = new StringBuilder(" where ").append(VISIBLE)
+                .append(" and dt.active and exists (select 1 from clinical_documents cd where cd.report_id=r.id and cd.status='ACTIVE')")
+                .append(" and ((dt.approval_required and r.state='APPROVED')")
+                .append(" or (not dt.approval_required and dt.preview_required and r.state='PREVIEWED')")
+                .append(" or (not dt.approval_required and not dt.preview_required and r.state in ('RECEIVED','PARSED','PREVIEWED'))) ");
         Map<String, Object> params = new HashMap<>();
         params.put("username", username);
         if (mode != SignatureSelectionMode.FILTERED) {
@@ -102,6 +105,7 @@ class SignatureRepository {
                 select r.id, r.internal_identifier, r.workflow_version,
                        coalesce(ms.failures_before_success, 0) failures_before_success
                 from reports r join patient_metadata pm on pm.id=r.patient_metadata_id
+                join fse_document_types dt on dt.code=r.document_type
                 left join mock_signature_scenarios ms on ms.report_id=r.id
                 """ + where + " order by r.produced_at, r.id")
                 .params(params).query((rs, row) -> new EligibleReport(rs.getObject("id", UUID.class),

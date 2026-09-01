@@ -30,6 +30,12 @@ public class AdminTechnicalConfigurationController {
         return service.fseDocumentTypes();
     }
 
+    @PutMapping("/fse-document-types/{code}/signature-policy")
+    FseDocumentTypeResponse updateFseDocumentTypeSignaturePolicy(@PathVariable String code,
+            @RequestBody FseDocumentTypeSignaturePolicyRequest request) {
+        return service.updateFseDocumentTypeSignaturePolicy(code, request);
+    }
+
     @GetMapping("/source-systems/{id}/fse-document-types")
     List<SourceSystemFseDocumentTypeResponse> sourceSystemFseDocumentTypes(@PathVariable UUID id) {
         return service.sourceSystemFseDocumentTypes(id);

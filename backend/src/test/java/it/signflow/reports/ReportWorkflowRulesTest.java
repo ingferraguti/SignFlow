@@ -10,8 +10,10 @@ class ReportWorkflowRulesTest {
     @Test
     void definesTheCompleteLifecycleAndRejectsSkippedTransitions() {
         Map<ReportState, Set<ReportState>> expected = Map.ofEntries(
-                Map.entry(ReportState.RECEIVED, Set.of(ReportState.PARSED, ReportState.INCOMPLETE, ReportState.MISSING_SIGNER)),
-                Map.entry(ReportState.PARSED, Set.of(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN)),
+                Map.entry(ReportState.RECEIVED, Set.of(ReportState.PARSED, ReportState.INCOMPLETE, ReportState.MISSING_SIGNER,
+                        ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING)),
+                Map.entry(ReportState.PARSED, Set.of(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN,
+                        ReportState.SIGN_BATCH_CREATED, ReportState.SIGNING)),
                 Map.entry(ReportState.INCOMPLETE, Set.of(ReportState.MISSING_SIGNER, ReportState.READY_TO_SIGN)),
                 Map.entry(ReportState.MISSING_SIGNER, Set.of(ReportState.INCOMPLETE, ReportState.READY_TO_SIGN)),
                 Map.entry(ReportState.READY_TO_SIGN, Set.of(ReportState.INCOMPLETE, ReportState.MISSING_SIGNER,
