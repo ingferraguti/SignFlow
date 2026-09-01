@@ -193,7 +193,7 @@ class SignerReportIntegrationTest {
                 .andExpect(jsonPath("$.partitionCode", equalTo("LOCAL")))
                 .andExpect(jsonPath("$.groups[0]", equalTo("LOCAL-SIGNERS")))
                 .andExpect(jsonPath("$.authenticationAccounts", hasSize(2)))
-                .andExpect(jsonPath("$.digitalSignatures", hasSize(2)));
+                .andExpect(jsonPath("$.digitalSignatures", hasSize(3)));
         mockMvc.perform(get(ROOT + "/states").with(signerJwt("demo.signer")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(19)))
                 .andExpect(jsonPath("$[18].code", equalTo("CONSERVATION_REJECTED")));

@@ -1,6 +1,6 @@
 # Current Status
 
-Last verified: 2026-08-24 Europe/Rome.
+Last verified: 2026-08-31 Europe/Rome.
 
 ## Repository State
 
@@ -142,6 +142,9 @@ The repository currently contains a technical foundation for SignFlow:
   certificate validity interval.
 - Provider-neutral adapter lifecycle for session, challenge, transient OTP/equivalent authentication, document or
   digest submission, polling, retrieval, typed errors, timeouts, retry policy, idempotency key, and correlation ID.
+- Aruba ARSS (`ARUBA_ARSS`) remote-signature adapter, configured as the initially inactive `ARUBA-REMOTE` provider with a public demo
+  endpoint, transient OTP session authentication and synchronous PDF signing through `pdfsignatureV2`. Its username
+  and password are deployment environment variables only; no Aruba credential is seeded or stored by SignFlow.
 - Mock and local PAdES test adapters share one contract-test suite. The local adapter is not registered in the normal
   application context; its fictional self-signed certificate and PKCS#12 are generated in memory by tests only.
 - Provider session persistence now retains opaque provider/challenge references and correlation ID while continuing
@@ -172,9 +175,9 @@ The repository currently contains a technical foundation for SignFlow:
 - Automatic mapping of healthcare service intake to `Report`. Generic requests deliberately retain their independent
   provider-neutral lifecycle because the public contract does not supply patient/episode data required by a Referto.
 
-- Real signature-provider integration, qualified certificates, and legally valid signature execution. The required
-  documentation, sandbox, credentials, test chain, protocol details, and compliance inputs are listed in
-  `docs/provider-adapter-contract.md`.
+- Production activation of Aruba (or another real signature provider), qualified certificates and legal/compliance
+  validation. The ARSS adapter has unit coverage against SOAP responses but has not been exercised against Aruba with
+  a customer-owned non-production account or a documented certificate trust/revocation policy.
 - Production-grade MLLP routing (mTLS/VPN, durable listener supervision and multi-endpoint routing); the current listener
   is deliberately local and the published Compose port is loopback-only.
 - Analytics event persistence and publication interfaces.
@@ -196,11 +199,11 @@ Command:
 .\scripts\test-all.ps1
 ```
 
-Result: pass on 2026-08-24.
+Result: pass on 2026-08-31.
 
 Evidence:
 
-- Backend: 98 tests, 0 failures, 0 errors, 0 skipped.
+- Backend: 99 tests, 0 failures, 0 errors, 0 skipped.
 - Frontend: 3 Vitest tests, zero-vulnerability npm audit, ESLint, type validation, and Next.js 16.3 production build passed.
 - The focused `test-all.ps1` gate covers the backend and frontend baselines. The broader migration, dependency,
   Compose, E2E and backup/restore evidence below remains from the last successful isolated release gate.
@@ -213,16 +216,19 @@ Command:
 .\scripts\test-backend.ps1
 ```
 
-Result: pass.
+Result: pass on 2026-08-31.
 
 Evidence:
 
 - Maven build success.
-- Tests run: 98 in the full regression suite.
+- Tests run: 99 in the full regression suite.
 - Failures: 0.
 - Errors: 0.
 - Skipped: 0.
-- Finished at: 2026-08-24 Europe/Rome.
+- Finished at: 2026-08-31 Europe/Rome.
+
+The full suite includes `ArubaArssSignatureProviderTest`, `SignatureProviderAdapterContractTest`, the Flyway V25
+migration checks and the signer-profile account-count regression.
 
 Notes:
 

@@ -58,6 +58,13 @@ signflow:
     pdfa3-render-dpi: ${SIGNFLOW_SIGNATURE_PDFA3_RENDER_DPI:144}
     max-pages: ${SIGNFLOW_SIGNATURE_MAX_PAGES:100}
     max-rendered-pixels: ${SIGNFLOW_SIGNATURE_MAX_RENDERED_PIXELS:100000000}
+  signature-providers:
+    aruba:
+      service-url: ${SIGNFLOW_ARUBA_SERVICE_URL:https://arss.demo.firma-automatica.it/ArubaSignService/ArubaSignService}
+      username: ${SIGNFLOW_ARUBA_USERNAME:}
+      password: ${SIGNFLOW_ARUBA_PASSWORD:}
+      otp-authentication-type: ${SIGNFLOW_ARUBA_OTP_AUTHENTICATION_TYPE:demoprod}
+      certificate-id: ${SIGNFLOW_ARUBA_CERTIFICATE_ID:AS0}
   external-delivery:
     allow-mock-signatures: ${SIGNFLOW_EXTERNAL_ALLOW_MOCK_SIGNATURES:false}
     max-retries: ${SIGNFLOW_EXTERNAL_MAX_RETRIES:2}

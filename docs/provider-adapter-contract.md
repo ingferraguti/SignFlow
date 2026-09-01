@@ -37,10 +37,20 @@ validity.
 The UI workflow from Delivery Objective 10 continues to use the unmistakably non-legal plain-text mock provider.
 No cryptographic test PDF is presented as a production or legally valid artifact.
 
+## Aruba ARSS Adapter
+
+`ARUBA_ARSS` is a real-provider adapter for Aruba Firma Remota. It uses the ARSS demo SOAP service documented in
+`aruba/FirmaRemota.pdf`: `opensession` authenticates the supplied OTP and `pdfsignatureV2` synchronously returns the
+signed PDF. The neutral `poll` and `retrieve` methods expose that synchronous result without leaking SOAP DTOs.
+
+The adapter is configured as the initially inactive `ARUBA-REMOTE` provider, but no account is seeded and no credential is stored in the database.
+Set `SIGNFLOW_ARUBA_USERNAME` and `SIGNFLOW_ARUBA_PASSWORD` through the deployment secret mechanism; the OTP is the
+transient value posted to the existing provider-session endpoint. Do not add demo credentials to source, fixtures,
+logs, or `.env` files. The provider must be tested with a non-production account before use in a clinical flow.
+
 ## Real Provider Integration Gate
 
-No real-provider adapter is implemented because no authoritative API documentation, sandbox endpoint, test
-credentials, or provider test certificate is available in the repository. A future provider integration requires:
+Before enabling any real provider in production, confirm:
 
 - current provider API and authentication/challenge documentation;
 - sandbox base URL, client identity, non-production account, and credential-vault reference;
